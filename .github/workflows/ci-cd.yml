@@ -20,10 +20,35 @@ jobs:
           go-version: '1.26'
           cache-dependency-path: backend/go.sum
 
+      - name: go vet
+        run: cd backend && go vet ./...
+
+      - name: govulncheck
+        continue-on-error: true
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          cd backend && govulncheck ./...
+
       - name: Run Backend Tests
         run: |
           cd backend
-          go test -v ./...
+          go test -race -v ./...
+
+  lint:
+    name: Backend Lint (golangci-lint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+          cache-dependency-path: backend/go.sum
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: backend
+          args: --timeout=5m
 
   web-tests:
     name: Web Frontend TypeScript Check

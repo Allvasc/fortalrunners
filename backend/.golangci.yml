@@ -1,0 +1,25 @@
+# Lint enxuto — pega o que importa sem afogar em nitpick de estilo.
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    - govet
+    - staticcheck
+    - errcheck
+    - ineffassign
+    - unused
+    - gosimple
+    - bodyclose
+    - rowserrcheck
+    - sqlclosecheck
+    - misspell
+    - unconvert
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters: [errcheck, bodyclose]
+  max-issues-per-linter: 0
+  max-same-issues: 0
