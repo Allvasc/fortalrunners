@@ -18,6 +18,10 @@ import { EventsScreen } from "./src/screens/Events";
 import { AICoachScreen } from "./src/screens/AICoach";
 import { SafetyScreen } from "./src/screens/Safety";
 import { SettingsScreen } from "./src/screens/Settings";
+import { RankingScreen } from "./src/screens/Ranking";
+import { ChallengesScreen } from "./src/screens/Challenges";
+import { ProfileScreen } from "./src/screens/Profile";
+import { HistoryScreen } from "./src/screens/History";
 import "./src/lib/recorder"; // registra a task de background no import
 
 export type RootStack = {
@@ -33,6 +37,10 @@ export type RootStack = {
   AICoach: undefined;
   Safety: undefined;
   Settings: undefined;
+  Ranking: undefined;
+  Challenges: undefined;
+  Profile: undefined;
+  History: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStack>();
@@ -71,6 +79,10 @@ function Root() {
       >
         <Stack.Screen name="Home" component={Home} options={{ title: "FortalRunners", headerShown: false }} />
         <Stack.Screen name="Map" component={Map} options={{ title: "Meu mapa" }} />
+        <Stack.Screen name="Ranking" component={RankingScreen} options={{ title: "Ranking" }} />
+        <Stack.Screen name="Challenges" component={ChallengesScreen} options={{ title: "Desafios" }} />
+        <Stack.Screen name="History" component={HistoryScreen} options={{ title: "Histórico" }} />
+        <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: "Perfil" }} />
         <Stack.Screen name="Landmarks" component={Landmarks} options={{ title: "Marcos & Selos" }} />
         <Stack.Screen name="Routes" component={RoutesScreen} options={{ title: "Rotas" }} />
         <Stack.Screen name="Social" component={SocialScreen} options={{ title: "Feed Social" }} />

@@ -32,12 +32,12 @@ export function Home({ navigation }: Props) {
         </TouchableOpacity>
       </View>
 
-      <View style={s.tiles}>
+      <TouchableOpacity style={s.tiles} onPress={() => navigation.navigate("Profile")} activeOpacity={0.7}>
         <Tile v={String(life.data?.run_count ?? 0)} l="corridas" />
         <Tile v={km(life.data?.total_distance_m)} l="km totais" />
         <Tile v={area(life.data?.territory_area_m2)} l="território" />
         <Tile v={`${cov.data?.city.pct ?? 0}%`} l="de Fortaleza" />
-      </View>
+      </TouchableOpacity>
 
       <TouchableOpacity style={s.cta} onPress={() => navigation.navigate("Recording")}>
         <Text style={s.ctaText}>Iniciar corrida</Text>
@@ -46,6 +46,12 @@ export function Home({ navigation }: Props) {
       <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
         <TouchableOpacity style={[s.ctaGhost, { flexGrow: 1 }]} onPress={() => navigation.navigate("Map")}>
           <Text style={s.ctaGhostText}>Ver mapa</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[s.ctaGhost, { flexGrow: 1 }]} onPress={() => navigation.navigate("Ranking")}>
+          <Text style={s.ctaGhostText}>Ranking</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[s.ctaGhost, { flexGrow: 1 }]} onPress={() => navigation.navigate("Challenges")}>
+          <Text style={s.ctaGhostText}>Desafios</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[s.ctaGhost, { flexGrow: 1 }]} onPress={() => navigation.navigate("Landmarks")}>
           <Text style={s.ctaGhostText}>Marcos</Text>
@@ -73,7 +79,13 @@ export function Home({ navigation }: Props) {
         </TouchableOpacity>
       </View>
 
-      <Text style={s.section}>Últimas corridas</Text>
+      <TouchableOpacity
+        style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}
+        onPress={() => navigation.navigate("History")}
+      >
+        <Text style={s.section}>Últimas corridas</Text>
+        <Text style={{ color: C.teal, fontWeight: "700", fontSize: 13 }}>ver todas ›</Text>
+      </TouchableOpacity>
       {runs.data?.runs.length === 0 && <Text style={s.muted}>Nenhuma ainda. Bora?</Text>}
       {runs.data?.runs.map((r) => (
         <TouchableOpacity key={r.id} style={s.runRow} onPress={() => navigation.navigate("Summary", { runId: r.id })}>

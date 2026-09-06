@@ -57,23 +57,30 @@ export function relativeDeadline(iso: string): string {
   return "falta < 1 h";
 }
 
+// Chaves gravadas pelo rollup (backend/internal/stats/stats.go):
+// longest, max_elev, biggest_territory, 1h (maior = melhor) e
+// 1k/5k/10k/15k/21k/42k (tempo, menor = melhor).
 const RECORD_LABELS: Record<string, string> = {
-  longest_distance_m: "Maior distância",
-  longest_run_s: "Corrida mais longa",
-  most_elevation_m: "Mais elevação",
-  biggest_territory_m2: "Maior território",
-  fastest_5k_s: "5 km mais rápido",
-  fastest_10k_s: "10 km mais rápido",
+  longest: "Maior distância",
+  max_elev: "Mais elevação",
+  biggest_territory: "Maior território",
+  "1h": "Recorde de 1 hora",
+  "1k": "1 km mais rápido",
+  "5k": "5 km mais rápido",
+  "10k": "10 km mais rápido",
+  "15k": "15 km mais rápido",
+  "21k": "Meia maratona",
+  "42k": "Maratona",
 };
 export function recordLabel(key: string): string {
   return RECORD_LABELS[key] ?? key;
 }
 
 export function recordValue(key: string, value: number): string {
-  if (key.endsWith("_m2")) return area(value);
-  if (key.endsWith("_m")) return km(value);
-  if (key.endsWith("_s")) return hours(value);
-  return int(value);
+  if (key === "longest" || key === "1h") return `${km(value)} km`;
+  if (key === "max_elev") return `${Math.round(value)} m`;
+  if (key === "biggest_territory") return area(value);
+  return clock(value); // 1k..42k → tempo em s
 }
 
 const CADENCE_LABELS: Record<string, string> = {

@@ -185,9 +185,9 @@ function Records({ records }: { records: PersonalRecord[] }) {
   return (
     <ul className="rec-list">
       {records.map((r) => (
-        <li key={r.key}>
-          <span>{recordLabel(r.key)}</span>
-          <span className="mono">{recordValue(r.key, r.value)}</span>
+        <li key={r.distance_key}>
+          <span>{recordLabel(r.distance_key)}</span>
+          <span className="mono">{recordValue(r.distance_key, r.value_s)}</span>
           <span className="muted small">{date(r.achieved_at)}</span>
         </li>
       ))}

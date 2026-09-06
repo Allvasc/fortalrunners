@@ -205,8 +205,8 @@ export type Lifetime = {
 };
 
 export type PersonalRecord = {
-  key: string;
-  value: number;
+  distance_key: string;
+  value_s: number;
   run_id: string | null;
   achieved_at: string | null;
 };

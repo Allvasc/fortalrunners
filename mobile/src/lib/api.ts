@@ -24,8 +24,46 @@ export type Lifetime = {
   run_count: number;
   total_distance_m?: number;
   total_moving_s?: number;
+  total_steps?: number;
   territory_area_m2?: number;
+  elevation_gain_m?: number;
+  active_days?: number;
   current_streak_days?: number;
+  longest_streak_days?: number;
+  last_run_date?: string | null;
+};
+
+export type LeaderEntry = {
+  rank: number;
+  user_id: string;
+  username: string;
+  athlete_id: string;
+  area_m2: number;
+  blocks: number;
+};
+export type Leaderboard = { entries: LeaderEntry[]; me: LeaderEntry | null };
+
+export type ChallengeView = {
+  slug: string;
+  title: string;
+  description: string;
+  cadence: "weekly" | "biweekly" | "monthly" | "oneoff";
+  metric: string;
+  goal?: number;
+  period_no: number;
+  starts_at: string;
+  ends_at: string;
+  my_value: number;
+  my_rank: number;
+  my_completed: boolean;
+};
+export type ChallengeStanding = {
+  rank: number;
+  user_id: string;
+  username: string;
+  athlete_id: string;
+  value: number;
+  completed: boolean;
 };
 
 export class ApiError extends Error {
@@ -156,7 +194,28 @@ export const api = {
   territories: () =>
     request<{ type: "FeatureCollection"; features: unknown[] }>("/v1/territories?scope=me"),
   coverage: () =>
-    request<{ city: { pct: number; covered_cells: number; total_cells: number } }>("/v1/coverage"),
+    request<{
+      city: { pct: number; covered_cells: number; total_cells: number };
+      neighborhoods?: { neighborhood_id: string; name: string; total_cells: number; covered_cells: number; pct: number }[];
+    }>("/v1/coverage"),
+
+  // --- ranking / leaderboards ---
+  leaderboardGlobal: () => request<Leaderboard>("/v1/leaderboards/global"),
+  leaderboardNeighborhood: (id: string) =>
+    request<Leaderboard>(`/v1/leaderboards/neighborhood/${encodeURIComponent(id)}`),
+
+  // --- desafios ---
+  challenges: () => request<{ challenges: ChallengeView[] }>("/v1/challenges"),
+  challengeLeaderboard: (slug: string) =>
+    request<{ slug: string; period_no: number; closed: boolean; entries: ChallengeStanding[] }>(
+      `/v1/challenges/${encodeURIComponent(slug)}/leaderboard`,
+    ),
+
+  // --- perfil ---
+  records: () =>
+    request<{ records: { distance_key: string; value_s: number; run_id: string | null; achieved_at: string | null }[] }>(
+      "/v1/me/records",
+    ),
 
   landmarksProgress: () =>
     request<{
@@ -307,8 +366,7 @@ export const api = {
     request<{ type: "FeatureCollection"; features: unknown[] }>(`/v1/territories?scope=${scope}`),
   heatmapScope: (scope: "me" | "friends" | "city") =>
     request<{ type: "FeatureCollection"; features: unknown[] }>(`/v1/heatmap?scope=${scope}`),
-  leaderboardFriends: () =>
-    request<{ entries: { rank: number; username: string; area_m2: number }[] }>("/v1/leaderboards/friends"),
+  leaderboardFriends: () => request<Leaderboard>("/v1/leaderboards/friends"),
 
   events: () =>
     request<{
