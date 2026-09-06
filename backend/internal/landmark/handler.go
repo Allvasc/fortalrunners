@@ -2,19 +2,23 @@ package landmark
 
 import (
 	"errors"
+	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 
 	"github.com/Allvasc/fortalrunners/backend/internal/auth"
+	"github.com/Allvasc/fortalrunners/backend/internal/platform/blobstore"
 )
 
 type Handler struct {
-	svc *Service
+	svc   *Service
+	blobs blobstore.Store
 }
 
-func NewHandler(svc *Service) *Handler {
-	return &Handler{svc: svc}
+func NewHandler(svc *Service, blobs blobstore.Store) *Handler {
+	return &Handler{svc: svc, blobs: blobs}
 }
 
 func (h *Handler) Register(g *echo.Group) {
@@ -48,23 +52,51 @@ func (h *Handler) get(c echo.Context) error {
 	return c.JSON(http.StatusOK, lm)
 }
 
-type checkinReq struct {
-	Lat      float64 `json:"lat"`
-	Lng      float64 `json:"lng"`
-	RunID    *string `json:"run_id,omitempty"`
-	PhotoKey *string `json:"photo_key,omitempty"`
-}
-
+// checkin aceita multipart (campo `photo` + `lat`/`lng`/`run_id`) ou, sem
+// arquivo, JSON com `photo_key` já enviado. A foto é obrigatória (plano §3).
 func (h *Handler) checkin(c echo.Context) error {
 	userID := auth.UserID(c)
 	lmID := c.Param("id")
 
-	var req checkinReq
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "requisicao invalida")
+	var lat, lng float64
+	var runID, photoKey *string
+
+	if fh, ferr := c.FormFile("photo"); ferr == nil {
+		f, err := fh.Open()
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "não foi possível ler a foto")
+		}
+		defer f.Close()
+		raw, _ := io.ReadAll(io.LimitReader(f, 9<<20))
+		key, err := h.blobs.PutImage(c.Request().Context(), "landmark_checkin", userID, "landmark_checkin", raw)
+		switch {
+		case errors.Is(err, blobstore.ErrBadImage):
+			return echo.NewHTTPError(http.StatusUnprocessableEntity, "envie uma foto JPEG ou PNG")
+		case errors.Is(err, blobstore.ErrTooLarge):
+			return echo.NewHTTPError(http.StatusRequestEntityTooLarge, "foto muito grande")
+		case err != nil:
+			return echo.NewHTTPError(http.StatusInternalServerError, "erro ao processar a foto")
+		}
+		photoKey = &key
+		lat, _ = strconv.ParseFloat(c.FormValue("lat"), 64)
+		lng, _ = strconv.ParseFloat(c.FormValue("lng"), 64)
+		if r := c.FormValue("run_id"); r != "" {
+			runID = &r
+		}
+	} else {
+		var req struct {
+			Lat      float64 `json:"lat"`
+			Lng      float64 `json:"lng"`
+			RunID    *string `json:"run_id,omitempty"`
+			PhotoKey *string `json:"photo_key,omitempty"`
+		}
+		if err := c.Bind(&req); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "requisição inválida")
+		}
+		lat, lng, runID, photoKey = req.Lat, req.Lng, req.RunID, req.PhotoKey
 	}
 
-	chk, err := h.svc.Checkin(c.Request().Context(), userID, lmID, req.RunID, req.PhotoKey, req.Lat, req.Lng)
+	chk, err := h.svc.Checkin(c.Request().Context(), userID, lmID, runID, photoKey, lat, lng)
 	switch {
 	case errors.Is(err, ErrLandmarkNotFound):
 		return echo.NewHTTPError(http.StatusNotFound, "marco não encontrado")
