@@ -1,0 +1,55 @@
+/* Placeholder de estilo. A identidade real está em docs/manual-de-design.html;
+   os tokens serão extraídos para um pacote compartilhado na Fase 1. */
+:root {
+  --bg: #f4f1e8;
+  --surface: #fff;
+  --ink: #16262a;
+  --ink-3: #7b8688;
+  --line: #cfc7b4;
+  --teal: #0c7f86;
+  --coral: #e0562f;
+  --crit: #c7402b;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1618;
+    --surface: #1b292c;
+    --ink: #e9e4d7;
+    --ink-3: #7c8888;
+    --line: #3a4a4e;
+    --teal: #3cb4be;
+    --coral: #ff7c50;
+    --crit: #e4634a;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+.shell { max-width: 420px; margin: 0 auto; padding: 40px 20px; }
+.shell header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 28px; }
+.muted { color: var(--ink-3); }
+.small { font-size: 13px; }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.seg { display: flex; gap: 4px; background: var(--bg); border-radius: 999px; padding: 3px; }
+.seg button { flex: 1; border: 0; background: transparent; padding: 8px; border-radius: 999px; font: inherit; cursor: pointer; color: var(--ink-3); }
+.seg button.on { background: var(--surface); color: var(--teal); font-weight: 600; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; }
+input { font: inherit; padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); }
+.btn { border: 0; border-radius: 10px; padding: 12px; font: inherit; font-weight: 700; cursor: pointer; }
+.btn.primary { background: var(--coral); color: #fff; }
+.btn.ghost { background: transparent; border: 1.5px solid var(--line); color: var(--ink); }
+.err { color: var(--crit); font-size: 13px; margin: 0; }
