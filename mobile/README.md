@@ -6,7 +6,7 @@ npx expo start        # abre o dev server; use o app Expo Go ou um dev client
 ```
 
 Ajuste a URL da API em `app.json → expo.extra.apiUrl`
-(no simulador iOS use `http://localhost:8080`; no Android emulador, `http://10.0.2.2:8080`;
+(no simulador iOS use `http://localhost:8090`; no Android emulador, `http://10.0.2.2:8090`;
 em device físico, o IP da sua máquina).
 
 ## Próximas fases

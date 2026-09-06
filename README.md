@@ -40,7 +40,7 @@ make infra-up
 cd backend
 cp .env.example .env
 make migrate
-make run          # API em http://localhost:8080  (GET /healthz)
+make run          # API em http://localhost:8090  (GET /healthz)
 
 # em outro terminal: worker de território
 make run-worker
