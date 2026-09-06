@@ -26,6 +26,7 @@ func (h *Handler) Register(g *echo.Group) {
 	g.GET("/leaderboards/club/:id", h.club)
 	g.GET("/me/lifetime", h.lifetime)
 	g.GET("/me/records", h.records)
+	g.GET("/me/evolution", h.evolution)
 	g.GET("/coverage", h.coverage)
 }
 
@@ -236,6 +237,43 @@ func (h *Handler) lifetime(c echo.Context) error {
 		m.LastRunDate = &s
 	}
 	return c.JSON(http.StatusOK, m)
+}
+
+// evolution devolve as últimas ~26 semanas: distância, área nova, quarteirões e
+// nº de corridas por semana ISO. Alimenta os gráficos de evolução do portal.
+func (h *Handler) evolution(c echo.Context) error {
+	rows, err := h.pool.Query(c.Request().Context(), `
+		SELECT date_trunc('week', started_at AT TIME ZONE 'America/Fortaleza')::date AS wk,
+		       COALESCE(SUM(distance_m), 0)::bigint,
+		       COALESCE(SUM(territory_area_m2), 0)::double precision,
+		       COALESCE(SUM(new_blocks), 0)::int,
+		       COUNT(*)::int
+		FROM runs
+		WHERE user_id = $1 AND status = 'valid'
+		  AND started_at > now() - interval '27 weeks'
+		GROUP BY wk ORDER BY wk`, auth.UserID(c))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "erro interno")
+	}
+	defer rows.Close()
+	type week struct {
+		Week       string  `json:"week"`
+		DistanceM  int64   `json:"distance_m"`
+		AreaM2     float64 `json:"area_m2"`
+		NewBlocks  int     `json:"new_blocks"`
+		Runs       int     `json:"runs"`
+	}
+	out := []week{}
+	for rows.Next() {
+		var w week
+		var d time.Time
+		if err := rows.Scan(&d, &w.DistanceM, &w.AreaM2, &w.NewBlocks, &w.Runs); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "erro interno")
+		}
+		w.Week = d.Format("2006-01-02")
+		out = append(out, w)
+	}
+	return c.JSON(http.StatusOK, map[string]any{"weeks": out})
 }
 
 func (h *Handler) records(c echo.Context) error {

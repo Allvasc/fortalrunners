@@ -585,6 +585,11 @@ export const api = {
       "/v1/coach/summary",
     ),
 
+  evolution: () =>
+    request<{ weeks: { week: string; distance_m: number; area_m2: number; new_blocks: number; runs: number }[] }>(
+      "/v1/me/evolution",
+    ),
+
   // --- tênis ---
   shoes: () => request<{ shoes: ShoeItem[] }>("/v1/shoes"),
   createShoe: (b: { brand: string; model: string; nickname?: string; purchase_price_cents?: number; lifespan_goal_m?: number }) =>

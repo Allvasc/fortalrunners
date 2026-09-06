@@ -6,6 +6,7 @@ import { Auth } from "./pages/Auth";
 import { ResetPassword } from "./pages/ResetPassword";
 import { MapView } from "./pages/MapView";
 import { History } from "./pages/History";
+import { Evolution } from "./pages/Evolution";
 import { Ranking } from "./pages/Ranking";
 import { Challenges } from "./pages/Challenges";
 import { Profile } from "./pages/Profile";
@@ -49,6 +50,7 @@ function Portal() {
             Mapa
           </NavLink>
           <NavLink to="/historico">Histórico</NavLink>
+          <NavLink to="/evolucao">Evolução</NavLink>
           <NavLink to="/ranking">Ranking</NavLink>
           <NavLink to="/desafios">Desafios</NavLink>
           <NavLink to="/marcos">Marcos & Selos</NavLink>
@@ -91,6 +93,7 @@ function Portal() {
         <Routes>
           <Route path="/" element={<MapView />} />
           <Route path="/historico" element={<History />} />
+          <Route path="/evolucao" element={<Evolution />} />
           <Route path="/ranking" element={<Ranking />} />
           <Route path="/desafios" element={<Challenges />} />
           <Route path="/marcos" element={<LandmarksPage />} />
