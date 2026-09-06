@@ -19,6 +19,7 @@ import (
 	"github.com/Allvasc/fortalrunners/backend/internal/heatmap"
 	"github.com/Allvasc/fortalrunners/backend/internal/integration"
 	"github.com/Allvasc/fortalrunners/backend/internal/landmark"
+	"github.com/Allvasc/fortalrunners/backend/internal/organizer"
 	"github.com/Allvasc/fortalrunners/backend/internal/payment"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/config"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/crypto"
@@ -115,6 +116,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	report.NewHandler(report.NewService(pool)).Register(secured)
 	hazard.NewHandler(hazard.NewService(pool)).Register(secured)
 	profile.NewHandler(profile.NewService(pool)).Register(secured)
+	organizer.NewHandler(organizer.NewService(pool)).Register(secured)
 	paymentH := payment.NewHandler(payment.NewService(pool, payment.Config{
 		AsaasAPIKey:        cfg.AsaasAPIKey,
 		AsaasWebhookSecret: cfg.AsaasWebhookSecret,
