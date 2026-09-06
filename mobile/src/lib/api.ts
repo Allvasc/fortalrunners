@@ -86,10 +86,19 @@ export const api = {
     await setTokens(r.tokens);
     return r.user;
   },
-  async login(email: string, password: string) {
-    const r = await request<{ user: PublicUser; tokens: Tokens }>("/v1/auth/login", {
+  async login(email: string, password: string): Promise<{ mfa: false } | { mfa: true; mfaToken: string }> {
+    const r = await request<
+      { user: PublicUser; tokens: Tokens } | { mfa_required: true; mfa_token: string }
+    >("/v1/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+    if ("mfa_required" in r) return { mfa: true, mfaToken: r.mfa_token };
+    await setTokens(r.tokens);
+    return { mfa: false };
+  },
+
+  async verifyMfa(mfaToken: string, code: string) {
+    const r = await request<{ user: PublicUser; tokens: Tokens }>("/v1/auth/mfa/verify", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ mfa_token: mfaToken, code }),
     });
     await setTokens(r.tokens);
     return r.user;

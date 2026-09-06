@@ -10,12 +10,60 @@ export function Auth() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [mfaToken, setMfaToken] = useState<string | null>(null);
+  const [code, setCode] = useState("");
 
   const m = useMutation({
-    mutationFn: () =>
-      mode === "login" ? api.login(email, password) : api.register({ email, username, password }),
+    mutationFn: async () => {
+      if (mode === "register") {
+        await api.register({ email, username, password });
+        return;
+      }
+      const r = await api.login(email, password);
+      if (r.mfa) setMfaToken(r.mfaToken);
+    },
+    onSuccess: () => {
+      if (!mfaToken) qc.invalidateQueries();
+    },
+  });
+
+  const verify = useMutation({
+    mutationFn: () => api.verifyMfa(mfaToken!, code.trim()),
     onSuccess: () => qc.invalidateQueries(),
   });
+
+  if (mfaToken) {
+    return (
+      <View style={s.center}>
+        <Text style={s.h1}>Verificação em 2 etapas</Text>
+        <Text style={{ color: C.ink3, textAlign: "center", maxWidth: 280 }}>
+          Código de 6 dígitos do seu app de autenticação — ou um código de recuperação.
+        </Text>
+        <TextInput
+          style={s.input}
+          placeholder="123456"
+          autoCapitalize="none"
+          value={code}
+          onChangeText={setCode}
+          autoFocus
+        />
+        {verify.isError && (
+          <Text style={s.err}>{verify.error instanceof ApiError ? verify.error.message : "Código inválido"}</Text>
+        )}
+        <Pressable style={s.btn} disabled={verify.isPending} onPress={() => verify.mutate()}>
+          <Text style={s.btnText}>{verify.isPending ? "Verificando…" : "Entrar"}</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => {
+            setMfaToken(null);
+            setCode("");
+          }}
+        >
+          <Text style={{ color: C.ink3 }}>Voltar</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View style={s.center}>
