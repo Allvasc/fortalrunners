@@ -113,12 +113,14 @@ func (h *Handler) oauthStart(c echo.Context) error {
 		}
 		uid = claims.Subject
 	}
-	url, err := h.svc.OAuthStart(c.Param("provider"), mode, uid)
+	dest := c.QueryParam("dest") // "mobile" faz o callback voltar pro app
+	url, err := h.svc.OAuthStart(c.Param("provider"), mode, uid, dest)
 	if err != nil {
 		return authErr(err)
 	}
 	// mode=link vem de um fetch com Bearer (não pode seguir 302 por CORS) → JSON.
-	if mode == "link" || c.QueryParam("format") == "json" {
+	// dest=mobile também: o app abre a URL num browser in-app.
+	if mode == "link" || dest == "mobile" || c.QueryParam("format") == "json" {
 		return c.JSON(http.StatusOK, map[string]string{"authorize_url": url})
 	}
 	return c.Redirect(http.StatusFound, url)
@@ -131,13 +133,13 @@ func (h *Handler) oauthCallback(c echo.Context) error {
 	if code == "" || state == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "code e state obrigatórios")
 	}
-	u, tk, err := h.svc.OAuthCallback(c.Request().Context(), c.Param("provider"), code, state,
+	u, tk, dest, err := h.svc.OAuthCallback(c.Request().Context(), c.Param("provider"), code, state,
 		clientIP(c), c.Request().UserAgent())
 	if err != nil {
 		return authErr(err)
 	}
-	if dest := h.svc.WebRedirectURL(tk); dest != "" {
-		return c.Redirect(http.StatusFound, dest)
+	if target := h.svc.RedirectURL(tk, dest); target != "" {
+		return c.Redirect(http.StatusFound, target)
 	}
 	return c.JSON(http.StatusOK, map[string]any{"user": publicUser(u), "tokens": tk})
 }

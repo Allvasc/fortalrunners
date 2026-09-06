@@ -1,5 +1,6 @@
 // Cliente da API para o app. Tokens no SecureStore (Keychain / Keystore).
 import * as SecureStore from "expo-secure-store";
+import * as WebBrowser from "expo-web-browser";
 import Constants from "expo-constants";
 
 // Ordem: env do build (EAS define via eas.json) → extra do app.json → localhost (dev).
@@ -118,6 +119,35 @@ async function setTokens(t: Tokens | null) {
 }
 export async function isAuthed() {
   return (await getTokens()) !== null;
+}
+
+/**
+ * Login social: abre o provedor num browser in-app e captura os tokens do
+ * deep link de volta (fortalrunners://auth/callback#access_token=...).
+ * Lança em caso de cancelamento/erro.
+ */
+export async function oauthLogin(provider: "google" | "apple"): Promise<void> {
+  const res = await fetch(`${BASE}/v1/auth/oauth/${provider}?dest=mobile`);
+  if (!res.ok) throw new ApiError(res.status, "Login social indisponível");
+  const { authorize_url } = (await res.json()) as { authorize_url: string };
+
+  const result = await WebBrowser.openAuthSessionAsync(authorize_url, "fortalrunners://auth/callback");
+  if (result.type !== "success" || !result.url) throw new ApiError(0, "Login cancelado");
+
+  const frag = result.url.split("#")[1] ?? "";
+  const kv: Record<string, string> = {};
+  for (const part of frag.split("&")) {
+    const [k, v] = part.split("=");
+    if (k) kv[k] = decodeURIComponent(v ?? "");
+  }
+  if (!kv.access_token || !kv.refresh_token || !kv.expires_at) {
+    throw new ApiError(0, "Resposta inválida do provedor");
+  }
+  await setTokens({
+    access_token: kv.access_token,
+    refresh_token: kv.refresh_token,
+    expires_at: kv.expires_at,
+  });
 }
 
 /**

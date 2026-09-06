@@ -18,7 +18,7 @@ func testSvc() *Service {
 
 func TestOAuthStateRoundtrip(t *testing.T) {
 	s := testSvc()
-	raw, err := s.signState("link", "user_7")
+	raw, err := s.signState("link", "user_7", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,17 +42,17 @@ func TestOAuthStateRoundtrip(t *testing.T) {
 
 func TestOAuthStartUnconfigured(t *testing.T) {
 	s := testSvc()
-	if _, err := s.OAuthStart("apple", "login", ""); err != ErrOAuthProvider {
+	if _, err := s.OAuthStart("apple", "login", "", ""); err != ErrOAuthProvider {
 		t.Fatalf("apple sem config deveria dar ErrOAuthProvider, deu %v", err)
 	}
-	if _, err := s.OAuthStart("myspace", "login", ""); err != ErrOAuthProvider {
+	if _, err := s.OAuthStart("myspace", "login", "", ""); err != ErrOAuthProvider {
 		t.Fatal("provedor desconhecido")
 	}
 }
 
 func TestGoogleAuthURL(t *testing.T) {
 	s := testSvc()
-	u, err := s.OAuthStart("google", "login", "")
+	u, err := s.OAuthStart("google", "login", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}

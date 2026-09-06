@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, ApiError } from "../lib/api";
+import { api, ApiError, oauthLogin } from "../lib/api";
 import { C } from "../theme";
 
 export function Auth() {
@@ -30,6 +31,14 @@ export function Auth() {
   const verify = useMutation({
     mutationFn: () => api.verifyMfa(mfaToken!, code.trim()),
     onSuccess: () => qc.invalidateQueries(),
+  });
+
+  const google = useMutation({
+    mutationFn: () => oauthLogin("google"),
+    onSuccess: () => {
+      qc.clear();
+      qc.setQueryData(["authed"], true);
+    },
   });
 
   if (mfaToken) {
@@ -67,7 +76,33 @@ export function Auth() {
 
   return (
     <View style={s.center}>
+      <Image source={require("../../assets/icon.png")} style={s.logo} />
       <Text style={s.h1}>FortalRunners</Text>
+
+      <Pressable style={s.gbtn} disabled={google.isPending} onPress={() => google.mutate()}>
+        {google.isPending ? (
+          <ActivityIndicator color={C.ink} />
+        ) : (
+          <>
+            <Ionicons name="logo-google" size={18} color="#EA4335" />
+            <Text style={s.gbtnText}>Entrar com Google</Text>
+          </>
+        )}
+      </Pressable>
+      {google.isError && (
+        <Text style={s.err}>
+          {google.error instanceof ApiError && google.error.message !== "Login cancelado"
+            ? google.error.message
+            : "Não foi possível entrar com o Google."}
+        </Text>
+      )}
+
+      <View style={s.orRow}>
+        <View style={s.orLine} />
+        <Text style={s.orText}>ou</Text>
+        <View style={s.orLine} />
+      </View>
+
       <View style={s.seg}>
         {(["login", "register"] as const).map((mo) => (
           <Pressable key={mo} style={[s.segBtn, mode === mo && s.segOn]} onPress={() => setMode(mo)}>
@@ -97,7 +132,24 @@ export function Auth() {
 
 const s = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 24, backgroundColor: C.bg },
+  logo: { width: 64, height: 64, borderRadius: 16, marginBottom: 4 },
   h1: { fontSize: 26, fontWeight: "800", color: C.ink, marginBottom: 4 },
+  gbtn: {
+    width: 280,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: C.line,
+    backgroundColor: C.surface,
+  },
+  gbtnText: { color: C.ink, fontWeight: "700" },
+  orRow: { flexDirection: "row", alignItems: "center", gap: 10, width: 280, marginVertical: 2 },
+  orLine: { flex: 1, height: 1, backgroundColor: C.line },
+  orText: { color: C.ink3, fontSize: 12 },
   seg: { flexDirection: "row", backgroundColor: C.sunken, borderRadius: 999, padding: 3, marginVertical: 8 },
   segBtn: { paddingVertical: 8, paddingHorizontal: 18, borderRadius: 999 },
   segOn: { backgroundColor: C.surface },

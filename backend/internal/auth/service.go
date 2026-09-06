@@ -70,17 +70,28 @@ func NewService(deps Deps) (*Service, error) {
 	}, nil
 }
 
-// WebRedirectURL monta o destino do callback OAuth com os tokens no fragmento
-// (nunca na query — fragmento não vai para logs de servidor). "" quando não há
-// front configurado (aí o handler devolve JSON).
-func (s *Service) WebRedirectURL(t Tokens) string {
+// mobileScheme: deep link do app (app.json → "scheme").
+const mobileScheme = "fortalrunners"
+
+// RedirectURL monta o destino do callback OAuth com os tokens no fragmento
+// (nunca na query — fragmento não vai para logs de servidor).
+//   - dest "mobile" → volta pro app via deep link
+//   - senão → portal web ("" quando não há front configurado; o handler devolve JSON)
+func (s *Service) RedirectURL(t Tokens, dest string) string {
+	frag := "#access_token=" + url.QueryEscape(t.AccessToken) +
+		"&refresh_token=" + url.QueryEscape(t.RefreshToken) +
+		"&expires_at=" + url.QueryEscape(t.ExpiresAt.Format(time.RFC3339))
+	if dest == "mobile" {
+		return mobileScheme + "://auth/callback" + frag
+	}
 	if s.webBase == "" {
 		return ""
 	}
-	return s.webBase + "/auth/callback#access_token=" + url.QueryEscape(t.AccessToken) +
-		"&refresh_token=" + url.QueryEscape(t.RefreshToken) +
-		"&expires_at=" + url.QueryEscape(t.ExpiresAt.Format(time.RFC3339))
+	return s.webBase + "/auth/callback" + frag
 }
+
+// WebRedirectURL: compat — mesma coisa que RedirectURL(t, "").
+func (s *Service) WebRedirectURL(t Tokens) string { return s.RedirectURL(t, "") }
 
 // Register cria a conta e já devolve tokens (auto-login).
 func (s *Service) Register(ctx context.Context, in RegisterInput, ip, ua string) (User, Tokens, error) {

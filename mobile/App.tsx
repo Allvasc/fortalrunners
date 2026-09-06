@@ -2,7 +2,10 @@ import { useCallback, useEffect } from "react";
 import { View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
+import * as WebBrowser from "expo-web-browser";
 import { cleanupStaleRecording } from "./src/lib/recorder";
+
+WebBrowser.maybeCompleteAuthSession();
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -10,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { isAuthed } from "./src/lib/api";
 import { C } from "./src/theme";
+import { Splash } from "./src/screens/Splash";
 import { Auth } from "./src/screens/Auth";
 import { Home } from "./src/screens/Home";
 import { Map } from "./src/screens/Map";
@@ -82,15 +86,13 @@ function Root() {
     SplashScreen.hideAsync().catch(() => {});
   }, []);
 
-  // A splash nativa (assets/splash.png) cobre a tela até o login ser conferido.
+  // esconde a splash nativa assim que o JS montou; a <Splash/> em RN assume
+  // (tela cheia de verdade) até o login ser conferido.
   useEffect(() => {
-    if (!authed.isLoading) {
-      const id = setTimeout(onReady, 120);
-      return () => clearTimeout(id);
-    }
-  }, [authed.isLoading, onReady]);
+    onReady();
+  }, [onReady]);
 
-  if (authed.isLoading) return <View style={{ flex: 1, backgroundColor: C.bg }} />;
+  if (authed.isLoading) return <Splash />;
   if (!authed.data) {
     return (
       <View style={{ flex: 1 }}>

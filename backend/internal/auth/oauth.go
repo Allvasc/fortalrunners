@@ -69,11 +69,12 @@ func (s *Service) provider(name string) (oauthProvider, bool) {
 type oauthState struct {
 	Mode string `json:"m"` // login | link
 	UID  string `json:"u,omitempty"`
+	Dest string `json:"d,omitempty"` // "mobile" → volta pro app; senão pro portal web
 	jwt.RegisteredClaims
 }
 
-func (s *Service) signState(mode, uid string) (string, error) {
-	c := oauthState{Mode: mode, UID: uid, RegisteredClaims: jwt.RegisteredClaims{
+func (s *Service) signState(mode, uid, dest string) (string, error) {
+	c := oauthState{Mode: mode, UID: uid, Dest: dest, RegisteredClaims: jwt.RegisteredClaims{
 		IssuedAt:  jwt.NewNumericDate(time.Now()),
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(10 * time.Minute)),
 		Issuer:    "fortalrunners-oauth",
@@ -95,7 +96,8 @@ func (s *Service) parseState(raw string) (oauthState, error) {
 // --- fluxo público ---
 
 // OAuthStart devolve a URL de autorização do provedor. mode: "login" ou "link".
-func (s *Service) OAuthStart(provider, mode, uid string) (string, error) {
+// dest: "mobile" faz o callback voltar pro app; qualquer outra coisa → portal web.
+func (s *Service) OAuthStart(provider, mode, uid, dest string) (string, error) {
 	p, ok := s.provider(provider)
 	if !ok {
 		return "", ErrOAuthProvider
@@ -103,44 +105,47 @@ func (s *Service) OAuthStart(provider, mode, uid string) (string, error) {
 	if mode != "link" {
 		mode = "login"
 	}
-	state, err := s.signState(mode, uid)
+	if dest != "mobile" {
+		dest = ""
+	}
+	state, err := s.signState(mode, uid, dest)
 	if err != nil {
 		return "", err
 	}
 	return p.authURL(state), nil
 }
 
-// OAuthCallback finaliza o login/vínculo social.
-func (s *Service) OAuthCallback(ctx context.Context, provider, code, rawState, ip, ua string) (User, Tokens, error) {
+// OAuthCallback finaliza o login/vínculo social. O 3º retorno é o `dest` do state.
+func (s *Service) OAuthCallback(ctx context.Context, provider, code, rawState, ip, ua string) (User, Tokens, string, error) {
 	p, ok := s.provider(provider)
 	if !ok {
-		return User{}, Tokens{}, ErrOAuthProvider
+		return User{}, Tokens{}, "", ErrOAuthProvider
 	}
 	st, err := s.parseState(rawState)
 	if err != nil {
-		return User{}, Tokens{}, err
+		return User{}, Tokens{}, "", err
 	}
 	ou, err := p.exchange(ctx, code)
 	if err != nil {
-		return User{}, Tokens{}, ErrOAuthExchange
+		return User{}, Tokens{}, "", ErrOAuthExchange
 	}
 	if ou.ProviderUID == "" {
-		return User{}, Tokens{}, ErrOAuthExchange
+		return User{}, Tokens{}, "", ErrOAuthExchange
 	}
 
 	u, err := s.resolveOAuth(ctx, provider, st, ou)
 	if err != nil {
-		return User{}, Tokens{}, err
+		return User{}, Tokens{}, "", err
 	}
 	if u.Status != "active" {
-		return User{}, Tokens{}, ErrAccountBlocked
+		return User{}, Tokens{}, "", ErrAccountBlocked
 	}
 	// Conta social + role privilegiado sem 2FA: sessão não-verificada (plano §13).
 	tk, err := s.issue(ctx, u, "", ip, ua, !privilegedNoMFA(u.Role, nil) || func() bool {
 		_, act, _ := s.store.mfaState(ctx, u.ID)
 		return act != nil
 	}())
-	return u, tk, err
+	return u, tk, st.Dest, err
 }
 
 // resolveOAuth: identidade existente → login; e-mail conhecido → vincula; novo → cria.
