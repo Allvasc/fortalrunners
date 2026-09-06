@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "FortalRunners",
+    "slug": "fortalrunners",
+    "scheme": "fortalrunners",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.allvasc.fortalrunners",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Para gravar sua corrida e conquistar território.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Para gravar sua corrida mesmo com a tela apagada.",
+        "NSMotionUsageDescription": "Para medir cadência e passos com precisão.",
+        "UIBackgroundModes": ["location"]
+      }
+    },
+    "android": {
+      "package": "com.allvasc.fortalrunners",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "ACTIVITY_RECOGNITION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION"
+      ]
+    },
+    "extra": {
+      "apiUrl": "http://localhost:8080"
+    }
+  }
+}
