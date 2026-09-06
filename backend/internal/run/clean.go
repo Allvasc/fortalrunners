@@ -16,6 +16,7 @@ const (
 
 type cleaned struct {
 	points    []Point
+	matched   []Point // traçado encaixado na malha viária (OSRM) — vazio quando desligado/sem match
 	distM     float64
 	movingS   float64
 	durS      float64

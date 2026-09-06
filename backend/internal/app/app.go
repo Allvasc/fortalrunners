@@ -27,6 +27,7 @@ import (
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/config"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/crypto"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/httpx"
+	"github.com/Allvasc/fortalrunners/backend/internal/platform/mapmatch"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/queue"
 	"github.com/Allvasc/fortalrunners/backend/internal/poi"
 	"github.com/Allvasc/fortalrunners/backend/internal/profile"
@@ -112,7 +113,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 
 	shoeSvc := shoe.NewService(pool)
 	shoe.NewHandler(shoeSvc).Register(secured)
-	runSvc := run.NewService(pool, pub, shoeSvc)
+	runSvc := run.NewService(pool, pub, shoeSvc, mapmatch.New(cfg.OSRMURL))
 	run.NewHandler(runSvc).Register(secured)
 	territory.NewHandler(pool).Register(secured)
 	ranking.NewHandler(pool).Register(secured)

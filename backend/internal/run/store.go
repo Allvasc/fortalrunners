@@ -104,6 +104,13 @@ func (s *store) create(ctx context.Context, a createArgs) (View, error) {
 	}
 
 	ptsJSON, _ := json.Marshal(a.Clean.points)
+	// A geometria da linha segue o traçado encaixado na via (OSRM) quando existe;
+	// points_jsonb guarda sempre o traçado cru do GPS (replay, export, métricas).
+	geomPts := a.Clean.points
+	if len(a.Clean.matched) >= 2 {
+		geomPts = a.Clean.matched
+	}
+	geomJSON, _ := json.Marshal(geomPts)
 	splitsJSON, _ := json.Marshal(m.Splits)
 	effortsJSON, _ := json.Marshal(m.BestEfforts)
 	if len(effortsJSON) == 0 || string(effortsJSON) == "null" {
@@ -120,12 +127,12 @@ func (s *store) create(ctx context.Context, a createArgs) (View, error) {
 			$1, $2,
 			ST_SetSRID(ST_MakeLine(ARRAY(
 				SELECT ST_MakePoint((p->>'lon')::float8, (p->>'lat')::float8, COALESCE((p->>'alt')::float8, 0))
-				FROM jsonb_array_elements($3::jsonb) WITH ORDINALITY AS e(p, ord)
+				FROM jsonb_array_elements($7::jsonb) WITH ORDINALITY AS e(p, ord)
 				ORDER BY ord
 			)), 4326),
 			$3, $4, $5, $6
 		)`
-	if _, err := tx.Exec(ctx, insTrack, a.ID, a.In.StartedAt, ptsJSON, streams, splitsJSON, effortsJSON); err != nil {
+	if _, err := tx.Exec(ctx, insTrack, a.ID, a.In.StartedAt, ptsJSON, streams, splitsJSON, effortsJSON, geomJSON); err != nil {
 		return View{}, fmt.Errorf("run: insert track: %w", err)
 	}
 

@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/id"
+	"github.com/Allvasc/fortalrunners/backend/internal/platform/mapmatch"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/queue"
 )
 
@@ -27,13 +28,17 @@ type ShoeChecker interface {
 }
 
 type Service struct {
-	store *store
-	pub   queue.Publisher
-	shoes ShoeChecker
+	store   *store
+	pub     queue.Publisher
+	shoes   ShoeChecker
+	matcher *mapmatch.Matcher
 }
 
-func NewService(pool *pgxpool.Pool, pub queue.Publisher, shoes ShoeChecker) *Service {
-	return &Service{store: newStore(pool), pub: pub, shoes: shoes}
+func NewService(pool *pgxpool.Pool, pub queue.Publisher, shoes ShoeChecker, matcher *mapmatch.Matcher) *Service {
+	if matcher == nil {
+		matcher = mapmatch.New("")
+	}
+	return &Service{store: newStore(pool), pub: pub, shoes: shoes, matcher: matcher}
 }
 
 // Ingest grava a corrida e publica run.uploaded.
@@ -78,6 +83,23 @@ func (s *Service) Ingest(ctx context.Context, userID string, in IngestInput) (Vi
 		}
 		if dup {
 			return View{}, ErrDuplicateRun
+		}
+	}
+
+	// Map-matching (plano §11): encaixa o traçado na malha viária para o
+	// território seguir os quarteirões reais. Só afeta a geometria gravada —
+	// métricas e anti-fraude continuam sobre o traçado cru do GPS. Falha é
+	// silenciosa (segue com o traçado cru).
+	if s.matcher.Enabled() {
+		src := make([]mapmatch.LonLat, len(c.points))
+		for i, p := range c.points {
+			src[i] = mapmatch.LonLat{p.Lon, p.Lat}
+		}
+		if snapped, _ := s.matcher.Match(ctx, src); len(snapped) >= 2 {
+			c.matched = make([]Point, len(snapped))
+			for i, ll := range snapped {
+				c.matched[i] = Point{Lon: ll[0], Lat: ll[1]}
+			}
 		}
 	}
 

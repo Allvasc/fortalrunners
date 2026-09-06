@@ -66,6 +66,9 @@ services:
         sync: false
       - key: APPLE_REDIRECT_URL
         sync: false
+      # base de um servidor OSRM p/ map-matching do traçado — vazio = desligado
+      - key: OSRM_URL
+        sync: false
 
   # 2. Web Frontend Portal (Gratuito)
   - type: web

@@ -47,6 +47,8 @@ type Config struct {
 	AIModel         string // modelo padrão do coach
 	WeatherAPIKey   string // chave do provedor de clima — vazio = leitura estática
 
+	OSRMURL string // base de um servidor OSRM (ex.: https://osrm.exemplo.com) — vazio = sem map-matching
+
 	CORSOrigins []string
 }
 
@@ -78,6 +80,7 @@ func Load() (Config, error) {
 		AnthropicAPIKey:          os.Getenv("ANTHROPIC_API_KEY"),
 		AIModel:                  get("AI_MODEL", "claude-sonnet-5"),
 		WeatherAPIKey:            os.Getenv("WEATHER_API_KEY"),
+		OSRMURL:                  os.Getenv("OSRM_URL"),
 		CORSOrigins:              splitCSV(get("CORS_ORIGINS", "http://localhost:5173")),
 	}
 

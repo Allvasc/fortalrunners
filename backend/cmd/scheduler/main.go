@@ -20,6 +20,7 @@ import (
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/crypto"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/db"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/logging"
+	"github.com/Allvasc/fortalrunners/backend/internal/platform/mapmatch"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/queue"
 	"github.com/Allvasc/fortalrunners/backend/internal/run"
 	"github.com/Allvasc/fortalrunners/backend/internal/shoe"
@@ -60,7 +61,7 @@ func main() {
 			ClientID: cfg.StravaClientID, ClientSecret: cfg.StravaClientSecret,
 			RedirectURL: cfg.StravaRedirectURL, WebhookVerifyToken: cfg.StravaWebhookVerifyToken,
 		},
-	}, run.NewService(pool, pub, shoe.NewService(pool)), log)
+	}, run.NewService(pool, pub, shoe.NewService(pool), mapmatch.New(cfg.OSRMURL)), log)
 
 	tick := func() {
 		if err := chl.EnsurePeriods(ctx); err != nil {
