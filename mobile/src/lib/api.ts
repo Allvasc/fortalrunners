@@ -519,6 +519,12 @@ export const api = {
     request<{ qr: { id: string; payload_sig: string; expires_at: string } }>(
       `/v1/qr/token${eventId ? `?event_id=${encodeURIComponent(eventId)}` : ""}`
     ),
+  myScans: () =>
+    request<{ scans: { id: string; athlete_id: string; username: string; kind: string; status: string; scanned_at: string }[] }>(
+      "/v1/me/scans",
+    ),
+  disputeScan: (id: string) =>
+    request<{ status: string }>(`/v1/me/scans/${encodeURIComponent(id)}/dispute`, { method: "POST" }),
 
   askAICoach: (prompt: string) =>
     request<{

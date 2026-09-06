@@ -36,6 +36,7 @@ import { RankingScreen } from "./src/screens/Ranking";
 import { ChallengesScreen } from "./src/screens/Challenges";
 import { ProfileScreen } from "./src/screens/Profile";
 import { HistoryScreen } from "./src/screens/History";
+import { CarteirinhaScreen } from "./src/screens/Carteirinha";
 import "./src/lib/recorder"; // registra a task de background no import
 
 WebBrowser.maybeCompleteAuthSession();
@@ -58,6 +59,7 @@ export type RootStack = {
   Safety: undefined;
   Settings: undefined;
   History: undefined;
+  Carteirinha: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStack>();
@@ -148,7 +150,8 @@ const NAV: { name: keyof RootStack; label: string; icon: keyof typeof Ionicons.g
   { name: "Routes", label: "Rotas", icon: "trail-sign-outline", comp: RoutesScreen },
   { name: "Social", label: "Comunidade", icon: "people-outline", comp: SocialScreen },
   { name: "Clubs", label: "Clubes", icon: "shirt-outline", comp: ClubsScreen },
-  { name: "Events", label: "Eventos & QR", icon: "qr-code-outline", comp: EventsScreen },
+  { name: "Events", label: "Eventos & QR", icon: "calendar-outline", comp: EventsScreen },
+  { name: "Carteirinha", label: "Carteirinha", icon: "card-outline", comp: CarteirinhaScreen },
   { name: "AICoach", label: "Coach IA", icon: "sparkles-outline", comp: AICoachScreen },
   { name: "Safety", label: "Segurança & SOS", icon: "shield-checkmark-outline", comp: SafetyScreen },
   { name: "Profile", label: "Perfil", icon: "person-outline", comp: ProfileScreen },
