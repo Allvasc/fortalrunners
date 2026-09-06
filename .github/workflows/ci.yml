@@ -36,6 +36,8 @@ jobs:
         run: |
           go build ./cmd/api
           go build ./cmd/worker
+          go build ./cmd/scheduler
+          go build ./cmd/migrate
 
   web:
     runs-on: ubuntu-latest

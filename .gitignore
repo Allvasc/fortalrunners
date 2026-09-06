@@ -24,6 +24,8 @@ backend/*.test
 web/node_modules/
 web/dist/
 web/.vite/
+web/*.tsbuildinfo
+web/src/*.tsbuildinfo
 
 # --- mobile (Expo / RN) ---
 mobile/node_modules/
