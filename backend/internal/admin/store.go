@@ -386,3 +386,66 @@ func (s *store) removeHazard(ctx context.Context, hazardID string) error {
 	}
 	return err
 }
+
+type refundRow struct {
+	ID          string    `json:"id"`
+	OrderID     string    `json:"order_id"`
+	AmountCents int       `json:"amount_cents"`
+	Reason      string    `json:"reason,omitempty"`
+	Status      string    `json:"status"`
+	RequestedBy string    `json:"requested_by,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+func (s *store) refundList(ctx context.Context, status string, limit int) ([]refundRow, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT id, order_id, amount_cents, COALESCE(reason,''), status, COALESCE(requested_by,''), created_at
+		FROM refunds WHERE status = $1 ORDER BY created_at ASC LIMIT $2`, status, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []refundRow
+	for rows.Next() {
+		var r refundRow
+		if err := rows.Scan(&r.ID, &r.OrderID, &r.AmountCents, &r.Reason, &r.Status, &r.RequestedBy, &r.CreatedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	return out, rows.Err()
+}
+
+// decideRefund aprova (executa) ou nega um reembolso. Aprovar marca o pedido/pagamento
+// como refunded (o estorno real no PSP entra quando o Asaas estiver plugado).
+func (s *store) decideRefund(ctx context.Context, refundID, decision, actorID string) error {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	var orderID, payID string
+	newStatus := "denied"
+	if decision == "approve" {
+		newStatus = "done"
+	}
+	err = tx.QueryRow(ctx, `
+		UPDATE refunds SET status = $2, handled_by = $3, handled_at = now()
+		WHERE id = $1 AND status = 'requested'
+		RETURNING order_id, payment_id`, refundID, newStatus, actorID).Scan(&orderID, &payID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return errNotFound
+	}
+	if err != nil {
+		return err
+	}
+	if decision == "approve" {
+		_, _ = tx.Exec(ctx, `UPDATE payments SET status = 'refunded' WHERE id = $1`, payID)
+		_, _ = tx.Exec(ctx, `UPDATE orders SET status = 'refunded', updated_at = now() WHERE id = $1`, orderID)
+		_, _ = tx.Exec(ctx, `
+			UPDATE event_prices SET sold = GREATEST(sold - 1, 0)
+			WHERE id = (SELECT price_id FROM orders WHERE id = $1)`, orderID)
+	}
+	return tx.Commit(ctx)
+}

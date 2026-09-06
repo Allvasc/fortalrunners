@@ -73,6 +73,8 @@ func (h *Handler) Register(secured *echo.Group) {
 	g.POST("/reports/:id/resolve", h.reportResolve)
 	g.GET("/hazards", h.hazardList)
 	g.POST("/hazards/:id/remove", h.hazardRemove)
+	g.GET("/refunds", h.refundList)
+	g.POST("/refunds/:id/decide", h.refundDecide)
 }
 
 // --- moderação ---
@@ -177,6 +179,35 @@ func (h *Handler) hazardRemove(c echo.Context) error {
 	}
 	h.store.audit(ctx, aid, arole, "hazard.remove", "hazard", c.Param("id"), nil, ip)
 	return c.JSON(http.StatusOK, map[string]any{"status": "removed"})
+}
+
+func (h *Handler) refundList(c echo.Context) error {
+	status := c.QueryParam("status")
+	if status == "" {
+		status = "requested"
+	}
+	list, err := h.store.refundList(c.Request().Context(), status, clampLimit(c.QueryParam("limit"), 50, 200))
+	if err != nil {
+		return internalErr(err)
+	}
+	return c.JSON(http.StatusOK, map[string]any{"refunds": list})
+}
+
+func (h *Handler) refundDecide(c echo.Context) error {
+	var in struct {
+		Decision string `json:"decision"` // approve | deny
+	}
+	_ = c.Bind(&in)
+	if in.Decision != "approve" && in.Decision != "deny" {
+		return echo.NewHTTPError(http.StatusBadRequest, "decision deve ser approve ou deny")
+	}
+	ctx := c.Request().Context()
+	aid, arole, ip := h.actor(c)
+	if err := h.store.decideRefund(ctx, c.Param("id"), in.Decision, aid); err != nil {
+		return mapErr(err)
+	}
+	h.store.audit(ctx, aid, arole, "refund."+in.Decision, "refund", c.Param("id"), nil, ip)
+	return c.JSON(http.StatusOK, map[string]any{"status": in.Decision})
 }
 
 // requireStaff barra quem não é admin nem moderator (antes mesmo do 2FA).

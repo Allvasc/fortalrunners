@@ -35,6 +35,9 @@ var (
 	ErrLotSoldOut     = errors.New("lote esgotado")
 	ErrAlreadyOrdered = errors.New("você já tem um pedido para este lote")
 	ErrBadSignature   = errors.New("assinatura do webhook inválida")
+	ErrBadCoupon      = errors.New("cupom inválido, esgotado ou expirado")
+	ErrOrderNotFound  = errors.New("pedido não encontrado")
+	ErrNotRefundable  = errors.New("pedido não é reembolsável neste estado")
 )
 
 // platformFeeCents = R$2,00 fixo + 5% (plano §15, ajustável por organizador depois).
@@ -46,6 +49,7 @@ type Order struct {
 	Kind          string    `json:"kind"`
 	Status        string    `json:"status"`
 	AmountCents   int       `json:"amount_cents"`
+	DiscountCents int       `json:"discount_cents,omitempty"`
 	EventID       string    `json:"event_id,omitempty"`
 	AsaasChargeID string    `json:"asaas_charge_id"`
 	Method        string    `json:"method"`
@@ -79,7 +83,7 @@ func normalizeMethod(m string) string {
 
 // Checkout cria um pedido para um lote de inscrição. O valor vem de event_prices,
 // nunca do cliente. idemKey (header Idempotency-Key) evita pedidos duplicados.
-func (s *Service) Checkout(ctx context.Context, userID, priceID, method, idemKey string) (*Order, error) {
+func (s *Service) Checkout(ctx context.Context, userID, priceID, method, couponCode, idemKey string) (*Order, error) {
 	method = normalizeMethod(method)
 
 	// pedido idempotente: mesma chave → devolve o pedido já criado.
@@ -118,20 +122,35 @@ func (s *Service) Checkout(ctx context.Context, userID, priceID, method, idemKey
 		return nil, ErrLotSoldOut
 	}
 
+	// cupom (opcional): resolvido e travado dentro da mesma transação.
+	discount := 0
+	var couponID *string
+	if couponCode != "" {
+		cid, disc, err := applyCoupon(ctx, tx, couponCode, eventID, amount)
+		if err != nil {
+			return nil, err
+		}
+		couponID, discount = &cid, disc
+	}
+	payable := amount - discount
+	if payable < 0 {
+		payable = 0
+	}
+
 	orderID := id.New()
 	payID := id.New()
-	fee := platformFeeCents(amount)
+	fee := platformFeeCents(payable)
 	sandbox := s.cfg.AsaasAPIKey == ""
 	asaasID := "manual_" + orderID
 	pixCode := "DEMO-PIX-" + orderID // sandbox: opaco, não é um BR Code válido
 
 	var ord Order
 	ordQ := `
-		INSERT INTO orders (id, user_id, kind, status, amount_cents, platform_fee_cents,
-		                    event_id, price_id, idempotency_key)
-		VALUES ($1, $2, 'event_registration', 'pending', $3, $4, $5, $6, NULLIF($7,''))
+		INSERT INTO orders (id, user_id, kind, status, amount_cents, discount_cents, platform_fee_cents,
+		                    event_id, price_id, coupon_id, idempotency_key)
+		VALUES ($1, $2, 'event_registration', 'pending', $3, $4, $5, $6, $7, $8, NULLIF($9,''))
 		RETURNING id, user_id, kind, status, amount_cents, created_at`
-	if err := tx.QueryRow(ctx, ordQ, orderID, userID, amount, fee, eventID, priceID, idemKey).Scan(
+	if err := tx.QueryRow(ctx, ordQ, orderID, userID, payable, discount, fee, eventID, priceID, couponID, idemKey).Scan(
 		&ord.ID, &ord.UserID, &ord.Kind, &ord.Status, &ord.AmountCents, &ord.CreatedAt,
 	); err != nil {
 		if strings.Contains(err.Error(), "idempotency_key") {
@@ -147,7 +166,7 @@ func (s *Service) Checkout(ctx context.Context, userID, priceID, method, idemKey
 	if sandbox {
 		provider = "manual"
 	}
-	if _, err := tx.Exec(ctx, payQ, payID, orderID, asaasID, provider, method, amount-fee); err != nil {
+	if _, err := tx.Exec(ctx, payQ, payID, orderID, asaasID, provider, method, payable-fee); err != nil {
 		return nil, fmt.Errorf("create payment: %w", err)
 	}
 
@@ -164,7 +183,119 @@ func (s *Service) Checkout(ctx context.Context, userID, priceID, method, idemKey
 	ord.Method = method
 	ord.PixCode = pixCode
 	ord.Sandbox = sandbox
+	ord.DiscountCents = discount
 	return &ord, nil
+}
+
+// applyCoupon valida e consome um cupom dentro da transação de checkout.
+func applyCoupon(ctx context.Context, tx pgx.Tx, code, eventID string, amount int) (string, int, error) {
+	var (
+		id, scope, discType  string
+		value, maxUses, used int
+		couponEvent          *string
+		validUntil           *time.Time
+	)
+	err := tx.QueryRow(ctx, `
+		SELECT id, scope, event_id, discount_type, value, max_uses, used, valid_until
+		FROM coupons WHERE lower(code) = lower($1) FOR UPDATE`, code).
+		Scan(&id, &scope, &couponEvent, &discType, &value, &maxUses, &used, &validUntil)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", 0, ErrBadCoupon
+	}
+	if err != nil {
+		return "", 0, err
+	}
+	if validUntil != nil && time.Now().After(*validUntil) {
+		return "", 0, ErrBadCoupon
+	}
+	if maxUses > 0 && used >= maxUses {
+		return "", 0, ErrBadCoupon
+	}
+	if scope == "event" && couponEvent != nil && *couponEvent != eventID {
+		return "", 0, ErrBadCoupon
+	}
+
+	disc := value
+	if discType == "percent" {
+		if value < 1 || value > 100 {
+			return "", 0, ErrBadCoupon
+		}
+		disc = amount * value / 100
+	}
+	if disc > amount {
+		disc = amount
+	}
+	if _, err := tx.Exec(ctx, `UPDATE coupons SET used = used + 1 WHERE id = $1`, id); err != nil {
+		return "", 0, err
+	}
+	return id, disc, nil
+}
+
+// RequestRefund abre um pedido de reembolso para um pedido pago do próprio usuário.
+// A aprovação/execução acontece no painel de admin (plano §15).
+func (s *Service) RequestRefund(ctx context.Context, userID, orderID, reason string) error {
+	var payID string
+	var amount int
+	var status string
+	err := s.pool.QueryRow(ctx, `
+		SELECT p.id, o.amount_cents, o.status
+		FROM orders o JOIN payments p ON p.order_id = o.id
+		WHERE o.id = $1 AND o.user_id = $2`, orderID, userID).Scan(&payID, &amount, &status)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ErrOrderNotFound
+	}
+	if err != nil {
+		return err
+	}
+	if status != "paid" {
+		return ErrNotRefundable
+	}
+	_, err = s.pool.Exec(ctx, `
+		INSERT INTO refunds (id, payment_id, order_id, amount_cents, reason, status, requested_by)
+		VALUES ($1, $2, $3, $4, NULLIF($5,''), 'requested', $6)`,
+		id.New(), payID, orderID, amount, reason, userID)
+	return err
+}
+
+// --- assinatura premium ---
+
+func (s *Service) Subscription(ctx context.Context, userID string) (map[string]any, error) {
+	var plan, status string
+	var end *time.Time
+	err := s.pool.QueryRow(ctx,
+		`SELECT plan, status, current_period_end FROM subscriptions WHERE user_id = $1`, userID).
+		Scan(&plan, &status, &end)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return map[string]any{"active": false}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return map[string]any{"active": status == "active", "plan": plan, "status": status, "current_period_end": end}, nil
+}
+
+func (s *Service) Subscribe(ctx context.Context, userID, plan string) error {
+	if plan != "premium_monthly" && plan != "premium_yearly" {
+		plan = "premium_monthly"
+	}
+	end := time.Now().AddDate(0, 1, 0)
+	if plan == "premium_yearly" {
+		end = time.Now().AddDate(1, 0, 0)
+	}
+	_, err := s.pool.Exec(ctx, `
+		INSERT INTO subscriptions (user_id, plan, status, current_period_end)
+		VALUES ($1, $2, 'active', $3)
+		ON CONFLICT (user_id) DO UPDATE SET plan = EXCLUDED.plan, status = 'active',
+		    current_period_end = EXCLUDED.current_period_end, cancel_at = NULL, updated_at = now()`,
+		userID, plan, end)
+	return err
+}
+
+func (s *Service) CancelSubscription(ctx context.Context, userID string) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE subscriptions SET status = 'canceled', cancel_at = current_period_end, updated_at = now()
+		WHERE user_id = $1`, userID)
+	return err
 }
 
 func (s *Service) orderByIdemKey(ctx context.Context, userID, idemKey string) (*Order, error) {

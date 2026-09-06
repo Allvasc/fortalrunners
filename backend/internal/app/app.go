@@ -25,6 +25,7 @@ import (
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/httpx"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/queue"
 	"github.com/Allvasc/fortalrunners/backend/internal/poi"
+	"github.com/Allvasc/fortalrunners/backend/internal/profile"
 	"github.com/Allvasc/fortalrunners/backend/internal/qr"
 	"github.com/Allvasc/fortalrunners/backend/internal/ranking"
 	"github.com/Allvasc/fortalrunners/backend/internal/report"
@@ -113,6 +114,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	qr.NewHandler(qr.NewService(pool, cfg.JWTSecret)).RegisterRoutes(secured)
 	report.NewHandler(report.NewService(pool)).Register(secured)
 	hazard.NewHandler(hazard.NewService(pool)).Register(secured)
+	profile.NewHandler(profile.NewService(pool)).Register(secured)
 	paymentH := payment.NewHandler(payment.NewService(pool, payment.Config{
 		AsaasAPIKey:        cfg.AsaasAPIKey,
 		AsaasWebhookSecret: cfg.AsaasWebhookSecret,
