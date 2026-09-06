@@ -48,7 +48,7 @@
     },
     "android": {
       "package": "com.allvasc.fortalrunners",
-      "versionCode": 9,
+      "versionCode": 10,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#06181A"

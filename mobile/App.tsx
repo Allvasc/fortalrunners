@@ -37,6 +37,7 @@ import { ChallengesScreen } from "./src/screens/Challenges";
 import { ProfileScreen } from "./src/screens/Profile";
 import { HistoryScreen } from "./src/screens/History";
 import { CarteirinhaScreen } from "./src/screens/Carteirinha";
+import { ShoesScreen } from "./src/screens/Shoes";
 import "./src/lib/recorder"; // registra a task de background no import
 
 WebBrowser.maybeCompleteAuthSession();
@@ -60,6 +61,7 @@ export type RootStack = {
   Settings: undefined;
   History: undefined;
   Carteirinha: undefined;
+  Shoes: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStack>();
@@ -145,6 +147,7 @@ const NAV: { name: keyof RootStack; label: string; icon: keyof typeof Ionicons.g
   { name: "Map", label: "Mapa", icon: "map-outline", comp: Map },
   { name: "Ranking", label: "Ranking", icon: "trophy-outline", comp: RankingScreen },
   { name: "Challenges", label: "Desafios", icon: "flame-outline", comp: ChallengesScreen },
+  { name: "Shoes", label: "Meus tênis", icon: "footsteps-outline", comp: ShoesScreen },
   { name: "History", label: "Histórico", icon: "time-outline", comp: HistoryScreen },
   { name: "Landmarks", label: "Marcos & Selos", icon: "ribbon-outline", comp: Landmarks },
   { name: "Routes", label: "Rotas", icon: "trail-sign-outline", comp: RoutesScreen },

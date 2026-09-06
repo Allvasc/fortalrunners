@@ -14,6 +14,7 @@ import { LandmarksPage } from "./pages/Landmarks";
 import { RoutesPage } from "./pages/Routes";
 import { SocialPage } from "./pages/Social";
 import { ClubsPage } from "./pages/Clubs";
+import { ShoesPage } from "./pages/Shoes";
 
 import { EventsPage } from "./pages/Events";
 import { AICoachPage } from "./pages/AICoach";
@@ -54,6 +55,7 @@ function Portal() {
           <NavLink to="/rotas">Rotas</NavLink>
           <NavLink to="/social">Social</NavLink>
           <NavLink to="/clubes">Clubes</NavLink>
+          <NavLink to="/tenis">Tênis</NavLink>
           <NavLink to="/eventos">Eventos & QR</NavLink>
           <NavLink to="/coach">Coach IA</NavLink>
           <NavLink to="/perfil">Perfil</NavLink>
@@ -95,6 +97,7 @@ function Portal() {
           <Route path="/rotas" element={<RoutesPage />} />
           <Route path="/social" element={<SocialPage />} />
           <Route path="/clubes" element={<ClubsPage />} />
+          <Route path="/tenis" element={<ShoesPage />} />
           <Route path="/eventos" element={<EventsPage />} />
           <Route path="/coach" element={<AICoachPage />} />
           <Route path="/perfil" element={<Profile />} />

@@ -138,6 +138,24 @@ h3 {
   margin: 6px 0 12px;
 }
 .btn.sm { height: 30px; padding: 0 10px; font-size: 0.78rem; }
+.shoe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  gap: 1rem;
+}
+.shoe-card { display: flex; flex-direction: column; gap: 0.5rem; }
+.shoe-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; }
+.shoe-bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.shoe-bar i { display: block; height: 100%; }
+.shoe-figs {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-top: 1px solid var(--line);
+  padding-top: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
 
 /* --- controles --- */
 .btn {

@@ -585,6 +585,12 @@ export const api = {
       "/v1/coach/summary",
     ),
 
+  // --- tênis ---
+  shoes: () => request<{ shoes: ShoeItem[] }>("/v1/shoes"),
+  createShoe: (b: { brand: string; model: string; nickname?: string; purchase_price_cents?: number; lifespan_goal_m?: number }) =>
+    request<ShoeItem>("/v1/shoes", { method: "POST", body: JSON.stringify(b) }),
+  retireShoe: (id: string) => request<void>(`/v1/shoes/${encodeURIComponent(id)}/retire`, { method: "POST" }),
+
   // --- portal de organizadores ---
   orgMe: () => request<{ organizers: OrgSummary[] }>("/v1/organizer/me"),
   orgCreateEvent: (b: OrgEventInput) =>
@@ -622,6 +628,22 @@ export const api = {
 };
 
 export type OrgSummary = { id: string; name: string; kind: string; plan: string; status: string };
+
+export type ShoeItem = {
+  id: string;
+  brand: string;
+  model: string;
+  nickname?: string;
+  purchase_price_cents?: number;
+  lifespan_goal_m: number;
+  status: string;
+  total_distance_m: number;
+  run_count: number;
+  total_moving_s: number;
+  life_pct: number;
+  cost_per_km_cents?: number;
+  alert?: string;
+};
 export type OrgEventInput = {
   slug: string;
   title: string;

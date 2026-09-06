@@ -35,6 +35,22 @@ export type WeatherReport = {
   advice: string;
 };
 
+export type Shoe = {
+  id: string;
+  brand: string;
+  model: string;
+  nickname?: string;
+  purchase_price_cents?: number;
+  lifespan_goal_m: number;
+  status: string;
+  total_distance_m: number;
+  run_count: number;
+  total_moving_s: number;
+  life_pct: number;
+  cost_per_km_cents?: number;
+  alert?: string;
+};
+
 export type Friend = {
   id: string;
   athlete_id: string;
@@ -523,6 +539,12 @@ export const api = {
     request<{ scans: { id: string; athlete_id: string; username: string; kind: string; status: string; scanned_at: string }[] }>(
       "/v1/me/scans",
     ),
+
+  // --- tênis ---
+  shoes: () => request<{ shoes: Shoe[] }>("/v1/shoes"),
+  createShoe: (b: { brand: string; model: string; nickname?: string; purchase_price_cents?: number; lifespan_goal_m?: number }) =>
+    request<Shoe>("/v1/shoes", { method: "POST", body: JSON.stringify(b) }),
+  retireShoe: (id: string) => request<void>(`/v1/shoes/${encodeURIComponent(id)}/retire`, { method: "POST" }),
   disputeScan: (id: string) =>
     request<{ status: string }>(`/v1/me/scans/${encodeURIComponent(id)}/dispute`, { method: "POST" }),
 
