@@ -130,4 +130,6 @@ export const api = {
   lifetime: () => request<Lifetime>("/v1/me/lifetime"),
   territories: () =>
     request<{ type: "FeatureCollection"; features: unknown[] }>("/v1/territories?scope=me"),
+  coverage: () =>
+    request<{ city: { pct: number; covered_cells: number; total_cells: number } }>("/v1/coverage"),
 };

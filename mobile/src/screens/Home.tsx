@@ -12,6 +12,7 @@ export function Home({ navigation }: Props) {
   const qc = useQueryClient();
   const me = useQuery<PublicUser>({ queryKey: ["me"], queryFn: api.me });
   const life = useQuery({ queryKey: ["lifetime"], queryFn: api.lifetime });
+  const cov = useQuery({ queryKey: ["coverage"], queryFn: api.coverage });
   const runs = useQuery({ queryKey: ["runs"], queryFn: () => api.runs(8) });
 
   return (
@@ -35,7 +36,7 @@ export function Home({ navigation }: Props) {
         <Tile v={String(life.data?.run_count ?? 0)} l="corridas" />
         <Tile v={km(life.data?.total_distance_m)} l="km totais" />
         <Tile v={area(life.data?.territory_area_m2)} l="território" />
-        <Tile v={`${life.data?.current_streak_days ?? 0} d`} l="sequência" />
+        <Tile v={`${cov.data?.city.pct ?? 0}%`} l="de Fortaleza" />
       </View>
 
       <TouchableOpacity style={s.cta} onPress={() => navigation.navigate("Recording")}>

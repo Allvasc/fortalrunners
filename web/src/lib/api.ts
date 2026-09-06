@@ -301,6 +301,12 @@ export const api = {
 
   leaderboardGlobal: () => request<Leaderboard>("/v1/leaderboards/global"),
 
+  coverage: () =>
+    request<{
+      city: { total_cells: number; covered_cells: number; pct: number };
+      neighborhoods: { neighborhood_id: string; name: string; total_cells: number; covered_cells: number; pct: number }[];
+    }>("/v1/coverage"),
+
   lifetime: () => request<Lifetime>("/v1/me/lifetime"),
   records: () => request<{ records: PersonalRecord[] }>("/v1/me/records"),
 

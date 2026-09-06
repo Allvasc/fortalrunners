@@ -4,6 +4,7 @@ import { area, int } from "../lib/format";
 
 export function Ranking() {
   const q = useQuery({ queryKey: ["leaderboard", "global"], queryFn: api.leaderboardGlobal });
+  const cov = useQuery({ queryKey: ["coverage"], queryFn: api.coverage });
 
   return (
     <div className="page">
@@ -14,6 +15,28 @@ export function Ranking() {
           posição reflete tudo que você já conquistou, não uma semana.
         </p>
       </header>
+
+      {cov.data && (
+        <section>
+          <h2>Sua cobertura de Fortaleza</h2>
+          <p className="muted">
+            {cov.data.city.pct}% da cidade — {int(cov.data.city.covered_cells)} de{" "}
+            {int(cov.data.city.total_cells)} células.
+          </p>
+          <ul className="lb tight">
+            {[...cov.data.neighborhoods]
+              .sort((a, b) => b.pct - a.pct)
+              .map((n) => (
+                <li key={n.neighborhood_id}>
+                  <div className="lb-row">
+                    <span className="nm">{n.name}</span>
+                    <span className="mv">{n.pct}%</span>
+                  </div>
+                </li>
+              ))}
+          </ul>
+        </section>
+      )}
 
       {q.isLoading && <p className="muted">Carregando…</p>}
       {q.isError && <p className="err">Não foi possível carregar o ranking.</p>}
