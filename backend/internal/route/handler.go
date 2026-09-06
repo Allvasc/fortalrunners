@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 
@@ -27,7 +28,16 @@ func (h *Handler) Register(g *echo.Group) {
 
 func (h *Handler) list(c echo.Context) error {
 	limit, _ := strconv.Atoi(c.QueryParam("limit"))
-	routes, err := h.svc.ListRoutes(c.Request().Context(), limit)
+	var bbox [4]float64
+	if raw := c.QueryParam("bbox"); raw != "" {
+		p := strings.Split(raw, ",")
+		if len(p) == 4 {
+			for i := range p {
+				bbox[i], _ = strconv.ParseFloat(strings.TrimSpace(p[i]), 64)
+			}
+		}
+	}
+	routes, err := h.svc.ListRoutes(c.Request().Context(), limit, bbox)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "erro ao listar rotas")
 	}

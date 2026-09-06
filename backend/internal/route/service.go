@@ -12,11 +12,11 @@ func NewService(store *Store) *Service {
 	return &Service{store: store}
 }
 
-func (s *Service) ListRoutes(ctx context.Context, limit int) ([]Route, error) {
+func (s *Service) ListRoutes(ctx context.Context, limit int, bbox [4]float64) ([]Route, error) {
 	if limit <= 0 || limit > 200 {
 		limit = 50
 	}
-	return s.store.ListRoutes(ctx, limit)
+	return s.store.ListRoutes(ctx, limit, bbox)
 }
 
 func (s *Service) GetRoute(ctx context.Context, routeID string) (*Route, []Review, error) {

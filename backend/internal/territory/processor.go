@@ -44,6 +44,12 @@ func (p *Processor) Process(ctx context.Context, runID string) {
 	if !ok {
 		// corrida válida, mas sem laço fechado (ou área abaixo do mínimo).
 		_ = p.store.finishRun(ctx, runID, "valid", 0, 0, "")
+		// marcos históricos são detectados por proximidade do traçado — não
+		// dependem de ter fechado território (plano §3).
+		if err := p.store.autoCheckinLandmarks(ctx, ri.UserID, runID); err != nil {
+			log.Warn("territory: autoCheckinLandmarks falhou", "err", err)
+		}
+		p.store.recordFeed(ctx, ri.UserID, "run", runID, map[string]any{"area_m2": 0})
 		log.Info("territory: sem conquista", "area_m2", areaM2)
 		return
 	}

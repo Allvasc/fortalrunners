@@ -196,6 +196,20 @@ func (s *Service) ConfirmScan(ctx context.Context, ownerID, scanID string) error
 	return nil
 }
 
+// DisputeScan: o dono do ID contesta uma leitura que não reconhece.
+func (s *Service) DisputeScan(ctx context.Context, ownerID, scanID string) error {
+	tag, err := s.pool.Exec(ctx,
+		`UPDATE scan_events SET status = 'disputed'
+		 WHERE id = $1 AND athlete_id = $2 AND status IN ('recorded','pending')`, scanID, ownerID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrBadToken
+	}
+	return nil
+}
+
 // MyScans devolve o histórico de leituras da conta do usuário (transparência / antifraude).
 func (s *Service) MyScans(ctx context.Context, ownerID string, limit int) ([]ScanResult, error) {
 	if limit <= 0 || limit > 100 {

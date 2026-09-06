@@ -34,6 +34,7 @@ import (
 	"github.com/Allvasc/fortalrunners/backend/internal/ranking"
 	"github.com/Allvasc/fortalrunners/backend/internal/realtime"
 	"github.com/Allvasc/fortalrunners/backend/internal/report"
+	"github.com/Allvasc/fortalrunners/backend/internal/riskzone"
 	"github.com/Allvasc/fortalrunners/backend/internal/route"
 	"github.com/Allvasc/fortalrunners/backend/internal/run"
 	"github.com/Allvasc/fortalrunners/backend/internal/safety"
@@ -121,6 +122,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	routeSvc := route.NewService(route.NewStore(pool))
 	route.NewHandler(routeSvc).Register(secured)
 	poi.NewHandler(poi.NewStore(pool)).Register(secured)
+	riskzone.NewHandler(pool).Register(secured)
 	social.NewHandler(social.NewService(pool)).Register(secured)
 	club.NewHandler(club.NewService(pool)).Register(secured)
 	safetyH := safety.NewHandler(safety.NewService(pool, box, publicWebURL, log))

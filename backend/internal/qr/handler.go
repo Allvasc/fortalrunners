@@ -22,6 +22,7 @@ func (h *Handler) RegisterRoutes(g *echo.Group) {
 	// nomes do plano §10
 	g.GET("/me/qr", h.getToken)
 	g.GET("/me/scans", h.myScans)
+	g.POST("/me/scans/:id/dispute", h.dispute)
 	g.POST("/scan", h.scan)
 	g.POST("/scan/confirm", h.confirm)
 	// aliases usados pelos clientes atuais
@@ -80,6 +81,13 @@ func (h *Handler) confirm(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "leitura pendente não encontrada")
 	}
 	return c.JSON(http.StatusOK, map[string]any{"status": "recorded"})
+}
+
+func (h *Handler) dispute(c echo.Context) error {
+	if err := h.svc.DisputeScan(c.Request().Context(), auth.UserID(c), c.Param("id")); err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "leitura não encontrada")
+	}
+	return c.JSON(http.StatusOK, map[string]any{"status": "disputed"})
 }
 
 func (h *Handler) myScans(c echo.Context) error {

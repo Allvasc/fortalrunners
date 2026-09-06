@@ -49,7 +49,7 @@ func NewStore(pool *pgxpool.Pool) *Store {
 	return &Store{pool: pool}
 }
 
-func (s *Store) ListRoutes(ctx context.Context, limit int) ([]Route, error) {
+func (s *Store) ListRoutes(ctx context.Context, limit int, bbox [4]float64) ([]Route, error) {
 	query := `
 		SELECT
 			r.id, r.created_by, r.name, COALESCE(r.description, ''), r.distance_m,
@@ -59,11 +59,13 @@ func (s *Store) ListRoutes(ctx context.Context, limit int) ([]Route, error) {
 			r.created_at
 		FROM routes r
 		LEFT JOIN route_reviews rr ON rr.route_id = r.id AND rr.status = 'approved'
+		WHERE ($2 = 0 AND $3 = 0 AND $4 = 0 AND $5 = 0
+		       OR r.geom && ST_MakeEnvelope($2,$3,$4,$5,4326))
 		GROUP BY r.id, r.created_by, r.name, r.description, r.distance_m, r.surface, r.is_official, r.geom, r.created_at
 		ORDER BY r.is_official DESC, r.created_at DESC
 		LIMIT $1
 	`
-	rows, err := s.pool.Query(ctx, query, limit)
+	rows, err := s.pool.Query(ctx, query, limit, bbox[0], bbox[1], bbox[2], bbox[3])
 	if err != nil {
 		return nil, fmt.Errorf("list routes query: %w", err)
 	}
