@@ -58,7 +58,7 @@ export function SocialPage() {
         <p style={{ fontFamily: "var(--f-mono)", fontSize: "0.8rem", color: "var(--teal)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
           FortalRunners · Comunidade
         </p>
-        <h1 style={{ fontFamily: "var(--f-display)", fontSize: "2.2rem", fontWeight: 700, margin: "0.3rem 0 0.5rem" }}>
+        <h1 style={{ fontFamily: "var(--f-display)", fontSize: "clamp(1.6rem, 5vw, 2.2rem)", fontWeight: 700, margin: "0.3rem 0 0.5rem" }}>
           Feed Social & Amigos
         </h1>
         <p style={{ color: "var(--ink-soft)", maxWidth: "60ch" }}>

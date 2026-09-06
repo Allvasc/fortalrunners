@@ -877,6 +877,9 @@ table.splits .bar-cell {
 @media (max-width: 720px) {
   .app {
     grid-template-columns: 1fr;
+    /* sem isto o align-content:stretch do grid infla a linha da rail p/ ~metade
+       da tela quando o conteúdo é curto */
+    grid-template-rows: auto 1fr;
   }
   /* rail vira uma barra fixa no topo com nav em rolagem horizontal */
   .rail {
@@ -887,6 +890,7 @@ table.splits .bar-cell {
     max-width: 100vw;
     overflow: hidden;
     height: auto;
+    align-self: start;
     padding: 8px 10px;
     gap: 8px;
     flex-direction: row;

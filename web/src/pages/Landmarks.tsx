@@ -80,7 +80,7 @@ export function LandmarksPage() {
         <p style={{ fontFamily: "var(--f-mono)", fontSize: "0.8rem", color: "var(--teal)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
           FortalRunners · Conquistas da Cidade
         </p>
-        <h1 style={{ fontFamily: "var(--f-display)", fontSize: "2.2rem", fontWeight: 700, margin: "0.3rem 0 0.5rem" }}>
+        <h1 style={{ fontFamily: "var(--f-display)", fontSize: "clamp(1.6rem, 5vw, 2.2rem)", fontWeight: 700, margin: "0.3rem 0 0.5rem" }}>
           Marcos Históricos & Selos
         </h1>
         <p style={{ color: "var(--ink-soft)", maxWidth: "60ch" }}>
@@ -116,7 +116,7 @@ export function LandmarksPage() {
           <h3 style={{ fontFamily: "var(--f-display)", fontSize: "1.1rem", marginBottom: "0.8rem" }}>
             Coleções de Fortaleza
           </h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(240px, 100%), 1fr))", gap: "1rem" }}>
             <div
               onClick={() => setSelectedCol(null)}
               style={{
@@ -172,7 +172,7 @@ export function LandmarksPage() {
         <h3 style={{ fontFamily: "var(--f-display)", fontSize: "1.1rem", marginBottom: "1rem" }}>
           {selectedCol ? "Marcos da Coleção" : "Todos os Marcos"} ({filteredLandmarks?.length})
         </h3>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1.2rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(260px, 100%), 1fr))", gap: "1.2rem" }}>
           {filteredLandmarks?.map((lm) => (
             <div
               key={lm.id}

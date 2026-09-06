@@ -58,12 +58,12 @@ export function ClubsPage() {
 
   return (
     <div className="page">
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem", borderBottom: "1px solid var(--line)", paddingBottom: "1rem" }}>
-        <div>
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem", marginBottom: "2rem", borderBottom: "1px solid var(--line)", paddingBottom: "1rem" }}>
+        <div style={{ flex: "1 1 240px", minWidth: 0 }}>
           <p style={{ fontFamily: "var(--f-mono)", fontSize: "0.8rem", color: "var(--teal)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
             FortalRunners · Equipes & Grupos
           </p>
-          <h1 style={{ fontFamily: "var(--f-display)", fontSize: "2.2rem", fontWeight: 700, margin: "0.3rem 0 0.5rem" }}>
+          <h1 style={{ fontFamily: "var(--f-display)", fontSize: "clamp(1.6rem, 5vw, 2.2rem)", fontWeight: 700, margin: "0.3rem 0 0.5rem" }}>
             Clubes de Corrida
           </h1>
           <p style={{ color: "var(--ink-soft)", maxWidth: "60ch" }}>
@@ -74,6 +74,7 @@ export function ClubsPage() {
         <button
           onClick={() => setShowCreate((v) => !v)}
           style={{
+            flexShrink: 0,
             background: "var(--teal)",
             color: "#fff",
             border: "none",
@@ -81,6 +82,7 @@ export function ClubsPage() {
             borderRadius: "8px",
             fontWeight: 600,
             fontSize: "0.9rem",
+            whiteSpace: "nowrap",
             cursor: "pointer",
           }}
         >
@@ -135,7 +137,7 @@ export function ClubsPage() {
       )}
 
       {/* Clubs Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1.2rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(260px, 100%), 1fr))", gap: "1.2rem" }}>
         {clubs.map((c) => (
           <div
             key={c.id}
