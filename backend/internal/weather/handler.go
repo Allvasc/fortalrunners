@@ -55,10 +55,26 @@ type Handler struct {
 	provider Provider
 }
 
+// fallbackProvider tenta o provedor real e cai no estático em qualquer erro,
+// para o endpoint nunca ficar indisponível por causa do clima.
+type fallbackProvider struct {
+	primary  Provider
+	fallback Provider
+}
+
+func (f fallbackProvider) Current(ctx context.Context, lat, lng float64) (*Report, error) {
+	if r, err := f.primary.Current(ctx, lat, lng); err == nil {
+		return r, nil
+	}
+	return f.fallback.Current(ctx, lat, lng)
+}
+
 func NewHandler(apiKey string) *Handler {
-	// TODO: quando apiKey != "" instanciar o provedor real (FUNCEME/INMET/OpenWeather).
-	_ = apiKey
-	return &Handler{provider: staticProvider{}}
+	if apiKey == "" {
+		return &Handler{provider: staticProvider{}}
+	}
+	real := openWeatherProvider{key: apiKey, client: &http.Client{Timeout: 4 * time.Second}}
+	return &Handler{provider: fallbackProvider{primary: real, fallback: staticProvider{}}}
 }
 
 func (h *Handler) Register(g *echo.Group) {
