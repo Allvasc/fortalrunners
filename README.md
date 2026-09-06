@@ -115,6 +115,7 @@ Ver `docs/plano.html` § 16.
   - ✅ **passaporte digital & QR code** (`internal/qr`): geração de tokens QR rotativos (~45s) para estações de largada e kit do evento (`/v1/qr/token`, `/v1/qr/scan`)
   - ✅ **checkout & pagamentos** (`internal/payment`): cobranças PIX Copy&Paste e gateway Asaas com confirmação via webhook (`POST /v1/payments/checkout`)
   - ✅ **coach IA fortalrunners** (`internal/ai`): recomendações personalizadas de treino, vestuário, hidratação e horários ideais para corridas em Fortaleza (`POST /v1/ai/coach`); UI web (`/coach`) e mobile (`AICoach`)
+  - ✅ **wearables & sincronização de saúde** (`internal/integration/wearables.go`): ponte on-device para integração e sincronização com Apple Health e Health Connect (`POST /v1/integrations/health/sync`)
 
 ## Convenções
 
