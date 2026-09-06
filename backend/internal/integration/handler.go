@@ -20,7 +20,7 @@ func (h *Handler) RegisterSecured(g *echo.Group) {
 	g.GET("/integrations/:provider/connect", h.connect)
 	g.GET("/integrations/:provider/callback", h.callback)
 	g.POST("/integrations/:provider/sync", h.sync)
-	g.POST("/integrations/health/sync", h.syncHealthData)
+	g.POST("/integrations/health/sync", h.svc.IngestHealth)
 	g.DELETE("/integrations/:provider", h.disconnect)
 }
 

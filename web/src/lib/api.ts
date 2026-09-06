@@ -587,9 +587,11 @@ export type PaymentOrder = {
   kind: string;
   status: string;
   amount_cents: number;
+  event_id?: string;
   asaas_charge_id: string;
+  method?: string;
   pix_code?: string;
-  qr_code_url?: string;
+  sandbox?: boolean;
   created_at: string;
 };
 
@@ -597,8 +599,9 @@ export type AICoachResponse = {
   id: string;
   message: string;
   tips: string[];
-  advice: string;
-  weather: string;
+  source: "ia" | "fallback";
+  disclaimer?: string;
+  prompt_version?: string;
   created_at: string;
 };
 
