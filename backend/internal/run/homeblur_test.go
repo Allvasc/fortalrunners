@@ -8,10 +8,10 @@ func TestDropWithinRadius(t *testing.T) {
 	home := struct{ lat, lng float64 }{-3.7319, -38.5267}
 
 	// ~11m por 0.0001° de latitude em Fortaleza.
-	inside1 := pt(home.lat+0.0002, home.lng, 0)        // ~22 m do centro
-	inside2 := pt(home.lat, home.lng+0.0003, 10)       // ~33 m
-	outside1 := pt(home.lat+0.0060, home.lng, 20)      // ~665 m
-	outside2 := pt(home.lat, home.lng+0.0100, 30)      // ~1.1 km
+	inside1 := pt(home.lat+0.0002, home.lng, 0)   // ~22 m do centro
+	inside2 := pt(home.lat, home.lng+0.0003, 10)  // ~33 m
+	outside1 := pt(home.lat+0.0060, home.lng, 20) // ~665 m
+	outside2 := pt(home.lat, home.lng+0.0100, 30) // ~1.1 km
 
 	pts := []Point{inside1, inside2, outside1, outside2}
 	got := dropWithinRadius(append([]Point(nil), pts...), home.lat, home.lng, 150)

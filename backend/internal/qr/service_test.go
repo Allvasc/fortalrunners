@@ -8,7 +8,8 @@ import (
 )
 
 // mintPayload replica o formato emitido por GetToken sem tocar no banco:
-//   fr1.<base64url(user_id|exp_unix|nonce)>.<hmac_hex>
+//
+//	fr1.<base64url(user_id|exp_unix|nonce)>.<hmac_hex>
 func (s *Service) mintPayload(userID string, exp time.Time) string {
 	body := base64.RawURLEncoding.EncodeToString([]byte(
 		userID + "|" + strconv.FormatInt(exp.Unix(), 10) + "|" + base64.RawURLEncoding.EncodeToString([]byte("nonce1234")),

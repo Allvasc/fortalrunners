@@ -34,8 +34,8 @@ func New(baseURL string) *Matcher {
 func (m *Matcher) Enabled() bool { return m.baseURL != "" }
 
 type osrmResp struct {
-	Code       string `json:"code"`
-	Matchings  []struct {
+	Code      string `json:"code"`
+	Matchings []struct {
 		Geometry struct {
 			Coordinates []LonLat `json:"coordinates"`
 		} `json:"geometry"`

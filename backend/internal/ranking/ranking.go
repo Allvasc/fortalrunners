@@ -257,11 +257,11 @@ func (h *Handler) evolution(c echo.Context) error {
 	}
 	defer rows.Close()
 	type week struct {
-		Week       string  `json:"week"`
-		DistanceM  int64   `json:"distance_m"`
-		AreaM2     float64 `json:"area_m2"`
-		NewBlocks  int     `json:"new_blocks"`
-		Runs       int     `json:"runs"`
+		Week      string  `json:"week"`
+		DistanceM int64   `json:"distance_m"`
+		AreaM2    float64 `json:"area_m2"`
+		NewBlocks int     `json:"new_blocks"`
+		Runs      int     `json:"runs"`
 	}
 	out := []week{}
 	for rows.Next() {
