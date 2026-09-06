@@ -57,7 +57,7 @@ export function ClubsPage() {
   }
 
   return (
-    <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "1.5rem" }}>
+    <div className="page">
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem", borderBottom: "1px solid var(--line)", paddingBottom: "1rem" }}>
         <div>
           <p style={{ fontFamily: "var(--f-mono)", fontSize: "0.8rem", color: "var(--teal)", textTransform: "uppercase", letterSpacing: "0.1em" }}>

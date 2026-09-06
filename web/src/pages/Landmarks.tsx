@@ -23,7 +23,7 @@ export function LandmarksPage() {
     loadData();
   }, []);
 
-  const handleCheckin = (lm: Landmark) => {
+  const handleCheckin = (lm: Landmark, photo: File) => {
     if (!navigator.geolocation) {
       alert("Geolocalização não suportada pelo seu navegador.");
       return;
@@ -32,8 +32,8 @@ export function LandmarksPage() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          await api.landmarkCheckin(lm.id, pos.coords.latitude, pos.coords.longitude);
-          alert(`Selo "${lm.name}" desbloqueado com sucesso! 🎉`);
+          await api.landmarkCheckin(lm.id, pos.coords.latitude, pos.coords.longitude, photo);
+          alert(`Foto do marco "${lm.name}" enviada para revisão. O selo é concedido após a aprovação.`);
           loadData();
         } catch (err: any) {
           alert(err.message || "Não foi possível realizar o check-in.");
@@ -74,7 +74,7 @@ export function LandmarksPage() {
     : 0;
 
   return (
-    <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "1.5rem" }}>
+    <div className="page">
       {/* Header */}
       <header style={{ marginBottom: "2rem", borderBottom: "1px solid var(--line)", paddingBottom: "1rem" }}>
         <p style={{ fontFamily: "var(--f-mono)", fontSize: "0.8rem", color: "var(--teal)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
@@ -220,22 +220,35 @@ export function LandmarksPage() {
                 </span>
 
                 {!lm.checked_in && (
-                  <button
-                    onClick={() => handleCheckin(lm)}
-                    disabled={checkingId === lm.id}
+                  <label
                     style={{
+                      display: "inline-flex",
+                      alignItems: "center",
                       background: "var(--teal)",
                       color: "#fff",
-                      border: "none",
                       padding: "0.4rem 0.8rem",
                       borderRadius: "6px",
                       fontSize: "0.8rem",
                       fontWeight: 600,
-                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      cursor: checkingId === lm.id ? "wait" : "pointer",
+                      opacity: checkingId === lm.id ? 0.6 : 1,
                     }}
                   >
-                    {checkingId === lm.id ? "Verificando..." : "Check-in GPS"}
-                  </button>
+                    {checkingId === lm.id ? "Enviando…" : "Check-in com foto"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      hidden
+                      disabled={checkingId === lm.id}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleCheckin(lm, f);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
                 )}
                 {lm.checked_in && lm.checked_in_at && (
                   <span style={{ fontSize: "0.75rem", color: "var(--good)", fontWeight: 600 }}>

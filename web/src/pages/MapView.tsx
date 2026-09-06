@@ -171,14 +171,14 @@ export function MapView() {
           <span className="v">{area(total)}</span>
           <span className="l">cobertos</span>
         </div>
-        <div style={{ display: "flex", gap: "0.3rem" }}>
+        <div className="ov-row">
           {(["me", "friends"] as const).map((s) => (
             <button
               key={s}
               className={`btn sm ${scope === s ? "primary" : "ghost"}`}
               onClick={() => setScope(s)}
             >
-              {s === "me" ? "Meu mapa" : "Amigos"}
+              {s === "me" ? "Meu" : "Amigos"}
             </button>
           ))}
         </div>
@@ -186,10 +186,10 @@ export function MapView() {
           className={`btn sm ${showHeat ? "primary" : "ghost"}`}
           onClick={() => setShowHeat((v) => !v)}
         >
-          Calor {showHeat ? "on" : "off"}
+          Mapa de calor {showHeat ? "●" : "○"}
         </button>
         {showHeat && (
-          <div style={{ display: "flex", gap: "0.3rem" }}>
+          <div className="ov-row">
             {(["me", "friends", "city"] as const).map((s) => (
               <button
                 key={s}
@@ -205,19 +205,32 @@ export function MapView() {
           className={`btn sm ${showLandmarks ? "primary" : "ghost"}`}
           onClick={() => setShowLandmarks((v) => !v)}
         >
-          Marcos {showLandmarks ? "on" : "off"}
+          Marcos {showLandmarks ? "●" : "○"}
         </button>
         <button
           className={`btn sm ${showPois ? "primary" : "ghost"}`}
           onClick={() => setShowPois((v) => !v)}
         >
-          Apoio 💧🚾 {showPois ? "on" : "off"}
+          Bebedouros & banheiros {showPois ? "●" : "○"}
         </button>
 
         {weather.data && (
-          <div style={{ marginTop: "0.5rem", padding: "0.6rem 0.8rem", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "8px", fontSize: "0.8rem" }}>
-            <div style={{ fontWeight: 700, color: "var(--teal)" }}>☀️ {weather.data.city} · {weather.data.temp_c}°C</div>
-            <div style={{ color: "var(--ink-soft)" }}>Sensação {weather.data.feels_like_c}°C · UV {weather.data.uv_index} · Vento {weather.data.wind_kmh} km/h</div>
+          <div
+            style={{
+              padding: "0.55rem 0.7rem",
+              background: "var(--sunken)",
+              borderRadius: "8px",
+              fontSize: "0.78rem",
+              lineHeight: 1.35,
+            }}
+          >
+            <div style={{ fontWeight: 700, color: "var(--teal-strong)" }}>
+              {weather.data.city} · {weather.data.temp_c}°C
+            </div>
+            <div className="muted">
+              Sensação {weather.data.feels_like_c}° · UV {weather.data.uv_index} · Vento{" "}
+              {weather.data.wind_kmh} km/h
+            </div>
           </div>
         )}
 

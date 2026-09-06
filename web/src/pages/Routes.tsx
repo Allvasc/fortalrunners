@@ -64,7 +64,7 @@ export function RoutesPage() {
   }
 
   return (
-    <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "1.5rem" }}>
+    <div className="page">
       <header style={{ marginBottom: "2rem", borderBottom: "1px solid var(--line)", paddingBottom: "1rem" }}>
         <p style={{ fontFamily: "var(--f-mono)", fontSize: "0.8rem", color: "var(--teal)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
           FortalRunners · Percursos Curados
@@ -77,7 +77,7 @@ export function RoutesPage() {
         </p>
       </header>
 
-      <div style={{ display: "grid", gridTemplateColumns: selectedDetail ? "1fr 1.2fr" : "1fr", gap: "1.5rem" }}>
+      <div className={`two-col${selectedDetail ? " has-detail" : ""}`}>
         {/* Routes List */}
         <div>
           <h3 style={{ fontFamily: "var(--f-display)", fontSize: "1.1rem", marginBottom: "1rem" }}>

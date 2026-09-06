@@ -87,7 +87,7 @@ export function consumeOAuthFragment(): boolean {
 async function request<T>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
   const tokens = getTokens();
   const headers = new Headers(init.headers);
-  if (init.body) headers.set("Content-Type", "application/json");
+  if (init.body && !(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
   if (tokens) headers.set("Authorization", `Bearer ${tokens.access_token}`);
 
   const res = await fetch(`${BASE}${path}`, { ...init, headers });
@@ -437,11 +437,16 @@ export const api = {
 
   // --- landmarks & selos ---
   landmarksProgress: () => request<LandmarkProgress>("/v1/landmarks"),
-  landmarkCheckin: (id: string, lat: number, lng: number) =>
-    request<unknown>(`/v1/landmarks/${encodeURIComponent(id)}/checkin`, {
+  landmarkCheckin: (id: string, lat: number, lng: number, photo: File) => {
+    const form = new FormData();
+    form.append("lat", String(lat));
+    form.append("lng", String(lng));
+    form.append("photo", photo);
+    return request<{ status: string }>(`/v1/landmarks/${encodeURIComponent(id)}/checkin`, {
       method: "POST",
-      body: JSON.stringify({ lat, lng }),
-    }),
+      body: form,
+    });
+  },
 
   // --- rotas ---
   routes: () => request<{ routes: RouteItem[] }>("/v1/routes"),

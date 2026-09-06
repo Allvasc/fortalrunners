@@ -53,7 +53,7 @@ export function SocialPage() {
   }
 
   return (
-    <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "1.5rem" }}>
+    <div className="page">
       <header style={{ marginBottom: "2rem", borderBottom: "1px solid var(--line)", paddingBottom: "1rem" }}>
         <p style={{ fontFamily: "var(--f-mono)", fontSize: "0.8rem", color: "var(--teal)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
           FortalRunners · Comunidade
@@ -66,7 +66,7 @@ export function SocialPage() {
         </p>
       </header>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: "2rem" }}>
+      <div className="two-col sidebar" style={{ gap: "2rem" }}>
         {/* Activity Feed */}
         <div>
           <h3 style={{ fontFamily: "var(--f-display)", fontSize: "1.1rem", marginBottom: "1rem" }}>
