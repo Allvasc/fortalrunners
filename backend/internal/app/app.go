@@ -14,6 +14,7 @@ import (
 	"github.com/Allvasc/fortalrunners/backend/internal/challenge"
 	"github.com/Allvasc/fortalrunners/backend/internal/club"
 	"github.com/Allvasc/fortalrunners/backend/internal/event"
+	"github.com/Allvasc/fortalrunners/backend/internal/hazard"
 	"github.com/Allvasc/fortalrunners/backend/internal/health"
 	"github.com/Allvasc/fortalrunners/backend/internal/heatmap"
 	"github.com/Allvasc/fortalrunners/backend/internal/integration"
@@ -26,6 +27,7 @@ import (
 	"github.com/Allvasc/fortalrunners/backend/internal/poi"
 	"github.com/Allvasc/fortalrunners/backend/internal/qr"
 	"github.com/Allvasc/fortalrunners/backend/internal/ranking"
+	"github.com/Allvasc/fortalrunners/backend/internal/report"
 	"github.com/Allvasc/fortalrunners/backend/internal/route"
 	"github.com/Allvasc/fortalrunners/backend/internal/run"
 	"github.com/Allvasc/fortalrunners/backend/internal/safety"
@@ -96,25 +98,29 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	ranking.NewHandler(pool).Register(secured)
 	challenge.NewHandler(challenge.NewService(pool, log)).Register(secured)
 	heatmap.NewHandler(heatmap.NewService(pool, log)).Register(secured)
-	landmark.NewHandler(landmark.NewService(pool)).Register(secured)
-	route.NewHandler(route.NewService(route.NewStore(pool))).Register(secured)
+	landmarkSvc := landmark.NewService(pool)
+	landmark.NewHandler(landmarkSvc).Register(secured)
+	routeSvc := route.NewService(route.NewStore(pool))
+	route.NewHandler(routeSvc).Register(secured)
 	poi.NewHandler(poi.NewStore(pool)).Register(secured)
 	social.NewHandler(social.NewService(pool)).Register(secured)
 	club.NewHandler(club.NewService(pool)).Register(secured)
 	safetyH := safety.NewHandler(safety.NewService(pool, box, publicWebURL, log))
 	safetyH.Register(secured)
 	safetyH.RegisterPublic(e)
-	weather.NewHandler().Register(secured)
+	weather.NewHandler(cfg.WeatherAPIKey).Register(secured)
 	event.NewHandler(event.NewService(pool)).RegisterRoutes(secured)
 	qr.NewHandler(qr.NewService(pool, cfg.JWTSecret)).RegisterRoutes(secured)
+	report.NewHandler(report.NewService(pool)).Register(secured)
+	hazard.NewHandler(hazard.NewService(pool)).Register(secured)
 	paymentH := payment.NewHandler(payment.NewService(pool, payment.Config{
 		AsaasAPIKey:        cfg.AsaasAPIKey,
 		AsaasWebhookSecret: cfg.AsaasWebhookSecret,
 	}))
 	paymentH.RegisterSecured(secured)
 	paymentH.RegisterPublic(v1)
-	ai.NewHandler(ai.NewService(pool)).RegisterRoutes(secured)
-	admin.NewHandler(pool, pub).Register(secured) // /v1/admin/* (role admin/moderator + 2FA)
+	ai.NewHandler(ai.NewService(ai.Config{APIKey: cfg.AnthropicAPIKey, Model: cfg.AIModel}, pool, log)).RegisterRoutes(secured)
+	admin.NewHandler(pool, pub, landmarkSvc, routeSvc).Register(secured) // /v1/admin/* (role admin/moderator + 2FA)
 
 	// integrações (Strava) — reusa o mesmo cofre de campo.
 	integSvc := integration.NewService(pool, box, integration.Config{

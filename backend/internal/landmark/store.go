@@ -15,6 +15,8 @@ import (
 var ErrLandmarkNotFound = errors.New("landmark not found")
 var ErrAlreadyCheckedIn = errors.New("already checked in")
 var ErrTooFar = errors.New("position too far from landmark")
+var ErrRiskZone = errors.New("landmark in an active risk zone")
+var ErrPhotoRequired = errors.New("photo required for landmark check-in")
 
 type Landmark struct {
 	ID           string     `json:"id"`
@@ -139,38 +141,53 @@ func (s *Store) GetLandmark(ctx context.Context, landmarkID, userID string) (*La
 	return &lm, nil
 }
 
+// PerformCheckin registra um check-in por FOTO. Ele NÃO concede o selo na hora:
+// entra como 'pending' e a fila de moderação (admin) aprova/rejeita — plano §3.
+// Gate de zona de risco: marco dentro de risk_zone ativa acima do limiar não
+// aceita check-in (missionAllowedAt).
 func (s *Store) PerformCheckin(ctx context.Context, userID, landmarkID string, runID *string, photoKey *string, lat, lng float64) (*Checkin, error) {
+	if photoKey == nil || *photoKey == "" {
+		return nil, ErrPhotoRequired
+	}
+
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("begin tx: %w", err)
 	}
 	defer tx.Rollback(ctx)
 
-	// Verify landmark exists and position is within radius
-	var radiusM int
-	var badgeCode *string
+	// posição vs. raio + gate de zona de risco, numa query.
+	var withinRadius, inRiskZone bool
 	checkQuery := `
-		SELECT radius_m, badge_code, ST_DWithin(geom::geography, ST_SetSRID(ST_Point($2, $3), 4326)::geography, radius_m) as within_radius
-		FROM landmarks WHERE id = $1 AND status = 'active'
+		SELECT
+			ST_DWithin(l.geom::geography, ST_SetSRID(ST_Point($2, $3), 4326)::geography, l.radius_m),
+			EXISTS (
+				SELECT 1 FROM risk_zones rz
+				WHERE rz.status = 'active'
+				  AND rz.severity >= COALESCE((SELECT value_jsonb::text::int FROM game_config WHERE key = 'risk_zone_min_severity'), 3)
+				  AND (rz.active_to IS NULL OR rz.active_to > now())
+				  AND ST_Intersects(rz.geom, l.geom)
+			)
+		FROM landmarks l WHERE l.id = $1 AND l.status = 'active'
 	`
-	var withinRadius bool
-	if err := tx.QueryRow(ctx, checkQuery, landmarkID, lng, lat).Scan(&radiusM, &badgeCode, &withinRadius); err != nil {
+	if err := tx.QueryRow(ctx, checkQuery, landmarkID, lng, lat).Scan(&withinRadius, &inRiskZone); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrLandmarkNotFound
 		}
 		return nil, fmt.Errorf("check landmark location: %w", err)
 	}
-
+	if inRiskZone {
+		return nil, ErrRiskZone
+	}
 	if !withinRadius {
 		return nil, ErrTooFar
 	}
 
-	// Insert checkin
 	checkinID := id.New()
 	now := time.Now().UTC()
 	insertQuery := `
 		INSERT INTO landmark_checkins (id, user_id, landmark_id, run_id, photo_key, geom, taken_at, status)
-		VALUES ($1, $2, $3, $4, $5, ST_SetSRID(ST_Point($6, $7), 4326), $8, 'approved')
+		VALUES ($1, $2, $3, $4, $5, ST_SetSRID(ST_Point($6, $7), 4326), $8, 'pending')
 		ON CONFLICT (user_id, landmark_id) DO NOTHING
 		RETURNING id, taken_at
 	`
@@ -184,30 +201,13 @@ func (s *Store) PerformCheckin(ctx context.Context, userID, landmarkID string, r
 		return nil, fmt.Errorf("insert checkin: %w", err)
 	}
 
-	// Grant badge if associated
-	if badgeCode != nil && *badgeCode != "" {
-		badgeQuery := `
-			INSERT INTO user_badges (user_id, badge_code, source, earned_at)
-			VALUES ($1, $2, 'landmark', $3)
-			ON CONFLICT (user_id, badge_code) DO NOTHING
-		`
-		if _, err := tx.Exec(ctx, badgeQuery, userID, *badgeCode, now); err != nil {
-			return nil, fmt.Errorf("grant landmark badge: %w", err)
-		}
-	}
-
 	if err := tx.Commit(ctx); err != nil {
 		return nil, fmt.Errorf("commit checkin: %w", err)
 	}
 
 	return &Checkin{
-		ID:         retID,
-		UserID:     userID,
-		LandmarkID: landmarkID,
-		RunID:      runID,
-		PhotoKey:   photoKey,
-		TakenAt:    retTime,
-		Status:     "approved",
+		ID: retID, UserID: userID, LandmarkID: landmarkID,
+		RunID: runID, PhotoKey: photoKey, TakenAt: retTime, Status: "pending",
 	}, nil
 }
 
@@ -242,55 +242,86 @@ func (s *Store) ListCollections(ctx context.Context, userID string) ([]Collectio
 	return collections, nil
 }
 
-func (s *Store) AutoCheckinRun(ctx context.Context, userID, runID string, lineWKT string) ([]string, error) {
-	query := `
-		SELECT l.id, l.badge_code
-		FROM landmarks l
-		LEFT JOIN landmark_checkins lc ON lc.landmark_id = l.id AND lc.user_id = $1
-		WHERE l.status = 'active' 
-		  AND lc.id IS NULL
-		  AND ST_DWithin(l.geom::geography, ST_GeomFromText($2, 4326)::geography, l.radius_m)
-	`
-	rows, err := s.pool.Query(ctx, query, userID, lineWKT)
+// PendingCheckin é uma linha da fila de moderação (plano §13).
+type PendingCheckin struct {
+	ID           string    `json:"id"`
+	UserID       string    `json:"user_id"`
+	Username     string    `json:"username"`
+	LandmarkID   string    `json:"landmark_id"`
+	LandmarkName string    `json:"landmark_name"`
+	PhotoKey     *string   `json:"photo_key,omitempty"`
+	Lat          float64   `json:"lat"`
+	Lng          float64   `json:"lng"`
+	TakenAt      time.Time `json:"taken_at"`
+}
+
+// PendingCheckins lista os check-ins por foto aguardando moderação.
+func (s *Store) PendingCheckins(ctx context.Context, limit int) ([]PendingCheckin, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT lc.id, lc.user_id, u.username, lc.landmark_id, l.name, lc.photo_key,
+		       ST_Y(lc.geom), ST_X(lc.geom), lc.taken_at
+		FROM landmark_checkins lc
+		JOIN users u ON u.id = lc.user_id
+		JOIN landmarks l ON l.id = lc.landmark_id
+		WHERE lc.status = 'pending'
+		ORDER BY lc.taken_at ASC
+		LIMIT $1`, limit)
 	if err != nil {
-		return nil, fmt.Errorf("query auto checkin landmarks: %w", err)
+		return nil, err
 	}
 	defer rows.Close()
-
-	type toCheckin struct {
-		id        string
-		badgeCode *string
-	}
-	var targets []toCheckin
+	var out []PendingCheckin
 	for rows.Next() {
-		var t toCheckin
-		if err := rows.Scan(&t.id, &t.badgeCode); err == nil {
-			targets = append(targets, t)
+		var p PendingCheckin
+		var lat, lng *float64
+		if err := rows.Scan(&p.ID, &p.UserID, &p.Username, &p.LandmarkID, &p.LandmarkName,
+			&p.PhotoKey, &lat, &lng, &p.TakenAt); err != nil {
+			return nil, err
 		}
+		if lat != nil {
+			p.Lat = *lat
+		}
+		if lng != nil {
+			p.Lng = *lng
+		}
+		out = append(out, p)
+	}
+	return out, nil
+}
+
+// ModerateCheckin aprova ou rejeita um check-in pendente. Aprovar concede o selo.
+func (s *Store) ModerateCheckin(ctx context.Context, checkinID, decision, moderatorID string) error {
+	newStatus := "rejected"
+	if decision == "approve" {
+		newStatus = "approved"
 	}
 
-	var unlockedLandmarks []string
-	now := time.Now().UTC()
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
 
-	for _, target := range targets {
-		chkID := id.New()
-		insQuery := `
-			INSERT INTO landmark_checkins (id, user_id, landmark_id, run_id, taken_at, status)
-			VALUES ($1, $2, $3, $4, $5, 'approved')
-			ON CONFLICT (user_id, landmark_id) DO NOTHING
-		`
-		tag, err := s.pool.Exec(ctx, insQuery, chkID, userID, target.id, runID, now)
-		if err == nil && tag.RowsAffected() > 0 {
-			unlockedLandmarks = append(unlockedLandmarks, target.id)
-			if target.badgeCode != nil && *target.badgeCode != "" {
-				_, _ = s.pool.Exec(ctx, `
-					INSERT INTO user_badges (user_id, badge_code, source, earned_at)
-					VALUES ($1, $2, 'landmark', $3)
-					ON CONFLICT (user_id, badge_code) DO NOTHING
-				`, userID, *target.badgeCode, now)
-			}
-		}
+	var userID, landmarkID string
+	err = tx.QueryRow(ctx, `
+		UPDATE landmark_checkins SET status = $2, moderated_by = $3
+		WHERE id = $1 AND status = 'pending'
+		RETURNING user_id, landmark_id`, checkinID, newStatus, moderatorID).Scan(&userID, &landmarkID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ErrLandmarkNotFound
+	}
+	if err != nil {
+		return err
 	}
 
-	return unlockedLandmarks, nil
+	if newStatus == "approved" {
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO user_badges (user_id, badge_code, source, earned_at)
+			SELECT $1, l.badge_code, 'landmark', now()
+			FROM landmarks l WHERE l.id = $2 AND l.badge_code IS NOT NULL AND l.badge_code != ''
+			ON CONFLICT (user_id, badge_code) DO NOTHING`, userID, landmarkID); err != nil {
+			return fmt.Errorf("grant badge: %w", err)
+		}
+	}
+	return tx.Commit(ctx)
 }

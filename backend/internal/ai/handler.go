@@ -3,8 +3,9 @@ package ai
 import (
 	"net/http"
 
-	"github.com/Allvasc/fortalrunners/backend/internal/auth"
 	"github.com/labstack/echo/v4"
+
+	"github.com/Allvasc/fortalrunners/backend/internal/auth"
 )
 
 type Handler struct {
@@ -16,26 +17,31 @@ func NewHandler(svc *Service) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(g *echo.Group) {
-	g.POST("/ai/coach", h.AskCoach)
+	// nomes do plano §10
+	g.POST("/coach/ask", h.ask)
+	g.GET("/coach/summary", h.summary)
+	// alias usado pelos clientes atuais
+	g.POST("/ai/coach", h.ask)
 }
 
-type AskReq struct {
+type askReq struct {
 	Prompt string `json:"prompt"`
 }
 
-func (h *Handler) AskCoach(c echo.Context) error {
-	userID := auth.UserID(c)
-	var req AskReq
-	if err := c.Bind(&req); err != nil || req.Prompt == "" {
-		req.Prompt = "Qual a melhor dica para meu treino em Fortaleza hoje?"
-	}
-
-	if len(req.Prompt) > 1000 {
-		req.Prompt = req.Prompt[:1000]
-	}
-	res, err := h.svc.AskCoach(c.Request().Context(), userID, req.Prompt)
+func (h *Handler) ask(c echo.Context) error {
+	var req askReq
+	_ = c.Bind(&req)
+	res, err := h.svc.AskCoach(c.Request().Context(), auth.UserID(c), req.Prompt)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "coach indisponível no momento")
 	}
 	return c.JSON(http.StatusOK, map[string]any{"coach": res})
+}
+
+func (h *Handler) summary(c echo.Context) error {
+	s, err := h.svc.Summary(c.Request().Context(), auth.UserID(c))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "erro ao montar resumo")
+	}
+	return c.JSON(http.StatusOK, s)
 }

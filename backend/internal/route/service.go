@@ -27,3 +27,14 @@ func (s *Service) CreateRoute(ctx context.Context, userID, name, description str
 func (s *Service) AddReview(ctx context.Context, userID, routeID string, rating int, tags []string, body string) (*Review, error) {
 	return s.store.AddReview(ctx, userID, routeID, rating, tags, body)
 }
+
+func (s *Service) PendingReviews(ctx context.Context, limit int) ([]PendingReview, error) {
+	if limit <= 0 || limit > 200 {
+		limit = 50
+	}
+	return s.store.PendingReviews(ctx, limit)
+}
+
+func (s *Service) ModerateReview(ctx context.Context, reviewID, decision string) error {
+	return s.store.ModerateReview(ctx, reviewID, decision)
+}

@@ -43,6 +43,10 @@ type Config struct {
 	AsaasAPIKey        string // chave do Asaas (cofre) — vazio = modo sandbox/manual
 	AsaasWebhookSecret string // segredo HMAC do webhook do Asaas
 
+	AnthropicAPIKey string // chave da Anthropic (coach IA) — vazio = modo sem IA (fallback determinístico)
+	AIModel         string // modelo padrão do coach
+	WeatherAPIKey   string // chave do provedor de clima — vazio = leitura estática
+
 	CORSOrigins []string
 }
 
@@ -71,6 +75,9 @@ func Load() (Config, error) {
 		StravaWebhookVerifyToken: os.Getenv("STRAVA_WEBHOOK_VERIFY_TOKEN"),
 		AsaasAPIKey:              os.Getenv("ASAAS_API_KEY"),
 		AsaasWebhookSecret:       os.Getenv("ASAAS_WEBHOOK_SECRET"),
+		AnthropicAPIKey:          os.Getenv("ANTHROPIC_API_KEY"),
+		AIModel:                  get("AI_MODEL", "claude-sonnet-5"),
+		WeatherAPIKey:            os.Getenv("WEATHER_API_KEY"),
 		CORSOrigins:              splitCSV(get("CORS_ORIGINS", "http://localhost:5173")),
 	}
 

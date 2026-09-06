@@ -47,6 +47,15 @@ func (s *Service) Checkin(ctx context.Context, userID, landmarkID string, runID 
 	return s.store.PerformCheckin(ctx, userID, landmarkID, runID, photoKey, lat, lng)
 }
 
-func (s *Service) AutoCheckinRun(ctx context.Context, userID, runID string, lineWKT string) ([]string, error) {
-	return s.store.AutoCheckinRun(ctx, userID, runID, lineWKT)
+// --- moderação (usada pelo admin) ---
+
+func (s *Service) PendingCheckins(ctx context.Context, limit int) ([]PendingCheckin, error) {
+	if limit <= 0 || limit > 200 {
+		limit = 50
+	}
+	return s.store.PendingCheckins(ctx, limit)
+}
+
+func (s *Service) ModerateCheckin(ctx context.Context, checkinID, decision, moderatorID string) error {
+	return s.store.ModerateCheckin(ctx, checkinID, decision, moderatorID)
 }

@@ -3,6 +3,7 @@
 package admin
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -13,16 +14,32 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/Allvasc/fortalrunners/backend/internal/auth"
+	"github.com/Allvasc/fortalrunners/backend/internal/landmark"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/queue"
+	"github.com/Allvasc/fortalrunners/backend/internal/route"
 )
 
-type Handler struct {
-	store *store
-	pub   queue.Publisher
+// LandmarkModerator e RouteModerator são as portas de moderação implementadas
+// pelos serviços de landmark e route (evita duplicar a lógica de concessão de selo).
+type LandmarkModerator interface {
+	PendingCheckins(ctx context.Context, limit int) ([]landmark.PendingCheckin, error)
+	ModerateCheckin(ctx context.Context, checkinID, decision, moderatorID string) error
 }
 
-func NewHandler(pool *pgxpool.Pool, pub queue.Publisher) *Handler {
-	return &Handler{store: newStore(pool), pub: pub}
+type RouteModerator interface {
+	PendingReviews(ctx context.Context, limit int) ([]route.PendingReview, error)
+	ModerateReview(ctx context.Context, reviewID, decision string) error
+}
+
+type Handler struct {
+	store     *store
+	pub       queue.Publisher
+	landmarks LandmarkModerator
+	routes    RouteModerator
+}
+
+func NewHandler(pool *pgxpool.Pool, pub queue.Publisher, lm LandmarkModerator, rm RouteModerator) *Handler {
+	return &Handler{store: newStore(pool), pub: pub, landmarks: lm, routes: rm}
 }
 
 // Register monta /v1/admin/* já sob o Bearer middleware. Aplica o gate de role +
@@ -46,6 +63,120 @@ func (h *Handler) Register(secured *echo.Group) {
 	g.PUT("/config/:key", h.configSet)
 
 	g.GET("/audit", h.auditList)
+
+	// --- moderação (plano §13) ---
+	g.GET("/landmark-checkins", h.pendingCheckins)
+	g.POST("/landmark-checkins/:id/moderate", h.moderateCheckin)
+	g.GET("/route-reviews", h.pendingReviews)
+	g.POST("/route-reviews/:id/moderate", h.moderateReview)
+	g.GET("/reports", h.reportList)
+	g.POST("/reports/:id/resolve", h.reportResolve)
+	g.GET("/hazards", h.hazardList)
+	g.POST("/hazards/:id/remove", h.hazardRemove)
+}
+
+// --- moderação ---
+
+func decision(c echo.Context) (string, bool) {
+	var in struct {
+		Decision string `json:"decision"`
+	}
+	_ = c.Bind(&in)
+	if in.Decision != "approve" && in.Decision != "reject" {
+		return "", false
+	}
+	return in.Decision, true
+}
+
+func (h *Handler) pendingCheckins(c echo.Context) error {
+	list, err := h.landmarks.PendingCheckins(c.Request().Context(), clampLimit(c.QueryParam("limit"), 50, 200))
+	if err != nil {
+		return internalErr(err)
+	}
+	return c.JSON(http.StatusOK, map[string]any{"checkins": list})
+}
+
+func (h *Handler) moderateCheckin(c echo.Context) error {
+	d, ok := decision(c)
+	if !ok {
+		return echo.NewHTTPError(http.StatusBadRequest, "decision deve ser approve ou reject")
+	}
+	ctx := c.Request().Context()
+	aid, arole, ip := h.actor(c)
+	if err := h.landmarks.ModerateCheckin(ctx, c.Param("id"), d, aid); err != nil {
+		return mapErr(err)
+	}
+	h.store.audit(ctx, aid, arole, "landmark_checkin."+d, "landmark_checkin", c.Param("id"), nil, ip)
+	return c.JSON(http.StatusOK, map[string]any{"status": d})
+}
+
+func (h *Handler) pendingReviews(c echo.Context) error {
+	list, err := h.routes.PendingReviews(c.Request().Context(), clampLimit(c.QueryParam("limit"), 50, 200))
+	if err != nil {
+		return internalErr(err)
+	}
+	return c.JSON(http.StatusOK, map[string]any{"reviews": list})
+}
+
+func (h *Handler) moderateReview(c echo.Context) error {
+	d, ok := decision(c)
+	if !ok {
+		return echo.NewHTTPError(http.StatusBadRequest, "decision deve ser approve ou reject")
+	}
+	ctx := c.Request().Context()
+	aid, arole, ip := h.actor(c)
+	if err := h.routes.ModerateReview(ctx, c.Param("id"), d); err != nil {
+		return mapErr(err)
+	}
+	h.store.audit(ctx, aid, arole, "route_review."+d, "route_review", c.Param("id"), nil, ip)
+	return c.JSON(http.StatusOK, map[string]any{"status": d})
+}
+
+func (h *Handler) reportList(c echo.Context) error {
+	status := c.QueryParam("status")
+	if status == "" {
+		status = "open"
+	}
+	list, err := h.store.reportList(c.Request().Context(), status, clampLimit(c.QueryParam("limit"), 50, 200))
+	if err != nil {
+		return internalErr(err)
+	}
+	return c.JSON(http.StatusOK, map[string]any{"reports": list})
+}
+
+func (h *Handler) reportResolve(c echo.Context) error {
+	var in struct {
+		Outcome string `json:"outcome"` // actioned | dismissed
+	}
+	_ = c.Bind(&in)
+	if in.Outcome != "actioned" && in.Outcome != "dismissed" {
+		return echo.NewHTTPError(http.StatusBadRequest, "outcome deve ser actioned ou dismissed")
+	}
+	ctx := c.Request().Context()
+	aid, arole, ip := h.actor(c)
+	if err := h.store.resolveReport(ctx, c.Param("id"), in.Outcome, aid); err != nil {
+		return mapErr(err)
+	}
+	h.store.audit(ctx, aid, arole, "report."+in.Outcome, "report", c.Param("id"), nil, ip)
+	return c.JSON(http.StatusOK, map[string]any{"status": in.Outcome})
+}
+
+func (h *Handler) hazardList(c echo.Context) error {
+	list, err := h.store.hazardList(c.Request().Context(), clampLimit(c.QueryParam("limit"), 100, 500))
+	if err != nil {
+		return internalErr(err)
+	}
+	return c.JSON(http.StatusOK, map[string]any{"hazards": list})
+}
+
+func (h *Handler) hazardRemove(c echo.Context) error {
+	ctx := c.Request().Context()
+	aid, arole, ip := h.actor(c)
+	if err := h.store.removeHazard(ctx, c.Param("id")); err != nil {
+		return mapErr(err)
+	}
+	h.store.audit(ctx, aid, arole, "hazard.remove", "hazard", c.Param("id"), nil, ip)
+	return c.JSON(http.StatusOK, map[string]any{"status": "removed"})
 }
 
 // requireStaff barra quem não é admin nem moderator (antes mesmo do 2FA).

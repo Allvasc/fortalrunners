@@ -65,20 +65,22 @@ func (h *Handler) checkin(c echo.Context) error {
 	}
 
 	chk, err := h.svc.Checkin(c.Request().Context(), userID, lmID, req.RunID, req.PhotoKey, req.Lat, req.Lng)
-	if errors.Is(err, ErrLandmarkNotFound) {
+	switch {
+	case errors.Is(err, ErrLandmarkNotFound):
 		return echo.NewHTTPError(http.StatusNotFound, "marco não encontrado")
-	}
-	if errors.Is(err, ErrTooFar) {
+	case errors.Is(err, ErrPhotoRequired):
+		return echo.NewHTTPError(http.StatusBadRequest, "envie a foto tirada na câmera do app")
+	case errors.Is(err, ErrRiskZone):
+		return echo.NewHTTPError(http.StatusForbidden, "este marco está numa zona de risco ativa e não aceita check-in agora")
+	case errors.Is(err, ErrTooFar):
 		return echo.NewHTTPError(http.StatusBadRequest, "você precisa estar mais próximo do marco para fazer check-in")
-	}
-	if errors.Is(err, ErrAlreadyCheckedIn) {
+	case errors.Is(err, ErrAlreadyCheckedIn):
 		return echo.NewHTTPError(http.StatusConflict, "você já realizou o check-in neste marco")
-	}
-	if err != nil {
+	case err != nil:
 		return echo.NewHTTPError(http.StatusInternalServerError, "erro ao realizar check-in")
 	}
 
-	return c.JSON(http.StatusCreated, chk)
+	return c.JSON(http.StatusAccepted, chk) // 202: entrou na fila de moderação
 }
 
 func (h *Handler) userProgress(c echo.Context) error {

@@ -172,14 +172,15 @@ func (s *Store) AddReview(ctx context.Context, userID, routeID string, rating in
 
 	tagsJSON, _ := json.Marshal(tags)
 
+	// entra como 'pending' — fila de moderação do admin (plano §5).
 	query := `
 		INSERT INTO route_reviews (id, route_id, user_id, rating, tags_jsonb, body, status, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, 'approved', $7)
+		VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7)
 		ON CONFLICT (route_id, user_id) DO UPDATE SET
 			rating = EXCLUDED.rating,
 			tags_jsonb = EXCLUDED.tags_jsonb,
 			body = EXCLUDED.body,
-			status = 'approved',
+			status = 'pending',
 			created_at = EXCLUDED.created_at
 		RETURNING id, created_at
 	`
@@ -199,4 +200,58 @@ func (s *Store) AddReview(ctx context.Context, userID, routeID string, rating in
 		Body:      body,
 		CreatedAt: retTime,
 	}, nil
+}
+
+// PendingReview é uma linha da fila de moderação de avaliações.
+type PendingReview struct {
+	ID        string    `json:"id"`
+	RouteID   string    `json:"route_id"`
+	RouteName string    `json:"route_name"`
+	UserID    string    `json:"user_id"`
+	Username  string    `json:"username"`
+	Rating    int       `json:"rating"`
+	Body      string    `json:"body,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func (s *Store) PendingReviews(ctx context.Context, limit int) ([]PendingReview, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT rr.id, rr.route_id, r.name, rr.user_id, u.username, rr.rating,
+		       COALESCE(rr.body, ''), rr.created_at
+		FROM route_reviews rr
+		JOIN routes r ON r.id = rr.route_id
+		JOIN users u ON u.id = rr.user_id
+		WHERE rr.status = 'pending'
+		ORDER BY rr.created_at ASC LIMIT $1`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []PendingReview
+	for rows.Next() {
+		var p PendingReview
+		if err := rows.Scan(&p.ID, &p.RouteID, &p.RouteName, &p.UserID, &p.Username,
+			&p.Rating, &p.Body, &p.CreatedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	return out, nil
+}
+
+func (s *Store) ModerateReview(ctx context.Context, reviewID, decision string) error {
+	newStatus := "hidden"
+	if decision == "approve" {
+		newStatus = "approved"
+	}
+	tag, err := s.pool.Exec(ctx,
+		`UPDATE route_reviews SET status = $2 WHERE id = $1 AND status = 'pending'`,
+		reviewID, newStatus)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrRouteNotFound
+	}
+	return nil
 }

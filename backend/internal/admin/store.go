@@ -302,3 +302,87 @@ func nullInt(v int) *int {
 	}
 	return &v
 }
+
+// --- moderação: denúncias e perigos ---
+
+type reportRow struct {
+	ID         string    `json:"id"`
+	ReporterID string    `json:"reporter_id"`
+	TargetType string    `json:"target_type"`
+	TargetID   string    `json:"target_id"`
+	Reason     string    `json:"reason"`
+	Detail     string    `json:"detail,omitempty"`
+	Status     string    `json:"status"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+func (s *store) reportList(ctx context.Context, status string, limit int) ([]reportRow, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT id, reporter_id, target_type, target_id, reason, COALESCE(detail,''), status, created_at
+		FROM reports WHERE status = $1 ORDER BY created_at ASC LIMIT $2`, status, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []reportRow
+	for rows.Next() {
+		var r reportRow
+		if err := rows.Scan(&r.ID, &r.ReporterID, &r.TargetType, &r.TargetID, &r.Reason, &r.Detail, &r.Status, &r.CreatedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	return out, rows.Err()
+}
+
+func (s *store) resolveReport(ctx context.Context, reportID, outcome, actorID string) error {
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE reports SET status = $2, handled_by = $3, handled_at = now()
+		WHERE id = $1 AND status IN ('open', 'reviewing')`, reportID, outcome, actorID)
+	if err == nil && tag.RowsAffected() == 0 {
+		return errNotFound
+	}
+	return err
+}
+
+type hazardRow struct {
+	ID        string    `json:"id"`
+	Type      string    `json:"type"`
+	Lat       float64   `json:"lat"`
+	Lng       float64   `json:"lng"`
+	Severity  int       `json:"severity"`
+	Note      string    `json:"note,omitempty"`
+	Confirms  int       `json:"confirms"`
+	Disputes  int       `json:"disputes"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func (s *store) hazardList(ctx context.Context, limit int) ([]hazardRow, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT id, type, ST_Y(geom), ST_X(geom), severity, COALESCE(note,''),
+		       confirms, disputes, status, created_at
+		FROM hazard_reports ORDER BY created_at DESC LIMIT $1`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []hazardRow
+	for rows.Next() {
+		var h hazardRow
+		if err := rows.Scan(&h.ID, &h.Type, &h.Lat, &h.Lng, &h.Severity, &h.Note,
+			&h.Confirms, &h.Disputes, &h.Status, &h.CreatedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, h)
+	}
+	return out, rows.Err()
+}
+
+func (s *store) removeHazard(ctx context.Context, hazardID string) error {
+	tag, err := s.pool.Exec(ctx, `UPDATE hazard_reports SET status = 'removed' WHERE id = $1`, hazardID)
+	if err == nil && tag.RowsAffected() == 0 {
+		return errNotFound
+	}
+	return err
+}
