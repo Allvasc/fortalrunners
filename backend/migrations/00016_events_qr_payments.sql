@@ -1,6 +1,7 @@
 -- +goose Up
 -- Migration 00016: Eventos, QR Code, Estações, Pagamentos (Asaas) e Telemetria de IA
 
+-- +goose StatementBegin
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'org_kind') THEN
         CREATE TYPE org_kind AS ENUM ('race', 'company', 'brand', 'ngo');
@@ -33,6 +34,7 @@ DO $$ BEGIN
         CREATE TYPE pay_status AS ENUM ('pending', 'confirmed', 'received', 'overdue', 'refunded', 'chargeback');
     END IF;
 END $$;
+-- +goose StatementEnd
 
 CREATE TABLE IF NOT EXISTS organizers (
     id                  text PRIMARY KEY,
@@ -167,6 +169,7 @@ CREATE TABLE IF NOT EXISTS ai_interactions (
 -- Seed de organizadores e eventos de Fortaleza.
 -- Só roda quando já existe um usuário para ser dono do organizador.
 -- Em um banco de produção novo (sem usuários) o bloco é ignorado.
+-- +goose StatementBegin
 DO $$
 DECLARE seed_owner text;
 BEGIN
@@ -192,6 +195,7 @@ BEGIN
       ('prc_bm_10k', 'evt_beira_mar_night', 'Lote 1 - 10km', '10k', 6990, 150)
     ON CONFLICT (id) DO NOTHING;
 END $$;
+-- +goose StatementEnd
 
 -- +goose Down
 DROP TABLE IF EXISTS ai_interactions;

@@ -81,6 +81,7 @@ CREATE TABLE sos_events (
 -- --- SEED INICIAL ---
 -- Só semeia os clubes de demonstração quando já existe um usuário para ser dono.
 -- Em um banco de produção novo (sem usuários) o bloco é ignorado.
+-- +goose StatementBegin
 DO $$
 DECLARE seed_owner text;
 BEGIN
@@ -93,6 +94,7 @@ BEGIN
         ('clb_coco_trail', seed_owner, 'Grupo Cocó Trail & Natureza', 'Grupo dedicado a corridas nas trilhas do Parque do Cocó.', '#2E8F63')
     ON CONFLICT (id) DO NOTHING;
 END $$;
+-- +goose StatementEnd
 
 -- +goose Down
 DROP TABLE IF EXISTS sos_events;
