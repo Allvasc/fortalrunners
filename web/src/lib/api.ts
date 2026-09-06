@@ -397,6 +397,36 @@ export const api = {
 
   // --- clima ---
   weather: () => request<WeatherReport>("/v1/weather/current"),
+
+  // --- eventos & qr ---
+  events: () => request<{ events: EventItem[] }>("/v1/events"),
+  eventDetail: (id: string) => request<{ event: EventItem }>(`/v1/events/${encodeURIComponent(id)}`),
+  registerEvent: (id: string, category: string, shirt_size: string) =>
+    request<{ participant: unknown; message: string }>(`/v1/events/${encodeURIComponent(id)}/register`, {
+      method: "POST",
+      body: JSON.stringify({ category, shirt_size }),
+    }),
+  qrToken: (event_id?: string) =>
+    request<{ qr: QRToken }>(`/v1/qr/token${event_id ? `?event_id=${encodeURIComponent(event_id)}` : ""}`),
+  scanQR: (token_sig: string, kind: string) =>
+    request<{ scan: unknown; message: string }>("/v1/qr/scan", {
+      method: "POST",
+      body: JSON.stringify({ token_sig, kind }),
+    }),
+
+  // --- pagamentos ---
+  checkout: (kind: string, amount_cents: number, method = "pix") =>
+    request<{ order: PaymentOrder }>("/v1/payments/checkout", {
+      method: "POST",
+      body: JSON.stringify({ kind, amount_cents, method }),
+    }),
+
+  // --- IA coach ---
+  askAICoach: (prompt: string) =>
+    request<{ coach: AICoachResponse }>("/v1/ai/coach", {
+      method: "POST",
+      body: JSON.stringify({ prompt }),
+    }),
 };
 
 export type Friend = {
@@ -516,4 +546,58 @@ export type POI = {
   lng: number;
   note?: string;
 };
+
+export type EventPrice = {
+  id: string;
+  name: string;
+  category: string;
+  amount_cents: number;
+  quota: number;
+  sold: number;
+};
+
+export type EventItem = {
+  id: string;
+  slug: string;
+  organizer_id: string;
+  title: string;
+  description: string;
+  type: string;
+  starts_at: string;
+  ends_at: string;
+  location_name: string;
+  status: string;
+  is_registered: boolean;
+  prices?: EventPrice[];
+};
+
+export type QRToken = {
+  id: string;
+  user_id: string;
+  kind: string;
+  payload_sig: string;
+  expires_at: string;
+};
+
+export type PaymentOrder = {
+  id: string;
+  user_id: string;
+  kind: string;
+  status: string;
+  amount_cents: number;
+  asaas_charge_id: string;
+  pix_code?: string;
+  qr_code_url?: string;
+  created_at: string;
+};
+
+export type AICoachResponse = {
+  id: string;
+  message: string;
+  tips: string[];
+  advice: string;
+  weather: string;
+  created_at: string;
+};
+
 

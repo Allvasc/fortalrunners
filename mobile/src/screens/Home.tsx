@@ -59,6 +59,12 @@ export function Home({ navigation }: Props) {
         <TouchableOpacity style={[s.ctaGhost, { flexGrow: 1 }]} onPress={() => navigation.navigate("Clubs")}>
           <Text style={s.ctaGhostText}>Clubes</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={[s.ctaGhost, { flexGrow: 1 }]} onPress={() => navigation.navigate("Events")}>
+          <Text style={s.ctaGhostText}>Eventos & QR</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[s.ctaGhost, { flexGrow: 1 }]} onPress={() => navigation.navigate("AICoach")}>
+          <Text style={s.ctaGhostText}>Coach IA</Text>
+        </TouchableOpacity>
       </View>
 
       <Text style={s.section}>Últimas corridas</Text>

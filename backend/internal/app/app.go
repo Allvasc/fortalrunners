@@ -24,6 +24,10 @@ import (
 	"github.com/Allvasc/fortalrunners/backend/internal/ranking"
 	"github.com/Allvasc/fortalrunners/backend/internal/route"
 	"github.com/Allvasc/fortalrunners/backend/internal/run"
+	"github.com/Allvasc/fortalrunners/backend/internal/ai"
+	"github.com/Allvasc/fortalrunners/backend/internal/event"
+	"github.com/Allvasc/fortalrunners/backend/internal/payment"
+	"github.com/Allvasc/fortalrunners/backend/internal/qr"
 	"github.com/Allvasc/fortalrunners/backend/internal/safety"
 	"github.com/Allvasc/fortalrunners/backend/internal/shoe"
 	"github.com/Allvasc/fortalrunners/backend/internal/social"
@@ -89,6 +93,10 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	club.NewHandler(club.NewService(pool)).Register(secured)
 	safety.NewHandler(safety.NewService(pool)).Register(secured)
 	weather.NewHandler().Register(secured)
+	event.NewHandler(event.NewService(pool)).RegisterRoutes(secured)
+	qr.NewHandler(qr.NewService(pool)).RegisterRoutes(secured)
+	payment.NewHandler(payment.NewService(pool)).RegisterRoutes(secured)
+	ai.NewHandler(ai.NewService(pool)).RegisterRoutes(secured)
 	admin.NewHandler(pool, pub).Register(secured) // /v1/admin/* (role admin/moderator + 2FA)
 
 	// integrações (Strava). Reusa a chave de campo do 2FA como chave do cofre.

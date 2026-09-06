@@ -201,6 +201,47 @@ export const api = {
 
   triggerSOS: (lat: number, lng: number, note?: string) =>
     request<unknown>("/v1/safety/sos", { method: "POST", body: JSON.stringify({ lat, lng, note }) }),
+
+  events: () =>
+    request<{
+      events: {
+        id: string;
+        title: string;
+        description: string;
+        type: string;
+        starts_at: string;
+        ends_at: string;
+        location_name: string;
+        status: string;
+        is_registered: boolean;
+      }[];
+    }>("/v1/events"),
+
+  registerEvent: (id: string, category = "5k", shirt_size = "M") =>
+    request<{ participant: unknown; message: string }>(`/v1/events/${encodeURIComponent(id)}/register`, {
+      method: "POST",
+      body: JSON.stringify({ category, shirt_size }),
+    }),
+
+  qrToken: (eventId?: string) =>
+    request<{ qr: { id: string; payload_sig: string; expires_at: string } }>(
+      `/v1/qr/token${eventId ? `?event_id=${encodeURIComponent(eventId)}` : ""}`
+    ),
+
+  askAICoach: (prompt: string) =>
+    request<{
+      coach: {
+        id: string;
+        message: string;
+        tips: string[];
+        advice: string;
+        weather: string;
+        created_at: string;
+      };
+    }>("/v1/ai/coach", {
+      method: "POST",
+      body: JSON.stringify({ prompt }),
+    }),
 };
 
 
