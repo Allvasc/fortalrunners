@@ -14,8 +14,19 @@ import (
 // Claims do access token.
 type Claims struct {
 	Role string `json:"role"`
+	// MFA indica que a sessão passou por 2FA (ou que a conta não tem 2FA ativo).
+	// Rotas privilegiadas exigem MFA == true.
+	MFA bool `json:"mfa"`
 	jwt.RegisteredClaims
 }
+
+// challengeClaims é o token curto emitido entre senha correta e código TOTP.
+type challengeClaims struct {
+	Typ string `json:"typ"` // sempre "mfa_challenge"
+	jwt.RegisteredClaims
+}
+
+const challengeTTL = 5 * time.Minute
 
 type tokenIssuer struct {
 	secret     []byte
@@ -28,11 +39,12 @@ func newTokenIssuer(secret string, accessTTL, refreshTTL time.Duration) tokenIss
 }
 
 // access gera um JWT HS256 curto com sub = userID.
-func (t tokenIssuer) access(userID, role string) (string, time.Time, error) {
+func (t tokenIssuer) access(userID, role string, mfa bool) (string, time.Time, error) {
 	now := time.Now()
 	exp := now.Add(t.accessTTL)
 	c := Claims{
 		Role: role,
+		MFA:  mfa,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   userID,
 			IssuedAt:  jwt.NewNumericDate(now),
@@ -42,6 +54,39 @@ func (t tokenIssuer) access(userID, role string) (string, time.Time, error) {
 	}
 	s, err := jwt.NewWithClaims(jwt.SigningMethodHS256, c).SignedString(t.secret)
 	return s, exp, err
+}
+
+// challenge emite o token intermediário do fluxo de 2FA.
+func (t tokenIssuer) challenge(userID string) (string, error) {
+	now := time.Now()
+	c := challengeClaims{
+		Typ: "mfa_challenge",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   userID,
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(challengeTTL)),
+			Issuer:    "fortalrunners",
+		},
+	}
+	return jwt.NewWithClaims(jwt.SigningMethodHS256, c).SignedString(t.secret)
+}
+
+// parseChallenge valida o token intermediário e devolve o userID.
+func (t tokenIssuer) parseChallenge(token string) (string, error) {
+	var c challengeClaims
+	_, err := jwt.ParseWithClaims(token, &c, func(tok *jwt.Token) (any, error) {
+		if _, ok := tok.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("assinatura inesperada: %v", tok.Header["alg"])
+		}
+		return t.secret, nil
+	}, jwt.WithValidMethods([]string{"HS256"}))
+	if err != nil {
+		return "", err
+	}
+	if c.Typ != "mfa_challenge" || c.Subject == "" {
+		return "", fmt.Errorf("token de desafio inválido")
+	}
+	return c.Subject, nil
 }
 
 func (t tokenIssuer) parse(token string) (*Claims, error) {

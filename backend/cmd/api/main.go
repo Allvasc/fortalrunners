@@ -44,7 +44,11 @@ func main() {
 		log.Info("migrações aplicadas")
 	}
 
-	a := app.New(ctx, cfg, log, pool)
+	a, err := app.New(ctx, cfg, log, pool)
+	if err != nil {
+		log.Error("não foi possível montar a API", "err", err)
+		os.Exit(1)
+	}
 	defer a.Close()
 
 	srv := &http.Server{

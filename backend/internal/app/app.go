@@ -28,7 +28,7 @@ type API struct {
 }
 
 // New monta a API: pool, fila, middlewares e rotas.
-func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool.Pool) *API {
+func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool.Pool) (*API, error) {
 	pub := queue.Connect(cfg.NATSURL, log)
 
 	e := httpx.New(log, cfg.CORSOrigins)
@@ -39,18 +39,23 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	// --- v1 ---
 	v1 := e.Group("/v1")
 
-	authSvc := auth.NewService(auth.Deps{
+	authSvc, err := auth.NewService(auth.Deps{
 		Pool:       pool,
 		JWTSecret:  cfg.JWTSecret,
 		AccessTTL:  cfg.AccessTokenTTL,
 		RefreshTTL: cfg.RefreshTokenTTL,
+		MFAEncKey:  cfg.MFAEncKey,
 	})
+	if err != nil {
+		return nil, err
+	}
 	authH := auth.NewHandler(authSvc)
 	authH.Register(v1) // /v1/auth/*  (público)
 
 	// grupo protegido: exige Bearer token
 	secured := v1.Group("", authH.Middleware())
 	secured.GET("/me", authH.MeHandler)
+	authH.RegisterSecured(secured) // /v1/auth/mfa/*
 
 	shoeSvc := shoe.NewService(pool)
 	shoe.NewHandler(shoeSvc).Register(secured)
@@ -59,7 +64,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	ranking.NewHandler(pool).Register(secured)
 	challenge.NewHandler(challenge.NewService(pool, log)).Register(secured)
 
-	return &API{Echo: e, Pool: pool, Queue: pub}
+	return &API{Echo: e, Pool: pool, Queue: pub}, nil
 }
 
 // Close libera os recursos do processo.

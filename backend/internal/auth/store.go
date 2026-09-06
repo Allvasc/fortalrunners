@@ -61,23 +61,24 @@ type session struct {
 	RefreshTokenHash string
 	ExpiresAt        time.Time
 	RevokedAt        *time.Time
+	MFAVerified      bool
 }
 
 func (s *store) createSession(ctx context.Context, sess session, ip, ua string) error {
 	const q = `
-		INSERT INTO auth_sessions (id, user_id, refresh_token_hash, family_id, ip, user_agent, expires_at)
-		VALUES ($1, $2, $3, $4, nullif($5,'')::inet, nullif($6,''), $7)`
-	_, err := s.pool.Exec(ctx, q, sess.ID, sess.UserID, sess.RefreshTokenHash, sess.FamilyID, ip, ua, sess.ExpiresAt)
+		INSERT INTO auth_sessions (id, user_id, refresh_token_hash, family_id, ip, user_agent, expires_at, mfa_verified)
+		VALUES ($1, $2, $3, $4, nullif($5,'')::inet, nullif($6,''), $7, $8)`
+	_, err := s.pool.Exec(ctx, q, sess.ID, sess.UserID, sess.RefreshTokenHash, sess.FamilyID, ip, ua, sess.ExpiresAt, sess.MFAVerified)
 	return err
 }
 
 func (s *store) sessionByRefreshHash(ctx context.Context, hash string) (session, error) {
 	const q = `
-		SELECT id, user_id, family_id, refresh_token_hash, expires_at, revoked_at
+		SELECT id, user_id, family_id, refresh_token_hash, expires_at, revoked_at, mfa_verified
 		FROM auth_sessions WHERE refresh_token_hash = $1`
 	var sess session
 	err := s.pool.QueryRow(ctx, q, hash).Scan(
-		&sess.ID, &sess.UserID, &sess.FamilyID, &sess.RefreshTokenHash, &sess.ExpiresAt, &sess.RevokedAt)
+		&sess.ID, &sess.UserID, &sess.FamilyID, &sess.RefreshTokenHash, &sess.ExpiresAt, &sess.RevokedAt, &sess.MFAVerified)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return sess, errNotFound
 	}
@@ -93,6 +94,91 @@ func (s *store) revokeSession(ctx context.Context, id string) error {
 func (s *store) revokeFamily(ctx context.Context, familyID string) error {
 	_, err := s.pool.Exec(ctx, `UPDATE auth_sessions SET revoked_at = now() WHERE family_id = $1 AND revoked_at IS NULL`, familyID)
 	return err
+}
+
+// --- 2FA / TOTP ---
+
+// mfaState devolve o segredo cifrado (nil se não houver) e quando o TOTP foi
+// ativado (nil = pendente ou desligado).
+func (s *store) mfaState(ctx context.Context, userID string) (enc []byte, activatedAt *time.Time, err error) {
+	const q = `SELECT totp_secret_enc, totp_activated_at FROM users WHERE id = $1 AND deleted_at IS NULL`
+	err = s.pool.QueryRow(ctx, q, userID).Scan(&enc, &activatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil, errNotFound
+	}
+	return enc, activatedAt, err
+}
+
+// setPendingTOTP grava um segredo novo e zera a ativação (re-enrollment inclusive).
+func (s *store) setPendingTOTP(ctx context.Context, userID string, enc []byte) error {
+	const q = `UPDATE users SET totp_secret_enc = $2, totp_activated_at = NULL, updated_at = now()
+	           WHERE id = $1 AND deleted_at IS NULL`
+	_, err := s.pool.Exec(ctx, q, userID, enc)
+	return err
+}
+
+// activateTOTP marca o TOTP como ativo e regrava os códigos de recuperação
+// numa transação (troca atômica).
+func (s *store) activateTOTP(ctx context.Context, userID string, recoveryHashes []string) error {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	if _, err := tx.Exec(ctx,
+		`UPDATE users SET totp_activated_at = now(), updated_at = now()
+		 WHERE id = $1 AND totp_secret_enc IS NOT NULL`, userID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM mfa_recovery_codes WHERE user_id = $1`, userID); err != nil {
+		return err
+	}
+	for _, h := range recoveryHashes {
+		if _, err := tx.Exec(ctx,
+			`INSERT INTO mfa_recovery_codes (user_id, code_hash) VALUES ($1, $2)`, userID, h); err != nil {
+			return err
+		}
+	}
+	return tx.Commit(ctx)
+}
+
+// disableTOTP apaga o segredo, a ativação e todos os códigos de recuperação.
+func (s *store) disableTOTP(ctx context.Context, userID string) error {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	if _, err := tx.Exec(ctx,
+		`UPDATE users SET totp_secret_enc = NULL, totp_activated_at = NULL, updated_at = now()
+		 WHERE id = $1`, userID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM mfa_recovery_codes WHERE user_id = $1`, userID); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+// consumeRecoveryCode marca um código como usado. Devolve true se consumiu.
+func (s *store) consumeRecoveryCode(ctx context.Context, userID, codeHash string) (bool, error) {
+	const q = `UPDATE mfa_recovery_codes SET used_at = now()
+	           WHERE user_id = $1 AND code_hash = $2 AND used_at IS NULL`
+	tag, err := s.pool.Exec(ctx, q, userID, codeHash)
+	if err != nil {
+		return false, err
+	}
+	return tag.RowsAffected() == 1, nil
+}
+
+// countUnusedRecoveryCodes serve para avisar o usuário quando estão acabando.
+func (s *store) countUnusedRecoveryCodes(ctx context.Context, userID string) (int, error) {
+	var n int
+	err := s.pool.QueryRow(ctx,
+		`SELECT count(*) FROM mfa_recovery_codes WHERE user_id = $1 AND used_at IS NULL`, userID).Scan(&n)
+	return n, err
 }
 
 func scanUser(row pgx.Row) (User, error) {

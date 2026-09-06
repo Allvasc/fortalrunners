@@ -19,6 +19,12 @@ var (
 	ErrTokenReused    = errors.New("refresh token reutilizado — sessões revogadas")
 	ErrWeakPassword   = errors.New("a senha precisa de pelo menos 8 caracteres")
 	ErrAccountBlocked = errors.New("conta suspensa ou banida")
+
+	ErrMFARequired    = errors.New("2FA obrigatório: verifique o código")
+	ErrMFAInvalidCode = errors.New("código de verificação inválido")
+	ErrMFANotPending  = errors.New("nenhuma configuração de 2FA pendente")
+	ErrMFAAlreadyOn   = errors.New("2FA já está ativo nesta conta")
+	ErrMFANotEnabled  = errors.New("2FA não está ativo nesta conta")
 )
 
 // Tokens é o par devolvido ao cliente.
@@ -28,17 +34,31 @@ type Tokens struct {
 	ExpiresAt    time.Time `json:"expires_at"`
 }
 
+// LoginResult carrega ou os tokens, ou um desafio de 2FA.
+type LoginResult struct {
+	User        User
+	Tokens      Tokens
+	MFARequired bool
+	MFAToken    string // token curto para trocar por tokens em /v1/auth/mfa/verify
+}
+
 // Service é a fachada do módulo.
 type Service struct {
 	store  *store
 	tokens tokenIssuer
+	box    secretBox
 }
 
-func NewService(deps Deps) *Service {
+func NewService(deps Deps) (*Service, error) {
+	box, err := newSecretBox(deps.MFAEncKey)
+	if err != nil {
+		return nil, err
+	}
 	return &Service{
 		store:  newStore(deps.Pool),
 		tokens: newTokenIssuer(deps.JWTSecret, deps.AccessTTL, deps.RefreshTTL),
-	}
+		box:    box,
+	}, nil
 }
 
 // Register cria a conta e já devolve tokens (auto-login).
@@ -71,28 +91,89 @@ func (s *Service) Register(ctx context.Context, in RegisterInput, ip, ua string)
 		}
 	}
 
-	tk, err := s.issue(ctx, created, "", ip, ua)
+	// Conta recém-criada não tem 2FA: a sessão já nasce "verificada".
+	tk, err := s.issue(ctx, created, "", ip, ua, true)
 	return created, tk, err
 }
 
-// Login valida credenciais e abre uma nova família de sessão.
-func (s *Service) Login(ctx context.Context, email, password, ip, ua string) (User, Tokens, error) {
+// Login valida credenciais. Se a conta tem 2FA ativo, devolve um desafio em vez
+// dos tokens (MFARequired = true).
+func (s *Service) Login(ctx context.Context, email, password, ip, ua string) (LoginResult, error) {
 	email = strings.ToLower(strings.TrimSpace(email))
 	u, err := s.store.userByEmail(ctx, email)
 	if errors.Is(err, errNotFound) {
-		return User{}, Tokens{}, ErrInvalidCreds
+		return LoginResult{}, ErrInvalidCreds
 	}
 	if err != nil {
-		return User{}, Tokens{}, err
+		return LoginResult{}, err
 	}
 	if u.PasswordHash == nil || !verifyPassword(password, *u.PasswordHash) {
-		return User{}, Tokens{}, ErrInvalidCreds
+		return LoginResult{}, ErrInvalidCreds
+	}
+	if u.Status != "active" {
+		return LoginResult{}, ErrAccountBlocked
+	}
+
+	_, activatedAt, err := s.store.mfaState(ctx, u.ID)
+	if err != nil {
+		return LoginResult{}, err
+	}
+	if activatedAt != nil {
+		ch, err := s.tokens.challenge(u.ID)
+		if err != nil {
+			return LoginResult{}, err
+		}
+		return LoginResult{MFARequired: true, MFAToken: ch}, nil
+	}
+
+	tk, err := s.issue(ctx, u, "", ip, ua, true)
+	return LoginResult{User: u, Tokens: tk}, err
+}
+
+// VerifyMFA troca o token de desafio + código (TOTP ou recuperação) pelos tokens.
+func (s *Service) VerifyMFA(ctx context.Context, challengeToken, code, ip, ua string) (User, Tokens, error) {
+	userID, err := s.tokens.parseChallenge(challengeToken)
+	if err != nil {
+		return User{}, Tokens{}, ErrSessionInvalid
+	}
+	u, err := s.store.userByID(ctx, userID)
+	if err != nil {
+		return User{}, Tokens{}, ErrSessionInvalid
 	}
 	if u.Status != "active" {
 		return User{}, Tokens{}, ErrAccountBlocked
 	}
-	tk, err := s.issue(ctx, u, "", ip, ua)
+
+	ok, err := s.checkSecondFactor(ctx, userID, code)
+	if err != nil {
+		return User{}, Tokens{}, err
+	}
+	if !ok {
+		return User{}, Tokens{}, ErrMFAInvalidCode
+	}
+
+	tk, err := s.issue(ctx, u, "", ip, ua, true)
 	return u, tk, err
+}
+
+// checkSecondFactor aceita um código TOTP válido ou consome um código de
+// recuperação de uso único.
+func (s *Service) checkSecondFactor(ctx context.Context, userID, code string) (bool, error) {
+	enc, activatedAt, err := s.store.mfaState(ctx, userID)
+	if err != nil {
+		return false, err
+	}
+	if activatedAt == nil || len(enc) == 0 {
+		return false, ErrMFANotEnabled
+	}
+	secret, err := s.box.open(enc)
+	if err != nil {
+		return false, err
+	}
+	if verifyTOTP(secret, code, time.Now()) {
+		return true, nil
+	}
+	return s.store.consumeRecoveryCode(ctx, userID, hashRecoveryCode(code))
 }
 
 // Refresh rotaciona o token. Se o apresentado já foi trocado, revoga a família inteira.
@@ -119,7 +200,8 @@ func (s *Service) Refresh(ctx context.Context, refreshToken, ip, ua string) (Tok
 	if err := s.store.revokeSession(ctx, sess.ID); err != nil {
 		return Tokens{}, err
 	}
-	return s.issue(ctx, u, sess.FamilyID, ip, ua)
+	// O refresh preserva o estado de 2FA da família de sessão.
+	return s.issue(ctx, u, sess.FamilyID, ip, ua, sess.MFAVerified)
 }
 
 // Logout revoga a sessão do refresh apresentado.
@@ -144,8 +226,8 @@ func (s *Service) ParseAccess(token string) (*Claims, error) {
 	return s.tokens.parse(token)
 }
 
-func (s *Service) issue(ctx context.Context, u User, familyID, ip, ua string) (Tokens, error) {
-	access, exp, err := s.tokens.access(u.ID, u.Role)
+func (s *Service) issue(ctx context.Context, u User, familyID, ip, ua string, mfaVerified bool) (Tokens, error) {
+	access, exp, err := s.tokens.access(u.ID, u.Role, mfaVerified)
 	if err != nil {
 		return Tokens{}, err
 	}
@@ -159,11 +241,116 @@ func (s *Service) issue(ctx context.Context, u User, familyID, ip, ua string) (T
 		FamilyID:         familyID,
 		RefreshTokenHash: refreshHash,
 		ExpiresAt:        time.Now().Add(s.tokens.refreshTTL),
+		MFAVerified:      mfaVerified,
 	}
 	if err := s.store.createSession(ctx, sess, ip, ua); err != nil {
 		return Tokens{}, err
 	}
 	return Tokens{AccessToken: access, RefreshToken: rawRefresh, ExpiresAt: exp}, nil
+}
+
+// --- 2FA: enrollment e gestão (rotas autenticadas) ---
+
+// MFAStatusView é o que /v1/auth/mfa devolve.
+type MFAStatusView struct {
+	Enabled           bool       `json:"enabled"`
+	Pending           bool       `json:"pending"` // segredo gerado, falta ativar
+	ActivatedAt       *time.Time `json:"activated_at,omitempty"`
+	RecoveryCodesLeft int        `json:"recovery_codes_left"`
+}
+
+func (s *Service) MFAStatus(ctx context.Context, userID string) (MFAStatusView, error) {
+	enc, activatedAt, err := s.store.mfaState(ctx, userID)
+	if err != nil {
+		return MFAStatusView{}, err
+	}
+	v := MFAStatusView{Enabled: activatedAt != nil, ActivatedAt: activatedAt}
+	v.Pending = activatedAt == nil && len(enc) > 0
+	if v.Enabled {
+		if n, err := s.store.countUnusedRecoveryCodes(ctx, userID); err == nil {
+			v.RecoveryCodesLeft = n
+		}
+	}
+	return v, nil
+}
+
+// SetupTOTP gera um segredo novo (pendente) e devolve o otpauth:// para o QR.
+// Recusa se o 2FA já estiver ativo — desligue antes de refazer.
+func (s *Service) SetupTOTP(ctx context.Context, userID string) (secret, otpauth string, err error) {
+	u, err := s.store.userByID(ctx, userID)
+	if err != nil {
+		return "", "", ErrSessionInvalid
+	}
+	_, activatedAt, err := s.store.mfaState(ctx, userID)
+	if err != nil {
+		return "", "", err
+	}
+	if activatedAt != nil {
+		return "", "", ErrMFAAlreadyOn
+	}
+
+	secret, err = newTOTPSecret()
+	if err != nil {
+		return "", "", err
+	}
+	enc, err := s.box.seal(secret)
+	if err != nil {
+		return "", "", err
+	}
+	if err := s.store.setPendingTOTP(ctx, userID, enc); err != nil {
+		return "", "", err
+	}
+	return secret, otpauthURL(secret, u.Email, "FortalRunners"), nil
+}
+
+// ActivateTOTP confere o primeiro código e liga o 2FA, devolvendo os códigos
+// de recuperação (mostrados uma única vez).
+func (s *Service) ActivateTOTP(ctx context.Context, userID, code string) ([]string, error) {
+	enc, activatedAt, err := s.store.mfaState(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if activatedAt != nil {
+		return nil, ErrMFAAlreadyOn
+	}
+	if len(enc) == 0 {
+		return nil, ErrMFANotPending
+	}
+	secret, err := s.box.open(enc)
+	if err != nil {
+		return nil, err
+	}
+	if !verifyTOTP(secret, code, time.Now()) {
+		return nil, ErrMFAInvalidCode
+	}
+
+	plain, hashes, err := newRecoveryCodes()
+	if err != nil {
+		return nil, err
+	}
+	if err := s.store.activateTOTP(ctx, userID, hashes); err != nil {
+		return nil, err
+	}
+	return plain, nil
+}
+
+// DisableTOTP desliga o 2FA após conferir um código válido.
+func (s *Service) DisableTOTP(ctx context.Context, userID, code string) error {
+	_, activatedAt, err := s.store.mfaState(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if activatedAt == nil {
+		return ErrMFANotEnabled
+	}
+	ok, err := s.checkSecondFactor(ctx, userID, code)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return ErrMFAInvalidCode
+	}
+	return s.store.disableTOTP(ctx, userID)
 }
 
 func isUnique(err error, constraint string) bool {

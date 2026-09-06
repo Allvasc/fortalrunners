@@ -72,7 +72,11 @@ Ver `docs/plano.html` § 16.
   - ✅ **desafios recorrentes** (semanal / quinzenal / mensal): `/v1/challenges`,
     `/v1/challenges/:slug/leaderboard`; `cmd/scheduler` abre e fecha os períodos e concede badges
   - ✅ `/v1/me/lifetime`, `/v1/me/records`
-  - ⬜ métricas de precisão (splits, cadência), mapa de calor, integrações (Strava), 2FA,
+  - ✅ **2FA (TOTP, RFC 6238)**: `/v1/auth/mfa/{setup,activate,disable}` + desafio no login
+    (`/v1/auth/mfa/verify`); segredo cifrado em repouso (AES-256-GCM, `MFA_ENC_KEY`),
+    10 códigos de recuperação de uso único, claim `mfa` no access token +
+    middleware `RequireMFA` para rotas privilegiadas
+  - ⬜ métricas de precisão (splits, cadência), mapa de calor, integrações (Strava),
     portal web (mapa MapLibre), painel de admin
 
 ## Convenções

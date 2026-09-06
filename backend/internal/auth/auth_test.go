@@ -21,7 +21,7 @@ func TestPasswordHashRoundtrip(t *testing.T) {
 func TestAccessTokenRoundtrip(t *testing.T) {
 	ti := newTokenIssuer("segredo-de-teste-com-32-bytes-ok!!", time.Minute, time.Hour)
 
-	tok, exp, err := ti.access("user_123", "runner")
+	tok, exp, err := ti.access("user_123", "runner", true)
 	if err != nil {
 		t.Fatalf("emitir: %v", err)
 	}
@@ -39,13 +39,16 @@ func TestAccessTokenRoundtrip(t *testing.T) {
 	if claims.Role != "runner" {
 		t.Fatalf("role = %q, esperado runner", claims.Role)
 	}
+	if !claims.MFA {
+		t.Fatal("claim mfa deveria ser true")
+	}
 }
 
 func TestAccessTokenRejectsWrongSecret(t *testing.T) {
 	a := newTokenIssuer("segredo-a-com-32-bytes-de-verdade!", time.Minute, time.Hour)
 	b := newTokenIssuer("segredo-b-com-32-bytes-de-verdade!", time.Minute, time.Hour)
 
-	tok, _, _ := a.access("u", "runner")
+	tok, _, _ := a.access("u", "runner", false)
 	if _, err := b.parse(tok); err == nil {
 		t.Fatal("token com assinatura de outro segredo foi aceito")
 	}

@@ -3,6 +3,7 @@
 package config
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 	"strings"
@@ -22,6 +23,8 @@ type Config struct {
 	AccessTokenTTL  time.Duration
 	RefreshTokenTTL time.Duration
 
+	MFAEncKey string // base64 de 32 bytes — cifra o segredo TOTP em repouso
+
 	GoogleClientID     string
 	GoogleClientSecret string
 	GoogleRedirectURL  string
@@ -39,6 +42,7 @@ func Load() (Config, error) {
 		RedisURL:           get("REDIS_URL", "redis://localhost:6379/0"),
 		NATSURL:            get("NATS_URL", "nats://localhost:4222"),
 		JWTSecret:          os.Getenv("JWT_SECRET"),
+		MFAEncKey:          os.Getenv("MFA_ENC_KEY"),
 		GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
 		GoogleRedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL"),
@@ -61,6 +65,17 @@ func Load() (Config, error) {
 	}
 	if c.JWTSecret == "" {
 		c.JWTSecret = "dev-only-insecure-secret-do-not-use-in-prod"
+	}
+
+	if c.MFAEncKey == "" {
+		if c.IsProd() {
+			return c, fmt.Errorf("config: MFA_ENC_KEY é obrigatório em produção (base64 de 32 bytes)")
+		}
+		// dev: chave fixa e óbvia; nunca serve em produção (exatamente 32 bytes).
+		c.MFAEncKey = base64.StdEncoding.EncodeToString([]byte("dev-only-mfa-enc-key-do-not-ship"))
+	}
+	if raw, err := base64.StdEncoding.DecodeString(c.MFAEncKey); err != nil || len(raw) != 32 {
+		return c, fmt.Errorf("config: MFA_ENC_KEY precisa ser base64 de exatamente 32 bytes")
 	}
 	return c, nil
 }
