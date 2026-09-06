@@ -59,10 +59,10 @@ export function Recording({ navigation }: Props) {
   }, [phase]);
 
   const upload = useMutation({
-    mutationFn: async (data: { startedAt: number; points: GPSPoint[] }) => {
+    mutationFn: async (data: { startedAt: number; points: GPSPoint[]; cadence: { t: number; v: number }[] }) => {
       const start = new Date(data.startedAt).toISOString();
       const end = new Date(data.points[data.points.length - 1]?.t ?? Date.now()).toISOString();
-      return api.uploadRun({ started_at: start, ended_at: end, points: data.points });
+      return api.uploadRun({ started_at: start, ended_at: end, points: data.points, cadence: data.cadence });
     },
     onSuccess: (run) => navigation.replace("Summary", { runId: run.id }),
     onError: (e) =>
@@ -76,7 +76,7 @@ export function Recording({ navigation }: Props) {
   };
 
   const finish = async () => {
-    const { startedAt: sa, points } = await stopRecording();
+    const { startedAt: sa, points, cadence } = await stopRecording();
     setPhase("idle");
     if (computeStats(points, sa).distanceM < 50) {
       Alert.alert("Corrida muito curta", "Menos de 50 m — nada foi salvo.", [
@@ -84,7 +84,7 @@ export function Recording({ navigation }: Props) {
       ]);
       return;
     }
-    upload.mutate({ startedAt: sa, points });
+    upload.mutate({ startedAt: sa, points, cadence });
   };
 
   return (

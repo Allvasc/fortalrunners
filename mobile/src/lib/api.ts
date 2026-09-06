@@ -108,6 +108,7 @@ export const api = {
     started_at: string;
     ended_at: string;
     points: RunPoint[];
+    cadence?: { t: number; v: number }[];
     mock_location?: boolean;
   }) =>
     request<RunView>("/v1/runs", {

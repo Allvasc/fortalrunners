@@ -3,11 +3,13 @@
 // background e a tela). A tela lê num intervalo e recalcula distância/pace.
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
+import { Pedometer } from "expo-sensors";
 import * as TaskManager from "expo-task-manager";
 
 export const LOCATION_TASK = "fr-location-task";
 const BUF_KEY = "fr.rec.points";
 const META_KEY = "fr.rec.meta";
+const CAD_KEY = "fr.rec.cadence";
 
 export type GPSPoint = {
   lat: number;
@@ -17,6 +19,8 @@ export type GPSPoint = {
   acc?: number; // precisão horizontal (m)
   spd?: number; // m/s
 };
+
+export type Sample = { t: number; v: number }; // cadência (passos/min) no tempo
 
 type Meta = { startedAt: number; paused: boolean };
 
@@ -58,10 +62,41 @@ export async function ensurePermissions(): Promise<boolean> {
   return bg.status === "granted" || fg.status === "granted"; // background é desejável, não obrigatório
 }
 
+// --- cadência (pedômetro no foreground; para junto com a tela ativa) ---
+let cadSub: { remove: () => void } | null = null;
+let lastSteps = 0;
+let lastStepsAt = 0;
+
+async function startCadence() {
+  const ok = await Pedometer.isAvailableAsync().catch(() => false);
+  if (!ok) return;
+  lastSteps = 0;
+  lastStepsAt = Date.now();
+  cadSub = Pedometer.watchStepCount(async ({ steps }) => {
+    const now = Date.now();
+    const dSteps = steps - lastSteps;
+    const dt = (now - lastStepsAt) / 1000;
+    lastSteps = steps;
+    lastStepsAt = now;
+    if (dt < 5 || dSteps <= 0) return;
+    const spm = Math.round((dSteps / dt) * 60);
+    const raw = await AsyncStorage.getItem(CAD_KEY);
+    const buf: Sample[] = raw ? JSON.parse(raw) : [];
+    buf.push({ t: now, v: spm });
+    await AsyncStorage.setItem(CAD_KEY, JSON.stringify(buf));
+  });
+}
+
+function stopCadence() {
+  cadSub?.remove();
+  cadSub = null;
+}
+
 export async function startRecording(): Promise<boolean> {
   if (!(await ensurePermissions())) return false;
-  await AsyncStorage.multiRemove([BUF_KEY, META_KEY]);
+  await AsyncStorage.multiRemove([BUF_KEY, META_KEY, CAD_KEY]);
   await AsyncStorage.setItem(META_KEY, JSON.stringify({ startedAt: Date.now(), paused: false } satisfies Meta));
+  void startCadence();
 
   const running = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK).catch(() => false);
   if (running) await Location.stopLocationUpdatesAsync(LOCATION_TASK);
@@ -87,14 +122,16 @@ export async function setPaused(paused: boolean) {
   if (meta) await AsyncStorage.setItem(META_KEY, JSON.stringify({ ...meta, paused }));
 }
 
-export async function stopRecording(): Promise<{ startedAt: number; points: GPSPoint[] }> {
+export async function stopRecording(): Promise<{ startedAt: number; points: GPSPoint[]; cadence: Sample[] }> {
   const running = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK).catch(() => false);
   if (running) await Location.stopLocationUpdatesAsync(LOCATION_TASK);
+  stopCadence();
   const meta = await readMeta();
-  const raw = await AsyncStorage.getItem(BUF_KEY);
-  const points: GPSPoint[] = raw ? JSON.parse(raw) : [];
-  await AsyncStorage.multiRemove([BUF_KEY, META_KEY]);
-  return { startedAt: meta?.startedAt ?? (points[0]?.t ?? Date.now()), points };
+  const [ptsRaw, cadRaw] = await AsyncStorage.multiGet([BUF_KEY, CAD_KEY]);
+  const points: GPSPoint[] = ptsRaw[1] ? JSON.parse(ptsRaw[1]) : [];
+  const cadence: Sample[] = cadRaw[1] ? JSON.parse(cadRaw[1]) : [];
+  await AsyncStorage.multiRemove([BUF_KEY, META_KEY, CAD_KEY]);
+  return { startedAt: meta?.startedAt ?? (points[0]?.t ?? Date.now()), points, cadence };
 }
 
 export async function readLive(): Promise<{ meta: Meta | null; points: GPSPoint[] }> {
