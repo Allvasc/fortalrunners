@@ -914,6 +914,9 @@ table.splits .bar-cell {
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
+    /* fade na borda direita sinalizando que há mais itens p/ rolar */
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
   }
   .rail nav::-webkit-scrollbar {
     display: none;

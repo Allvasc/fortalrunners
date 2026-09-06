@@ -4,6 +4,22 @@ import { api, ApiError, type FlaggedRun } from "../lib/api";
 import { clock, date, km, pace } from "../lib/format";
 
 export function Admin() {
+  const me = useQuery({ queryKey: ["me"], queryFn: api.me });
+
+  if (me.isLoading) {
+    return <div className="page"><p className="muted">Carregando…</p></div>;
+  }
+  if (!me.data || (me.data.role !== "admin" && me.data.role !== "moderator")) {
+    return (
+      <div className="page">
+        <header className="page-head"><h1>Admin</h1></header>
+        <p className="muted">
+          Esta área é só para contas com perfil <code>admin</code> ou <code>moderator</code>.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="page">
       <header className="page-head">
