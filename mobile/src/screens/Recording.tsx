@@ -44,6 +44,8 @@ export function Recording({ navigation }: Props) {
     })();
     return () => {
       alive = false;
+      // se o usuário saiu sem concluir, encerra o GPS e a notificação
+      stopRecording().catch(() => {});
     };
   }, [navigation]);
 

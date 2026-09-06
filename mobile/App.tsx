@@ -1,7 +1,8 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
+import { cleanupStaleRecording } from "./src/lib/recorder";
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -72,6 +73,10 @@ export default function App() {
 
 function Root() {
   const authed = useQuery({ queryKey: ["authed"], queryFn: isAuthed });
+
+  useEffect(() => {
+    cleanupStaleRecording();
+  }, []);
 
   const onReady = useCallback(() => {
     SplashScreen.hideAsync().catch(() => {});

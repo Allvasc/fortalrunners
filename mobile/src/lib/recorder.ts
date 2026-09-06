@@ -122,6 +122,28 @@ export async function setPaused(paused: boolean) {
   if (meta) await AsyncStorage.setItem(META_KEY, JSON.stringify({ ...meta, paused }));
 }
 
+/**
+ * Encerra uma gravação órfã: a task de GPS em background continua rodando (com a
+ * notificação "Gravando sua corrida…") mas não há corrida ativa — acontece quando
+ * o app é fechado à força durante uma corrida. Chamar na abertura do app.
+ */
+export async function cleanupStaleRecording() {
+  try {
+    const running = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK).catch(() => false);
+    if (!running) return;
+    const meta = await readMeta();
+    // sem meta = órfã; meta com mais de 8h = corrida esquecida
+    const stale = !meta || Date.now() - meta.startedAt > 8 * 3600 * 1000;
+    if (stale) {
+      await Location.stopLocationUpdatesAsync(LOCATION_TASK).catch(() => {});
+      stopCadence();
+      await AsyncStorage.multiRemove([BUF_KEY, META_KEY, CAD_KEY]);
+    }
+  } catch {
+    /* best-effort */
+  }
+}
+
 export async function stopRecording(): Promise<{ startedAt: number; points: GPSPoint[]; cadence: Sample[] }> {
   const running = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK).catch(() => false);
   if (running) await Location.stopLocationUpdatesAsync(LOCATION_TASK);

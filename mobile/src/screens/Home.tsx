@@ -42,8 +42,13 @@ export function Home({ navigation }: Props) {
           <Tap
             style={s.logout}
             onPress={async () => {
-              await api.logout();
+              try {
+                await api.logout();
+              } catch {
+                /* segue mesmo se o servidor falhar — o token local já foi apagado */
+              }
               qc.clear();
+              qc.setQueryData(["authed"], false); // força a volta pra tela de login
             }}
           >
             <Ionicons name="log-out-outline" size={20} color={C.ink3} />
