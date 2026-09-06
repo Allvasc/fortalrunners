@@ -201,16 +201,6 @@ func (s *store) reviewRun(ctx context.Context, runID, decision string, voidTerri
 
 // --- zonas de risco ---
 
-type riskZone struct {
-	ID       string          `json:"id"`
-	CityID   string          `json:"city_id"`
-	Severity int             `json:"severity"`
-	Source   string          `json:"source"`
-	Note     *string         `json:"note"`
-	Status   string          `json:"status"`
-	Geom     json.RawMessage `json:"geom"`
-}
-
 func (s *store) riskZones(ctx context.Context, bbox [4]float64) (string, error) {
 	const q = `
 		SELECT jsonb_build_object('type','FeatureCollection','features',

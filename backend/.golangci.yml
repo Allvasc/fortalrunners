@@ -14,8 +14,14 @@ linters:
     - bodyclose
     - rowserrcheck
     - sqlclosecheck
-    - misspell
     - unconvert
+  # misspell fora: o código é comentado em português e ele só entende inglês.
+
+linters-settings:
+  errcheck:
+    # rollback de transação em defer e drain de conexão: falha aqui não muda nada.
+    exclude-functions:
+      - (github.com/jackc/pgx/v5.Tx).Rollback
 
 issues:
   exclude-rules:

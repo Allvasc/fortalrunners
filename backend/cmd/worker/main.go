@@ -44,7 +44,7 @@ func main() {
 		log.Error("NATS indisponível — o worker precisa da fila", "err", err)
 		os.Exit(1)
 	}
-	defer nc.Drain()
+	defer func() { _ = nc.Drain() }()
 
 	proc := territory.NewProcessor(pool, log)
 	rollup := stats.NewRollup(pool, log)

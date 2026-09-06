@@ -253,7 +253,7 @@ func (s *Service) Export(ctx context.Context, userID string) (map[string]any, er
 			}
 			m := map[string]any{}
 			for i, f := range fields {
-				m[string(f.Name)] = vals[i]
+				m[f.Name] = vals[i]
 			}
 			items = append(items, m)
 		}
