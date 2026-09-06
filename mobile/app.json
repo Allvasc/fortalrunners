@@ -20,7 +20,8 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": "Para a foto do check-in de marco histórico, tirada só pela câmera do app."
+          "cameraPermission": "Para a foto do check-in de marco histórico, tirada só pela câmera do app.",
+          "microphonePermission": false
         }
       ]
     ],
