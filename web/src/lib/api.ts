@@ -135,6 +135,7 @@ export type PublicUser = {
   username: string;
   email: string;
   role: string;
+  email_verified?: boolean;
 };
 
 export type LoginResult =
@@ -326,6 +327,13 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ token, password }),
     }),
+  verifyEmail: (token: string) =>
+    request<{ status: string }>("/v1/auth/email/verify", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    }),
+  resendEmailVerification: () =>
+    request<{ status: string }>("/v1/auth/email/verify/send", { method: "POST" }),
 
   async verifyMfa(mfaToken: string, code: string) {
     const r = await request<{ user: PublicUser; tokens: Tokens }>("/v1/auth/mfa/verify", {

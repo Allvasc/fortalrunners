@@ -16,14 +16,15 @@ var errNotFound = errors.New("não encontrado")
 
 // User é a projeção mínima usada pelo módulo auth.
 type User struct {
-	ID           string
-	AthleteID    string
-	Username     string
-	Email        string
-	PasswordHash *string
-	DisplayName  *string
-	Role         string
-	Status       string
+	ID            string
+	AthleteID     string
+	Username      string
+	Email         string
+	PasswordHash  *string
+	DisplayName   *string
+	Role          string
+	Status        string
+	EmailVerified bool
 }
 
 type store struct{ pool *pgxpool.Pool }
@@ -35,21 +36,21 @@ func (s *store) createUser(ctx context.Context, u User) (User, error) {
 	const q = `
 		INSERT INTO users (id, athlete_id, username, email, password_hash, display_name, role, status)
 		VALUES ($1, 'FR-' || lpad(nextval('athlete_id_seq')::text, 7, '0'), $2, $3, $4, $5, 'runner', 'active')
-		RETURNING id, athlete_id, username, email, password_hash, display_name, role, status`
+		RETURNING id, athlete_id, username, email, password_hash, display_name, role, status, (email_verified_at IS NOT NULL)`
 	row := s.pool.QueryRow(ctx, q, u.ID, u.Username, u.Email, u.PasswordHash, u.DisplayName)
 	return scanUser(row)
 }
 
 func (s *store) userByEmail(ctx context.Context, email string) (User, error) {
 	const q = `
-		SELECT id, athlete_id, username, email, password_hash, display_name, role, status
+		SELECT id, athlete_id, username, email, password_hash, display_name, role, status, (email_verified_at IS NOT NULL)
 		FROM users WHERE email = $1 AND deleted_at IS NULL`
 	return scanUser(s.pool.QueryRow(ctx, q, email))
 }
 
 func (s *store) userByID(ctx context.Context, id string) (User, error) {
 	const q = `
-		SELECT id, athlete_id, username, email, password_hash, display_name, role, status
+		SELECT id, athlete_id, username, email, password_hash, display_name, role, status, (email_verified_at IS NOT NULL)
 		FROM users WHERE id = $1 AND deleted_at IS NULL`
 	return scanUser(s.pool.QueryRow(ctx, q, id))
 }
@@ -95,7 +96,7 @@ func (s *store) createOAuthUser(ctx context.Context, u User, provider, providerU
 		INSERT INTO users (id, athlete_id, username, email, display_name, email_verified_at, role, status)
 		VALUES ($1, 'FR-' || lpad(nextval('athlete_id_seq')::text, 7, '0'), $2, $3, $4,
 		        CASE WHEN $5 THEN now() ELSE NULL END, 'runner', 'active')
-		RETURNING id, athlete_id, username, email, password_hash, display_name, role, status`
+		RETURNING id, athlete_id, username, email, password_hash, display_name, role, status, (email_verified_at IS NOT NULL)`
 	created, err := scanUser(tx.QueryRow(ctx, q, u.ID, u.Username, u.Email, u.DisplayName, emailVerified))
 	if err != nil {
 		return User{}, err
@@ -181,6 +182,46 @@ func (s *store) setPassword(ctx context.Context, userID, hash string) error {
 	_, err := s.pool.Exec(ctx,
 		`UPDATE users SET password_hash = $2, updated_at = now() WHERE id = $1`, userID, hash)
 	return err
+}
+
+// --- verificação de e-mail ---
+
+func (s *store) createEmailVerifyToken(ctx context.Context, tokenHash, userID, email string, exp time.Time) error {
+	_, err := s.pool.Exec(ctx,
+		`INSERT INTO email_verification_tokens (token_hash, user_id, email, expires_at) VALUES ($1, $2, $3, $4)`,
+		tokenHash, userID, email, exp)
+	return err
+}
+
+// consumeEmailVerifyToken marca o token como usado e carimba users.email_verified_at
+// se o e-mail do token ainda bate com o da conta. Devolve o user_id.
+func (s *store) consumeEmailVerifyToken(ctx context.Context, tokenHash string) (string, error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return "", err
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	var userID, email string
+	err = tx.QueryRow(ctx, `
+		UPDATE email_verification_tokens SET used_at = now()
+		WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now()
+		RETURNING user_id, email`, tokenHash).Scan(&userID, &email)
+	if err != nil {
+		return "", err
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE users SET email_verified_at = now(), updated_at = now()
+		WHERE id = $1 AND lower(email) = lower($2) AND email_verified_at IS NULL`, userID, email); err != nil {
+		return "", err
+	}
+	return userID, tx.Commit(ctx)
+}
+
+func (s *store) emailVerifiedAt(ctx context.Context, userID string) (*time.Time, error) {
+	var at *time.Time
+	err := s.pool.QueryRow(ctx, `SELECT email_verified_at FROM users WHERE id = $1`, userID).Scan(&at)
+	return at, err
 }
 
 // --- 2FA / TOTP ---
@@ -270,7 +311,7 @@ func (s *store) countUnusedRecoveryCodes(ctx context.Context, userID string) (in
 
 func scanUser(row pgx.Row) (User, error) {
 	var u User
-	err := row.Scan(&u.ID, &u.AthleteID, &u.Username, &u.Email, &u.PasswordHash, &u.DisplayName, &u.Role, &u.Status)
+	err := row.Scan(&u.ID, &u.AthleteID, &u.Username, &u.Email, &u.PasswordHash, &u.DisplayName, &u.Role, &u.Status, &u.EmailVerified)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return u, errNotFound
 	}

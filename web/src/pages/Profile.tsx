@@ -36,6 +36,8 @@ export function Profile() {
         )}
       </section>
 
+      {me.data && me.data.email_verified === false && <VerifyEmailBanner />}
+
       <section>
         <h2>Contas conectadas</h2>
         <ConnectionsPanel />
@@ -51,6 +53,32 @@ export function Profile() {
         <MFAPanel />
       </section>
     </div>
+  );
+}
+
+function VerifyEmailBanner() {
+  const m = useMutation({ mutationFn: api.resendEmailVerification });
+  return (
+    <section>
+      <h2>Confirme seu e-mail</h2>
+      <div className="card">
+        <p className="muted small">
+          Enviamos um link de confirmação quando você criou a conta. Não achou? Reenvie.
+        </p>
+        {m.isSuccess ? (
+          <p className="ok small">E-mail reenviado. Confira sua caixa (e o spam).</p>
+        ) : (
+          <button className="btn quiet" onClick={() => m.mutate()} disabled={m.isPending}>
+            {m.isPending ? "Enviando…" : "Reenviar e-mail de confirmação"}
+          </button>
+        )}
+        {m.isError && (
+          <p className="err small">
+            {m.error instanceof ApiError ? m.error.message : "Não foi possível reenviar."}
+          </p>
+        )}
+      </div>
+    </section>
   );
 }
 

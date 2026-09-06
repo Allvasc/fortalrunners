@@ -129,6 +129,14 @@ func (s *Service) Register(ctx context.Context, in RegisterInput, ip, ua string)
 		}
 	}
 
+	// Dispara a confirmação de e-mail em background (best-effort — não bloqueia
+	// nem falha o cadastro).
+	go func() {
+		bg, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+		_ = s.SendEmailVerification(bg, created.ID)
+	}()
+
 	// Conta recém-criada não tem 2FA: a sessão já nasce "verificada".
 	tk, err := s.issue(ctx, created, "", ip, ua, true)
 	return created, tk, err

@@ -46,6 +46,7 @@ func (h *Handler) Register(g *echo.Group) {
 	a.POST("/mfa/verify", h.mfaVerify) // troca o desafio de login pelo par de tokens
 	a.POST("/password/forgot", h.passwordForgot)
 	a.POST("/password/reset", h.passwordReset)
+	a.POST("/email/verify", h.emailVerify) // consome o token do e-mail (público)
 
 	a.GET("/oauth/:provider", h.oauthStart)
 	a.GET("/oauth/:provider/callback", h.oauthCallback)
@@ -59,6 +60,31 @@ func (h *Handler) RegisterSecured(g *echo.Group) {
 	m.POST("/setup", h.mfaSetup)
 	m.POST("/activate", h.mfaActivate)
 	m.POST("/disable", h.mfaDisable)
+
+	g.POST("/auth/email/verify/send", h.emailVerifySend) // reenvia o e-mail de confirmação
+}
+
+func (h *Handler) emailVerify(c echo.Context) error {
+	var req struct {
+		Token string `json:"token"`
+	}
+	if err := c.Bind(&req); err != nil || req.Token == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "token obrigatório")
+	}
+	if err := h.svc.VerifyEmail(c.Request().Context(), req.Token); err != nil {
+		return authErr(err)
+	}
+	return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
+}
+
+func (h *Handler) emailVerifySend(c echo.Context) error {
+	if err := h.svc.SendEmailVerification(c.Request().Context(), UserID(c)); err != nil {
+		if errors.Is(err, ErrAlreadyVerified) {
+			return c.JSON(http.StatusOK, map[string]string{"status": "already_verified"})
+		}
+		return authErr(err)
+	}
+	return c.JSON(http.StatusOK, map[string]string{"status": "sent"})
 }
 
 func (h *Handler) passwordForgot(c echo.Context) error {
@@ -312,11 +338,12 @@ func (h *Handler) MeHandler(c echo.Context) error {
 
 func publicUser(u User) map[string]any {
 	return map[string]any{
-		"id":         u.ID,
-		"athlete_id": u.AthleteID,
-		"username":   u.Username,
-		"email":      u.Email,
-		"role":       u.Role,
+		"id":             u.ID,
+		"athlete_id":     u.AthleteID,
+		"username":       u.Username,
+		"email":          u.Email,
+		"role":           u.Role,
+		"email_verified": u.EmailVerified,
 	}
 }
 
@@ -342,8 +369,10 @@ func authErr(err error) error {
 		return echo.NewHTTPError(http.StatusConflict, err.Error())
 	case errors.Is(err, ErrWeakPassword):
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
-	case errors.Is(err, ErrResetInvalid):
+	case errors.Is(err, ErrResetInvalid), errors.Is(err, ErrVerifyInvalid):
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	case errors.Is(err, ErrAlreadyVerified):
+		return echo.NewHTTPError(http.StatusConflict, err.Error())
 	default:
 		return echo.NewHTTPError(http.StatusInternalServerError, "erro interno")
 	}

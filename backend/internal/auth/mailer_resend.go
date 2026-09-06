@@ -31,7 +31,6 @@ func NewMailer(apiKey, from string) Mailer {
 }
 
 func (m *ResendMailer) SendPasswordReset(ctx context.Context, to, link string) error {
-	subject := "Redefinição de senha — FortalRunners"
 	text := "Você pediu para redefinir sua senha.\n\nAbra este link (vale por 30 minutos):\n" + link +
 		"\n\nSe não foi você, ignore este e-mail — sua senha continua a mesma."
 	html := fmt.Sprintf(`<div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;color:#16262A">
@@ -40,7 +39,22 @@ func (m *ResendMailer) SendPasswordReset(ctx context.Context, to, link string) e
 <p><a href="%s" style="display:inline-block;background:#0C7F86;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none">Criar nova senha</a></p>
 <p style="color:#7B8688;font-size:13px">O link vale por 30 minutos. Se não foi você, ignore este e-mail.</p>
 </div>`, link)
+	return m.send(ctx, to, "Redefinição de senha — FortalRunners", text, html)
+}
 
+func (m *ResendMailer) SendEmailVerification(ctx context.Context, to, link string) error {
+	text := "Confirme seu e-mail no FortalRunners.\n\nAbra este link (vale por 48 horas):\n" + link +
+		"\n\nSe não foi você que criou a conta, ignore este e-mail."
+	html := fmt.Sprintf(`<div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;color:#16262A">
+<h2 style="color:#0C7F86">Confirme seu e-mail</h2>
+<p>Falta só confirmar seu e-mail para liberar tudo no FortalRunners.</p>
+<p><a href="%s" style="display:inline-block;background:#0C7F86;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none">Confirmar e-mail</a></p>
+<p style="color:#7B8688;font-size:13px">O link vale por 48 horas. Se não foi você, ignore este e-mail.</p>
+</div>`, link)
+	return m.send(ctx, to, "Confirme seu e-mail — FortalRunners", text, html)
+}
+
+func (m *ResendMailer) send(ctx context.Context, to, subject, text, html string) error {
 	body, _ := json.Marshal(map[string]any{
 		"from": m.from, "to": []string{to}, "subject": subject, "text": text, "html": html,
 	})

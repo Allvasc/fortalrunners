@@ -21,12 +21,18 @@ const resetTTL = 30 * time.Minute
 // real (Resend/SendGrid/SES) é plugado depois sem tocar no resto.
 type Mailer interface {
 	SendPasswordReset(ctx context.Context, to, link string) error
+	SendEmailVerification(ctx context.Context, to, link string) error
 }
 
 type logMailer struct{ log *slog.Logger }
 
 func (m logMailer) SendPasswordReset(_ context.Context, to, link string) error {
 	m.log.Info("password reset (sem provedor de e-mail configurado)", "to", to, "link", link)
+	return nil
+}
+
+func (m logMailer) SendEmailVerification(_ context.Context, to, link string) error {
+	m.log.Info("verificação de e-mail (sem provedor de e-mail configurado)", "to", to, "link", link)
 	return nil
 }
 
