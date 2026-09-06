@@ -11,7 +11,7 @@ const BASE: string =
 const KEY = "fr.tokens";
 
 export type Tokens = { access_token: string; refresh_token: string; expires_at: string };
-export type PublicUser = { id: string; athlete_id: string; username: string; email: string; role: string };
+export type PublicUser = { id: string; athlete_id: string; username: string; email: string; role: string; email_verified?: boolean };
 
 export type GeoFC = { type: "FeatureCollection"; features: GeoJSON.Feature[] };
 
@@ -250,6 +250,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ token, password }),
     }),
+  resendEmailVerification: () =>
+    request<{ status: string }>("/v1/auth/email/verify/send", { method: "POST" }),
 
   async verifyMfa(mfaToken: string, code: string) {
     const r = await request<{ user: PublicUser; tokens: Tokens }>("/v1/auth/mfa/verify", {

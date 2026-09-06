@@ -17,6 +17,7 @@ export function SettingsScreen() {
   const devices = useQuery({ queryKey: ["devices"], queryFn: api.devices });
   const badges = useQuery({ queryKey: ["badges"], queryFn: api.badges });
   const sub = useQuery({ queryKey: ["subscription"], queryFn: api.subscription });
+  const me = useQuery({ queryKey: ["me"], queryFn: api.me });
 
   const [theme, setTheme] = useState<ThemePref>(themePref());
   const [kind, setKind] = useState<(typeof KINDS)[number]>("watch");
@@ -26,6 +27,15 @@ export function SettingsScreen() {
     setThemePref(t);
     setTheme(t);
     Alert.alert("Tema alterado", "Feche e reabra o app para aplicar em todas as telas.");
+  }
+
+  async function resendVerify() {
+    try {
+      await api.resendEmailVerification();
+      Alert.alert("Enviado", "Confira sua caixa de entrada (e o spam).");
+    } catch (e: any) {
+      Alert.alert("Ops", e?.message ?? "Não foi possível enviar.");
+    }
   }
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
@@ -73,6 +83,18 @@ export function SettingsScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {me.data && me.data.email_verified === false && (
+        <View style={s.card}>
+          <Text style={s.section}>Confirme seu e-mail</Text>
+          <Text style={s.meta}>
+            Enviamos um link quando você criou a conta. Não achou? Reenvie para {me.data.email}.
+          </Text>
+          <TouchableOpacity style={s.btnGhost} onPress={resendVerify}>
+            <Text style={s.btnGhostText}>Reenviar e-mail de confirmação</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={s.card}>
         <Text style={s.section}>Aparência</Text>
