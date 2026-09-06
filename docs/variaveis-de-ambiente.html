@@ -1,0 +1,304 @@
+<title>FortalRunners — Variáveis de Ambiente</title>
+<meta name="description" content="Toda variável de ambiente do backend FortalRunners: o que faz, se é obrigatória, como obter e onde configurar no Render.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --sand: #F5F2EC; --surface: #FCFAF5; --surface-2: #FFFFFF;
+    --ink: #16262A; --ink-soft: #4A5A5D; --line: #E2DCCF; --line-strong: #CDC5B2;
+    --teal: #0E7C86; --teal-deep: #0A5A61; --coral: #E05633; --sun: #C98F2E;
+    --good: #2E8F63; --crit: #C7402B;
+    --f-display: "Archivo", ui-sans-serif, system-ui, sans-serif;
+    --f-body: "Newsreader", Georgia, serif;
+    --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sand: #0E1618; --surface: #152124; --surface-2: #1B292C;
+      --ink: #E9E4D7; --ink-soft: #A4AEAE; --line: #29363A; --line-strong: #3A4A4E;
+      --teal: #3CB4BE; --teal-deep: #6FD0D8; --coral: #FF7C50; --sun: #E4BA5D;
+      --good: #45B37F; --crit: #E4634A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --sand: #0E1618; --surface: #152124; --surface-2: #1B292C;
+    --ink: #E9E4D7; --ink-soft: #A4AEAE; --line: #29363A; --line-strong: #3A4A4E;
+    --teal: #3CB4BE; --teal-deep: #6FD0D8; --coral: #FF7C50; --sun: #E4BA5D;
+    --good: #45B37F; --crit: #E4634A;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--sand); color: var(--ink);
+    font-family: var(--f-body); font-size: 1rem; line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: clamp(1.2rem, 4vw, 3.5rem); }
+  header { border-bottom: 1px solid var(--line); padding-bottom: 1.6rem; margin-bottom: 2rem; }
+  .eyebrow {
+    font-family: var(--f-mono); font-size: 0.78rem; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--teal-deep); margin: 0 0 0.8rem;
+  }
+  :root[data-theme="dark"] .eyebrow, :root:not([data-theme="light"]) .eyebrow { color: var(--teal); }
+  h1 {
+    font-family: var(--f-display); font-weight: 700; font-size: clamp(2rem, 1.6rem + 2vw, 3rem);
+    line-height: 1.02; letter-spacing: -0.02em; margin: 0 0 0.8rem; text-wrap: balance;
+  }
+  .lede { font-size: 1.15rem; color: var(--ink-soft); max-width: 62ch; margin: 0; }
+  h2 {
+    font-family: var(--f-display); font-weight: 700; font-size: 1.5rem;
+    letter-spacing: -0.01em; margin: 2.8rem 0 0.3rem; scroll-margin-top: 1rem;
+  }
+  h2 .n { font-family: var(--f-mono); font-size: 0.9rem; color: var(--teal); font-weight: 400; }
+  h2 + p { color: var(--ink-soft); margin: 0 0 1.2rem; max-width: 64ch; }
+  a { color: var(--teal-deep); }
+  :root[data-theme="dark"] a, :root:not([data-theme="light"]) a { color: var(--teal); }
+  code {
+    font-family: var(--f-mono); font-size: 0.85em; background: var(--surface-2);
+    border: 1px solid var(--line); border-radius: 4px; padding: 0.08em 0.36em;
+  }
+  .callout {
+    border-left: 3px solid var(--coral); background: color-mix(in srgb, var(--coral) 7%, var(--surface));
+    padding: 0.9rem 1.1rem; margin: 1.4rem 0; border-radius: 0 6px 6px 0; font-size: 0.95rem;
+  }
+  .callout.teal { border-left-color: var(--teal); background: color-mix(in srgb, var(--teal) 8%, var(--surface)); }
+  .callout strong { font-weight: 600; }
+
+  .var { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); margin: 0.9rem 0; overflow: hidden; }
+  .var-head {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 0.9rem;
+    padding: 0.8rem 1rem; background: var(--surface-2); border-bottom: 1px solid var(--line);
+  }
+  .var-name { font-family: var(--f-mono); font-size: 0.95rem; font-weight: 500; color: var(--ink); }
+  .tag {
+    font-family: var(--f-mono); font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 0.16rem 0.5rem; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--ink-soft);
+  }
+  .tag.req { color: #fff; background: var(--crit); border-color: var(--crit); }
+  .tag.prod { color: #1a1400; background: var(--sun); border-color: var(--sun); }
+  .tag.opt { color: var(--good); border-color: var(--good); }
+  .var-body { padding: 0.85rem 1rem; }
+  .var-body p { margin: 0 0 0.55rem; }
+  .var-body p:last-child { margin-bottom: 0; }
+  .kv { font-size: 0.9rem; color: var(--ink-soft); }
+  .kv b { font-family: var(--f-mono); font-size: 0.76rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--teal-deep); font-weight: 500; margin-right: 0.4rem; }
+  :root[data-theme="dark"] .kv b, :root:not([data-theme="light"]) .kv b { color: var(--teal); }
+
+  .toc { font-family: var(--f-display); font-size: 0.95rem; margin: 1.5rem 0 0; padding: 0; list-style: none; columns: 2 200px; column-gap: 2rem; }
+  .toc li { margin: 0.25rem 0; break-inside: avoid; }
+  footer { margin-top: 3rem; border-top: 1px solid var(--line); padding-top: 1.4rem; font-family: var(--f-mono); font-size: 0.82rem; color: var(--ink-soft); }
+  ::selection { background: color-mix(in srgb, var(--teal) 30%, transparent); }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">FortalRunners · Referência de configuração · 06 set 2026</p>
+    <h1>Variáveis de ambiente</h1>
+    <p class="lede">Toda variável que o backend lê. Cada uma diz o que faz, se é obrigatória, como obter e onde configurar no Render. O arquivo prático para copiar é <code>backend/.env.example</code>.</p>
+    <ol class="toc">
+      <li><a href="#nucleo">01 · Núcleo (obrigatório)</a></li>
+      <li><a href="#social">02 · Login social</a></li>
+      <li><a href="#strava">03 · Strava</a></li>
+      <li><a href="#pagamentos">04 · Pagamentos (Asaas)</a></li>
+      <li><a href="#ia">05 · Coach IA</a></li>
+      <li><a href="#clima">06 · Clima</a></li>
+      <li><a href="#operacao">07 · Operação</a></li>
+      <li><a href="#front">08 · Front (web &amp; mobile)</a></li>
+      <li><a href="#render">09 · O que já está no render.yaml</a></li>
+    </ol>
+  </header>
+
+  <div class="callout teal">
+    <strong>Como ler as etiquetas:</strong>
+    <span class="tag req">obrigatória</span> a API não sobe sem ela ·
+    <span class="tag prod">só em prod</span> tem default de dev, mas em produção precisa de valor real ·
+    <span class="tag opt">opcional</span> vazia = o recurso degrada com elegância (501 / sandbox / fallback).
+  </div>
+
+  <h2 id="nucleo"><span class="n">01</span> Núcleo</h2>
+  <p>Sem isto a API não funciona. Em produção, gere segredos fortes e nunca os commite.</p>
+
+  <div class="var">
+    <div class="var-head"><span class="var-name">DATABASE_URL</span><span class="tag req">obrigatória</span></div>
+    <div class="var-body">
+      <p>String de conexão do PostgreSQL + PostGIS. A API roda as migrações no boot (a menos que <code>AUTO_MIGRATE=false</code>).</p>
+      <p class="kv"><b>Exemplo</b> <code>postgres://user:senha@host:5432/fortalrunners?sslmode=require</code></p>
+      <p class="kv"><b>Render</b> injetado automaticamente pelo banco <code>fortalrunners-db</code> (<code>fromDatabase</code> no render.yaml).</p>
+      <p class="kv"><b>Precisa de</b> extensões <code>postgis</code>, <code>pg_trgm</code>, <code>citext</code> (o Postgres do Render tem todas).</p>
+    </div>
+  </div>
+
+  <div class="var">
+    <div class="var-head"><span class="var-name">JWT_SECRET</span><span class="tag prod">só em prod</span></div>
+    <div class="var-body">
+      <p>Assina os tokens de acesso, o token curto de 2FA e o QR rotativo do atleta. Em produção precisa de <strong>≥ 32 bytes</strong> — a API recusa subir com menos.</p>
+      <p class="kv"><b>Gerar</b> <code>openssl rand -base64 48</code></p>
+      <p class="kv"><b>Dev</b> usa um default inseguro se vazio.</p>
+      <p class="kv"><b>Render</b> já está no render.yaml (troque por um valor gerado).</p>
+    </div>
+  </div>
+
+  <div class="var">
+    <div class="var-head"><span class="var-name">MFA_ENC_KEY</span><span class="tag prod">só em prod</span></div>
+    <div class="var-body">
+      <p>Chave AES-256-GCM que cifra <strong>em repouso</strong>: o segredo TOTP do 2FA, os tokens de integração (Strava) e os <strong>telefones de contato de emergência</strong>. base64 de <strong>exatamente 32 bytes</strong>.</p>
+      <p class="kv"><b>Gerar</b> <code>openssl rand -base64 32</code></p>
+      <p class="kv"><b>Dev</b> usa um default fixo se vazio ou inválido.</p>
+      <p class="kv"><b>Render</b> já está no render.yaml (o valor atual decodifica para 32 bytes — troque por um gerado).</p>
+    </div>
+  </div>
+
+  <div class="var">
+    <div class="var-head"><span class="var-name">CORS_ORIGINS</span><span class="tag opt">opcional</span></div>
+    <div class="var-body">
+      <p>Lista (separada por vírgula) de origens permitidas no CORS. Também define <strong>para onde o callback OAuth redireciona</strong> (a 1ª origem) e a <strong>base do link público de beacon</strong> (<code>/s/:token</code>).</p>
+      <p class="kv"><b>Default</b> <code>http://localhost:5173</code></p>
+      <p class="kv"><b>Prod</b> <code>https://fortalrunners-web.onrender.com</code> (ou seu domínio).</p>
+    </div>
+  </div>
+
+  <div class="var">
+    <div class="var-head"><span class="var-name">APP_ENV</span><span class="tag opt">opcional</span></div>
+    <div class="var-body">
+      <p><code>dev</code> · <code>staging</code> · <code>prod</code>. Em <code>prod</code> a API exige <code>JWT_SECRET</code> forte e <code>MFA_ENC_KEY</code> válida.</p>
+      <p class="kv"><b>Default</b> <code>dev</code> · <b>Render</b> já setado como <code>prod</code>.</p>
+    </div>
+  </div>
+
+  <div class="var">
+    <div class="var-head"><span class="var-name">HTTP_ADDR</span> · <span class="var-name">PORT</span><span class="tag opt">opcional</span></div>
+    <div class="var-body">
+      <p>Porta de escuta. O Render injeta <code>PORT</code> e ele <strong>sobrepõe</strong> <code>HTTP_ADDR</code> — não setar <code>PORT</code> à mão.</p>
+      <p class="kv"><b>Dev</b> <code>HTTP_ADDR=:8090</code> (a 8080 costuma estar reservada no Windows).</p>
+    </div>
+  </div>
+
+  <div class="var">
+    <div class="var-head"><span class="var-name">REDIS_URL</span> · <span class="var-name">NATS_URL</span> · <span class="var-name">LOG_LEVEL</span> · <span class="var-name">ACCESS_TOKEN_TTL</span> · <span class="var-name">REFRESH_TOKEN_TTL</span><span class="tag opt">opcional</span></div>
+    <div class="var-body">
+      <p><code>REDIS_URL</code> — cache/sessão (ainda pouco usado; default <code>redis://localhost:6379/0</code>).</p>
+      <p><code>NATS_URL</code> — fila. <strong>Sem NATS</strong> a API processa território + rollup no próprio processo (é o caso do deploy atual).</p>
+      <p><code>LOG_LEVEL</code> — <code>debug</code>|<code>info</code>|<code>warn</code>|<code>error</code> (default <code>info</code>).</p>
+      <p><code>ACCESS_TOKEN_TTL</code> / <code>REFRESH_TOKEN_TTL</code> — duração dos tokens (default <code>15m</code> / <code>720h</code>).</p>
+    </div>
+  </div>
+
+  <h2 id="social"><span class="n">02</span> Login social</h2>
+  <p>Opcional. Vazio → <code>GET /v1/auth/oauth/:provider</code> responde <code>501</code> e a UI mostra "não configurado".</p>
+
+  <div class="var">
+    <div class="var-head"><span class="var-name">GOOGLE_CLIENT_ID</span> · <span class="var-name">GOOGLE_CLIENT_SECRET</span> · <span class="var-name">GOOGLE_REDIRECT_URL</span><span class="tag opt">opcional</span></div>
+    <div class="var-body">
+      <p>Credenciais OAuth 2.0 do <a href="https://console.cloud.google.com/apis/credentials">Google Cloud Console</a> → "Credentials" → "OAuth client ID" → tipo "Web application".</p>
+      <p class="kv"><b>Redirect a cadastrar no Google</b> <code>&lt;API&gt;/v1/auth/oauth/google/callback</code> — e o mesmo valor em <code>GOOGLE_REDIRECT_URL</code>.</p>
+      <p class="kv"><b>Prod</b> <code>https://fortalrunners-api.onrender.com/v1/auth/oauth/google/callback</code></p>
+    </div>
+  </div>
+
+  <div class="var">
+    <div class="var-head"><span class="var-name">APPLE_CLIENT_ID</span> · <span class="var-name">APPLE_TEAM_ID</span> · <span class="var-name">APPLE_KEY_ID</span> · <span class="var-name">APPLE_P8_KEY</span> · <span class="var-name">APPLE_REDIRECT_URL</span><span class="tag opt">opcional</span></div>
+    <div class="var-body">
+      <p>Do <a href="https://developer.apple.com/account/resources/">Apple Developer</a> (precisa de conta paga). Crie um <strong>Services ID</strong> (é o <code>APPLE_CLIENT_ID</code>, ex.: <code>com.allvasc.fortalrunners.web</code>) e uma <strong>Sign in with Apple key</strong> (.p8).</p>
+      <p class="kv"><b>APPLE_TEAM_ID</b> 10 caracteres, canto superior direito da conta.</p>
+      <p class="kv"><b>APPLE_KEY_ID</b> id da chave .p8.</p>
+      <p class="kv"><b>APPLE_P8_KEY</b> o <strong>conteúdo inteiro</strong> do arquivo .p8, incluindo <code>-----BEGIN PRIVATE KEY-----</code> / <code>END</code>. No Render, cole tudo no campo de valor (quebras de linha são aceitas).</p>
+      <p class="kv"><b>Redirect</b> <code>&lt;API&gt;/v1/auth/oauth/apple/callback</code> (Apple exige HTTPS — não funciona em <code>localhost</code>).</p>
+    </div>
+  </div>
+
+  <h2 id="strava"><span class="n">03</span> Strava</h2>
+  <p>Opcional. Import de atividades + webhook de novas corridas. Vazio → <code>/v1/integrations/strava/*</code> responde <code>501</code>.</p>
+
+  <div class="var">
+    <div class="var-head"><span class="var-name">STRAVA_CLIENT_ID</span> · <span class="var-name">STRAVA_CLIENT_SECRET</span> · <span class="var-name">STRAVA_REDIRECT_URL</span> · <span class="var-name">STRAVA_WEBHOOK_VERIFY_TOKEN</span><span class="tag opt">opcional</span></div>
+    <div class="var-body">
+      <p>Crie um app em <a href="https://www.strava.com/settings/api">strava.com/settings/api</a>. O "Authorization Callback Domain" deve ser o host da API (sem <code>https://</code>).</p>
+      <p class="kv"><b>STRAVA_REDIRECT_URL</b> <code>&lt;API&gt;/v1/integrations/strava/callback</code></p>
+      <p class="kv"><b>STRAVA_WEBHOOK_VERIFY_TOKEN</b> uma string que <strong>você inventa</strong>; precisa bater com o valor usado ao registrar o webhook (<code>hub.verify_token</code>).</p>
+      <p class="kv"><b>Termos</b> exibir "Powered by Strava" e link "Ver no Strava"; dados só do próprio usuário.</p>
+    </div>
+  </div>
+
+  <h2 id="pagamentos"><span class="n">04</span> Pagamentos — Asaas</h2>
+  <p>Opcional. <strong>Vazio → modo sandbox</strong>: o checkout cria o pedido e devolve um PIX <em>marcado como demo</em> (não é um BR Code válido, ninguém paga). Com a chave, entra o fluxo real.</p>
+
+  <div class="var">
+    <div class="var-head"><span class="var-name">ASAAS_API_KEY</span><span class="tag opt">opcional</span></div>
+    <div class="var-body">
+      <p>Chave da API do <a href="https://www.asaas.com/">Asaas</a> (Configurações → Integrações → API). Use a chave de <strong>sandbox</strong> primeiro (<code>asaas-sandbox.com</code>).</p>
+      <p class="kv"><b>Sem ela</b> checkout funciona em modo demo (útil para desenvolver o fluxo de inscrição sem cobrar).</p>
+    </div>
+  </div>
+
+  <div class="var">
+    <div class="var-head"><span class="var-name">ASAAS_WEBHOOK_SECRET</span><span class="tag opt">opcional</span></div>
+    <div class="var-body">
+      <p>Segredo para verificar a assinatura HMAC-SHA256 do webhook em <code>POST /v1/webhooks/asaas</code>. O webhook é <strong>sempre idempotente</strong> (por <code>webhook_events</code>); a verificação de assinatura só acontece quando este segredo está setado.</p>
+      <p class="kv"><b>Produção</b> <strong>obrigatório na prática</strong> — sem ele qualquer POST no webhook seria aceito.</p>
+      <p class="kv"><b>Onde</b> defina o mesmo valor no cadastro do webhook no painel do Asaas.</p>
+    </div>
+  </div>
+
+  <h2 id="ia"><span class="n">05</span> Coach IA</h2>
+  <p>Opcional. Vazio → o coach responde com um <strong>fallback determinístico</strong> (dicas fixas por palavra-chave), sem chamar LLM. A telemetria e os guardrails funcionam nos dois modos.</p>
+
+  <div class="var">
+    <div class="var-head"><span class="var-name">ANTHROPIC_API_KEY</span> · <span class="var-name">AI_MODEL</span><span class="tag opt">opcional</span></div>
+    <div class="var-body">
+      <p>Chave da <a href="https://console.anthropic.com/">Anthropic Console</a>. Com ela, <code>POST /v1/coach/ask</code> monta o contexto só com dados do próprio usuário e chama o modelo, com limite por usuário (15/h) + teto global diário e timeout de 20 s.</p>
+      <p class="kv"><b>AI_MODEL</b> default <code>claude-sonnet-5</code>.</p>
+    </div>
+  </div>
+
+  <h2 id="clima"><span class="n">06</span> Clima</h2>
+  <div class="var">
+    <div class="var-head"><span class="var-name">WEATHER_API_KEY</span><span class="tag opt">opcional</span></div>
+    <div class="var-body">
+      <p>Reservada para um provedor real (FUNCEME / INMET / OpenWeather). <strong>Hoje ignorada</strong> — <code>GET /v1/conditions</code> devolve uma leitura estática de Fortaleza marcada como tal. A interface <code>Provider</code> já está pronta para plugar.</p>
+    </div>
+  </div>
+
+  <h2 id="operacao"><span class="n">07</span> Operação</h2>
+  <div class="var">
+    <div class="var-head"><span class="var-name">AUTO_MIGRATE</span><span class="tag opt">opcional</span></div>
+    <div class="var-body">
+      <p><code>false</code> desliga a migração automática no boot da API (útil quando um job de migração roda à parte). Qualquer outro valor = liga.</p>
+    </div>
+  </div>
+  <div class="var">
+    <div class="var-head"><span class="var-name">TARGET</span><span class="tag opt">build arg</span></div>
+    <div class="var-body">
+      <p><strong>Não é env de runtime</strong> — é um <code>ARG</code> do Dockerfile (<code>api</code> | <code>worker</code> | <code>scheduler</code> | <code>migrate</code>) que escolhe qual binário compilar. O render.yaml passa <code>TARGET=api</code>.</p>
+    </div>
+  </div>
+
+  <h2 id="front"><span class="n">08</span> Front — web &amp; mobile</h2>
+  <div class="var">
+    <div class="var-head"><span class="var-name">VITE_API_URL</span><span class="tag opt">build-time (web)</span></div>
+    <div class="var-body">
+      <p>URL <strong>completa</strong> da API (com <code>https://</code>). Lida no build do Vite. No render.yaml está <code>https://fortalrunners-api.onrender.com</code>.</p>
+    </div>
+  </div>
+  <div class="var">
+    <div class="var-head"><span class="var-name">apiUrl</span> (mobile — <code>app.json → expo.extra</code>)<span class="tag opt">config</span></div>
+    <div class="var-body">
+      <p>Não é env var: é o campo <code>extra.apiUrl</code> em <code>mobile/app.json</code>. Hoje <code>http://localhost:8090</code>; troque para a URL de produção antes de gerar um build (EAS).</p>
+    </div>
+  </div>
+
+  <h2 id="render"><span class="n">09</span> O que já está no render.yaml</h2>
+  <p>Estas o Blueprint já injeta — você só precisa <strong>trocar os segredos por valores gerados</strong> e <strong>adicionar as opcionais que quiser ativar</strong> (login social, Strava, Asaas, IA) nas <em>Environment</em> do serviço <code>fortalrunners-api</code> no painel do Render.</p>
+  <div class="var">
+    <div class="var-body">
+      <p class="kv"><b>Automáticas</b> <code>DATABASE_URL</code>, <code>REDIS_URL</code>, <code>PORT</code></p>
+      <p class="kv"><b>Fixas no blueprint</b> <code>APP_ENV=prod</code>, <code>JWT_SECRET</code>, <code>MFA_ENC_KEY</code>, <code>CORS_ORIGINS</code>, <code>ASAAS_WEBHOOK_SECRET</code> (adicionar), demais opcionais</p>
+      <p class="kv"><b>Você adiciona</b> quando ativar: <code>GOOGLE_*</code>, <code>APPLE_*</code>, <code>STRAVA_*</code>, <code>ASAAS_API_KEY</code>, <code>ANTHROPIC_API_KEY</code></p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Checklist mínimo para produção de verdade:</strong> gerar <code>JWT_SECRET</code> e <code>MFA_ENC_KEY</code> novos · setar <code>ASAAS_WEBHOOK_SECRET</code> antes de habilitar pagamento real · nunca commitar o <code>.env</code>.
+  </div>
+
+  <footer>FortalRunners · variáveis de ambiente · gerado 06 set 2026 · fonte: <code>backend/internal/platform/config/config.go</code></footer>
+</div>
