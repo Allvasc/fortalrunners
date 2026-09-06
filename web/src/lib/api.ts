@@ -166,6 +166,51 @@ export type PersonalRecord = {
   achieved_at: string | null;
 };
 
+export type Run = {
+  id: string;
+  started_at: string;
+  ended_at: string;
+  distance_m: number;
+  moving_s: number;
+  duration_s: number;
+  avg_pace_s: number;
+  elevation_gain_m: number;
+  data_source: string;
+  territory_area_m2: number;
+  new_blocks: number;
+  status: string;
+};
+
+export type Split = {
+  index: number;
+  distance_m: number;
+  elapsed_s: number;
+  moving_s: number;
+  pace_s_per_km: number;
+  elev_gain_m: number;
+  elev_loss_m: number;
+  avg_cadence_spm?: number;
+  avg_hr_bpm?: number;
+};
+
+export type RunMetrics = {
+  run_id: string;
+  splits: Split[];
+  elev_gain_m: number;
+  elev_loss_m: number;
+  alt_min_m?: number;
+  alt_max_m?: number;
+  avg_cadence_spm?: number;
+  max_cadence_spm?: number;
+  avg_hr_bpm?: number;
+  max_hr_bpm?: number;
+  best_km_pace_s?: number;
+  grade_adjusted_pace_s?: number;
+  has_altitude: boolean;
+  has_cadence: boolean;
+  has_heart_rate: boolean;
+};
+
 export type MFAStatus = {
   enabled: boolean;
   pending: boolean;
@@ -221,6 +266,9 @@ export const api = {
 
   lifetime: () => request<Lifetime>("/v1/me/lifetime"),
   records: () => request<{ records: PersonalRecord[] }>("/v1/me/records"),
+
+  runs: (limit = 30) => request<{ runs: Run[] }>(`/v1/runs?limit=${limit}`),
+  runMetrics: (id: string) => request<RunMetrics>(`/v1/runs/${encodeURIComponent(id)}/metrics`),
 
   challenges: () => request<{ challenges: ChallengeView[] }>("/v1/challenges"),
   challengeLeaderboard: (slug: string) =>

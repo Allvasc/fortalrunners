@@ -545,6 +545,107 @@ button:focus-visible {
   gap: 8px;
 }
 
+/* --- histórico --- */
+.run-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.run-item {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.run-head {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  text-align: left;
+}
+.run-when {
+  display: flex;
+  flex-direction: column;
+  min-width: 96px;
+}
+.run-figs {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 0.88rem;
+  margin-left: auto;
+}
+.run-figs .mono {
+  font-family: "IBM Plex Mono", monospace;
+}
+.run-metrics {
+  border-top: 1px solid var(--line);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.metric-chips {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.mchip {
+  background: var(--sunken);
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+}
+.mchip .v {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.mchip .l {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+}
+table.splits {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+table.splits th {
+  text-align: left;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+  padding: 4px 8px;
+  font-weight: 600;
+}
+table.splits td {
+  padding: 5px 8px;
+  border-top: 1px solid var(--line);
+}
+table.splits .bar-cell {
+  width: 45%;
+}
+.split-bar {
+  display: block;
+  height: 8px;
+  background: var(--teal);
+  border-radius: 999px;
+  min-width: 4px;
+}
+
 @media (max-width: 720px) {
   .app {
     grid-template-columns: 1fr;

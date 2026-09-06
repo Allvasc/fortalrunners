@@ -4,6 +4,7 @@ import { api, type PublicUser } from "./lib/api";
 import { useAuthed } from "./lib/useAuth";
 import { Auth } from "./pages/Auth";
 import { MapView } from "./pages/MapView";
+import { History } from "./pages/History";
 import { Ranking } from "./pages/Ranking";
 import { Challenges } from "./pages/Challenges";
 import { Profile } from "./pages/Profile";
@@ -30,6 +31,7 @@ function Portal() {
           <NavLink to="/" end>
             Mapa
           </NavLink>
+          <NavLink to="/historico">Histórico</NavLink>
           <NavLink to="/ranking">Ranking</NavLink>
           <NavLink to="/desafios">Desafios</NavLink>
           <NavLink to="/perfil">Perfil</NavLink>
@@ -58,6 +60,7 @@ function Portal() {
       <main key={loc.pathname}>
         <Routes>
           <Route path="/" element={<MapView />} />
+          <Route path="/historico" element={<History />} />
           <Route path="/ranking" element={<Ranking />} />
           <Route path="/desafios" element={<Challenges />} />
           <Route path="/perfil" element={<Profile />} />

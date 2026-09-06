@@ -14,6 +14,23 @@ export function area(m2?: number): string {
   return `${nf(0, 0).format(m2)} m²`;
 }
 
+export function pace(secondsPerKm?: number): string {
+  if (!secondsPerKm || secondsPerKm <= 0) return "—";
+  const m = Math.floor(secondsPerKm / 60);
+  const s = Math.round(secondsPerKm % 60);
+  return `${m}'${String(s).padStart(2, "0")}"/km`;
+}
+
+export function clock(seconds?: number): string {
+  if (!seconds) return "0:00";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.round(seconds % 60);
+  return h > 0
+    ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+    : `${m}:${String(s).padStart(2, "0")}`;
+}
+
 export function hours(seconds?: number): string {
   if (!seconds) return "0 h";
   const h = Math.floor(seconds / 3600);
