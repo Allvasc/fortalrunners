@@ -24,6 +24,7 @@ export function MapView() {
   const heat = useQuery({ queryKey: ["heatmap"], queryFn: () => api.heatmap(), enabled: showHeat });
   const lmk = useQuery({ queryKey: ["landmarks"], queryFn: () => api.landmarksProgress(), enabled: showLandmarks });
   const poi = useQuery({ queryKey: ["amenities"], queryFn: () => api.amenities(), enabled: showPois });
+  const weather = useQuery({ queryKey: ["weather"], queryFn: () => api.weather() });
   const fc = terr.data ?? EMPTY;
 
   useEffect(() => {
@@ -179,6 +180,14 @@ export function MapView() {
         >
           Apoio 💧🚾 {showPois ? "on" : "off"}
         </button>
+
+        {weather.data && (
+          <div style={{ marginTop: "0.5rem", padding: "0.6rem 0.8rem", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "8px", fontSize: "0.8rem" }}>
+            <div style={{ fontWeight: 700, color: "var(--teal)" }}>☀️ {weather.data.city} · {weather.data.temp_c}°C</div>
+            <div style={{ color: "var(--ink-soft)" }}>Sensação {weather.data.feels_like_c}°C · UV {weather.data.uv_index} · Vento {weather.data.wind_kmh} km/h</div>
+          </div>
+        )}
+
         {showHeat && heat.isLoading && <span className="muted small">carregando calor…</span>}
         {terr.isLoading && <span className="muted small">carregando território…</span>}
         {terr.isError && <span className="err small">falha ao carregar território</span>}

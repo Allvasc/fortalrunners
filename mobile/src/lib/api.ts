@@ -166,5 +166,41 @@ export const api = {
         avg_rating: number;
       }[];
     }>("/v1/routes"),
+
+  feed: () =>
+    request<{
+      feed: {
+        id: string;
+        actor_id: string;
+        actor_name: string;
+        type: string;
+        subject_id: string;
+        kudos_count: number;
+        has_kudos: boolean;
+        created_at: string;
+      }[];
+    }>("/v1/feed"),
+
+  toggleKudos: (runId: string) =>
+    request<{ kudosed: boolean }>(`/v1/runs/${encodeURIComponent(runId)}/kudos`, { method: "POST" }),
+
+  clubs: () =>
+    request<{
+      clubs: {
+        id: string;
+        name: string;
+        description?: string;
+        color_hex: string;
+        member_count: number;
+        is_member: boolean;
+      }[];
+    }>("/v1/clubs"),
+
+  joinClub: (id: string) =>
+    request<{ joined: boolean }>(`/v1/clubs/${encodeURIComponent(id)}/join`, { method: "POST" }),
+
+  triggerSOS: (lat: number, lng: number, note?: string) =>
+    request<unknown>("/v1/safety/sos", { method: "POST", body: JSON.stringify({ lat, lng, note }) }),
 };
+
 

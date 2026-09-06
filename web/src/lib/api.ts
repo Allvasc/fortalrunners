@@ -370,7 +370,85 @@ export const api = {
   // --- pontos de apoio ---
   amenities: (category?: string) =>
     request<{ amenities: POI[] }>(`/v1/amenities${category ? `?category=${category}` : ""}`),
+
+  // --- social ---
+  friends: () => request<{ friends: Friend[] }>("/v1/friends"),
+  sendFriendRequest: (target_id: string) =>
+    request<unknown>("/v1/friends/request", { method: "POST", body: JSON.stringify({ target_id }) }),
+  acceptFriendRequest: (target_id: string) =>
+    request<unknown>("/v1/friends/accept", { method: "POST", body: JSON.stringify({ target_id }) }),
+  feed: () => request<{ feed: FeedEvent[] }>("/v1/feed"),
+  toggleKudos: (runId: string) =>
+    request<{ kudosed: boolean }>(`/v1/runs/${encodeURIComponent(runId)}/kudos`, { method: "POST" }),
+
+  // --- clubes ---
+  clubs: () => request<{ clubs: ClubItem[] }>("/v1/clubs"),
+  createClub: (name: string, description: string, color_hex?: string) =>
+    request<ClubItem>("/v1/clubs", { method: "POST", body: JSON.stringify({ name, description, color_hex }) }),
+  joinClub: (id: string) =>
+    request<{ joined: boolean }>(`/v1/clubs/${encodeURIComponent(id)}/join`, { method: "POST" }),
+
+  // --- segurança ---
+  safetyContacts: () => request<{ contacts: SafetyContact[] }>("/v1/safety/contacts"),
+  addSafetyContact: (name: string, phone: string, relation?: string) =>
+    request<SafetyContact>("/v1/safety/contacts", { method: "POST", body: JSON.stringify({ name, phone, relation }) }),
+  triggerSOS: (lat: number, lng: number, note?: string) =>
+    request<unknown>("/v1/safety/sos", { method: "POST", body: JSON.stringify({ lat, lng, note }) }),
+
+  // --- clima ---
+  weather: () => request<WeatherReport>("/v1/weather/current"),
 };
+
+export type Friend = {
+  id: string;
+  athlete_id: string;
+  username: string;
+  name: string;
+  status: "pending" | "accepted" | "blocked";
+  since: string;
+};
+
+export type FeedEvent = {
+  id: string;
+  actor_id: string;
+  actor_name: string;
+  type: "run" | "claim" | "badge" | "checkin";
+  subject_id: string;
+  payload: Record<string, unknown>;
+  kudos_count: number;
+  has_kudos: boolean;
+  created_at: string;
+};
+
+export type ClubItem = {
+  id: string;
+  owner_id: string;
+  name: string;
+  description?: string;
+  color_hex: string;
+  member_count: number;
+  is_member: boolean;
+  created_at: string;
+};
+
+export type SafetyContact = {
+  id: string;
+  name: string;
+  phone: string;
+  relation?: string;
+};
+
+export type WeatherReport = {
+  city: string;
+  temp_c: number;
+  feels_like_c: number;
+  humidity_pct: number;
+  uv_index: number;
+  wind_kmh: number;
+  best_windows: string[];
+  advice: string;
+};
+
 
 export type Landmark = {
   id: string;

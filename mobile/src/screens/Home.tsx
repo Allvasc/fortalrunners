@@ -43,15 +43,21 @@ export function Home({ navigation }: Props) {
         <Text style={s.ctaText}>Iniciar corrida</Text>
       </TouchableOpacity>
 
-      <View style={{ flexDirection: "row", gap: 10 }}>
-        <TouchableOpacity style={[s.ctaGhost, { flex: 1 }]} onPress={() => navigation.navigate("Map")}>
+      <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+        <TouchableOpacity style={[s.ctaGhost, { flexGrow: 1 }]} onPress={() => navigation.navigate("Map")}>
           <Text style={s.ctaGhostText}>Ver mapa</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[s.ctaGhost, { flex: 1 }]} onPress={() => navigation.navigate("Landmarks")}>
-          <Text style={s.ctaGhostText}>Marcos & Selos</Text>
+        <TouchableOpacity style={[s.ctaGhost, { flexGrow: 1 }]} onPress={() => navigation.navigate("Landmarks")}>
+          <Text style={s.ctaGhostText}>Marcos</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[s.ctaGhost, { flex: 1 }]} onPress={() => navigation.navigate("Routes")}>
+        <TouchableOpacity style={[s.ctaGhost, { flexGrow: 1 }]} onPress={() => navigation.navigate("Routes")}>
           <Text style={s.ctaGhostText}>Rotas</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[s.ctaGhost, { flexGrow: 1 }]} onPress={() => navigation.navigate("Social")}>
+          <Text style={s.ctaGhostText}>Feed</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[s.ctaGhost, { flexGrow: 1 }]} onPress={() => navigation.navigate("Clubs")}>
+          <Text style={s.ctaGhostText}>Clubes</Text>
         </TouchableOpacity>
       </View>
 
