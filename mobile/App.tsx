@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, isAuthed, ApiError, type PublicUser } from "@/lib/api";
+import { api, isAuthed, ApiError, type PublicUser } from "./src/lib/api";
 
 // App do corredor — Fase 0: login/cadastro + "quem sou eu".
 // Mapa (MapLibre), gravação de corrida em background e território entram na Fase 1.
