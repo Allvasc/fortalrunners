@@ -21,6 +21,8 @@ func NewHandler(svc *Service) *Handler {
 // RegisterSecured monta as rotas autenticadas sob /v1.
 func (h *Handler) RegisterSecured(g *echo.Group) {
 	g.POST("/payments/checkout", h.checkout)
+	g.GET("/me/orders", h.myOrders)
+	g.GET("/orders/:id", h.getOrder)
 	g.POST("/orders/:id/refund", h.refund)
 	g.GET("/me/subscription", h.getSubscription)
 	g.POST("/me/subscription", h.subscribe)
@@ -59,6 +61,25 @@ func (h *Handler) checkout(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "erro ao criar cobrança")
 	}
 	return c.JSON(http.StatusOK, map[string]any{"order": ord})
+}
+
+func (h *Handler) myOrders(c echo.Context) error {
+	list, err := h.svc.MyOrders(c.Request().Context(), auth.UserID(c), 0)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "erro ao listar pedidos")
+	}
+	return c.JSON(http.StatusOK, map[string]any{"orders": list})
+}
+
+func (h *Handler) getOrder(c echo.Context) error {
+	o, err := h.svc.GetOrder(c.Request().Context(), auth.UserID(c), c.Param("id"))
+	if errors.Is(err, ErrOrderNotFound) {
+		return echo.NewHTTPError(http.StatusNotFound, "pedido não encontrado")
+	}
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "erro interno")
+	}
+	return c.JSON(http.StatusOK, map[string]any{"order": o})
 }
 
 type refundReq struct {

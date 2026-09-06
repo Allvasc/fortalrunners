@@ -3,6 +3,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -137,6 +138,23 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	integH := integration.NewHandler(integSvc)
 	integH.RegisterSecured(secured)
 	integH.RegisterPublic(v1)
+
+	// Sem NATS a API processa o território no próprio processo, consumindo o
+	// barramento em processo. Com NATS, quem consome é o cmd/worker.
+	if bus, ok := pub.(*queue.InProc); ok {
+		proc := territory.NewProcessor(pool, log)
+		bus.Subscribe(queue.SubjectRunUploaded, func(data []byte) {
+			var ev struct {
+				RunID string `json:"run_id"`
+			}
+			if err := json.Unmarshal(data, &ev); err != nil || ev.RunID == "" {
+				log.Error("queue: run.uploaded malformado", "err", err)
+				return
+			}
+			proc.Process(context.Background(), ev.RunID)
+		})
+		log.Info("território: processando no processo da API (sem NATS)")
+	}
 
 	return &API{Echo: e, Pool: pool, Queue: pub}, nil
 }

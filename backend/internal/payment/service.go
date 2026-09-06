@@ -315,6 +315,59 @@ func (s *Service) orderByIdemKey(ctx context.Context, userID, idemKey string) (*
 	return &o, nil
 }
 
+// OrderView é a visão de leitura de um pedido (DTO explícito, sem dados sensíveis).
+type OrderView struct {
+	ID            string    `json:"id"`
+	Kind          string    `json:"kind"`
+	Status        string    `json:"status"`
+	AmountCents   int       `json:"amount_cents"`
+	DiscountCents int       `json:"discount_cents"`
+	EventID       string    `json:"event_id,omitempty"`
+	Method        string    `json:"method,omitempty"`
+	PaymentStatus string    `json:"payment_status,omitempty"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
+func (s *Service) MyOrders(ctx context.Context, userID string, limit int) ([]OrderView, error) {
+	if limit <= 0 || limit > 200 {
+		limit = 50
+	}
+	rows, err := s.pool.Query(ctx, `
+		SELECT o.id, o.kind, o.status, o.amount_cents, o.discount_cents, COALESCE(o.event_id,''),
+		       COALESCE(p.method,''), COALESCE(p.status::text,''), o.created_at
+		FROM orders o LEFT JOIN payments p ON p.order_id = o.id
+		WHERE o.user_id = $1 ORDER BY o.created_at DESC LIMIT $2`, userID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []OrderView
+	for rows.Next() {
+		var o OrderView
+		if err := rows.Scan(&o.ID, &o.Kind, &o.Status, &o.AmountCents, &o.DiscountCents,
+			&o.EventID, &o.Method, &o.PaymentStatus, &o.CreatedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, o)
+	}
+	return out, nil
+}
+
+func (s *Service) GetOrder(ctx context.Context, userID, orderID string) (*OrderView, error) {
+	var o OrderView
+	err := s.pool.QueryRow(ctx, `
+		SELECT o.id, o.kind, o.status, o.amount_cents, o.discount_cents, COALESCE(o.event_id,''),
+		       COALESCE(p.method,''), COALESCE(p.status::text,''), o.created_at
+		FROM orders o LEFT JOIN payments p ON p.order_id = o.id
+		WHERE o.id = $1 AND o.user_id = $2`, orderID, userID).Scan(
+		&o.ID, &o.Kind, &o.Status, &o.AmountCents, &o.DiscountCents,
+		&o.EventID, &o.Method, &o.PaymentStatus, &o.CreatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrOrderNotFound
+	}
+	return &o, err
+}
+
 // asaasWebhook é o subconjunto do payload que consumimos.
 type asaasWebhook struct {
 	Event   string `json:"event"`
