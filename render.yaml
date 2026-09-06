@@ -6,8 +6,12 @@ services:
     plan: free
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    dockerCommand: ./app
+    # sem dockerCommand: a imagem distroless não tem shell e o Render
+    # embrulha dockerCommand em `sh -c`. O ENTRYPOINT ["/app"] (exec form)
+    # do Dockerfile sobe o binário direto, sem shell.
     envVars:
+      - key: APP_ENV
+        value: prod
       - key: TARGET
         value: api
       - key: JWT_SECRET
