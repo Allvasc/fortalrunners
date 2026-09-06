@@ -6,6 +6,7 @@ services:
     plan: free
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
+    healthCheckPath: /healthz
     # sem dockerCommand: a imagem distroless não tem shell e o Render
     # embrulha dockerCommand em `sh -c`. O ENTRYPOINT ["/app"] (exec form)
     # do Dockerfile sobe o binário direto, sem shell.
@@ -27,6 +28,9 @@ services:
           type: redis
           name: fortalrunners-redis
           property: connectionString
+      # origem do portal web para o CORS (o front roda em outro domínio)
+      - key: CORS_ORIGINS
+        value: https://fortalrunners-web.onrender.com
 
   # 2. Web Frontend Portal (Gratuito)
   - type: web
@@ -39,11 +43,9 @@ services:
         source: /*
         destination: /index.html
     envVars:
+      # URL completa (com https://) — property:host devolveria só o hostname
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: fortalrunners-api
-          property: host
+        value: https://fortalrunners-api.onrender.com
 
   # 3. Redis Service (Gratuito)
   - type: redis
