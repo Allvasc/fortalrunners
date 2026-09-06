@@ -6,11 +6,12 @@ import { api, type FeatureCollection } from "../lib/api";
 import { area } from "../lib/format";
 
 const FORTALEZA: [number, number] = [-38.523, -3.731];
-// Raster do OpenStreetMap, sem chave — mostra ruas de verdade. Provisório: trocar
-// pelo style JSON vetorial próprio (MapTiler/Protomaps) quando a chave entrar
-// (plano §7). O demotiles.maplibre.org não tem ruas, só o contorno do mundo.
+
+// Base raster sem chave: OSM (ruas) + Esri World Imagery (satélite). Provisório
+// até entrar o style vetorial próprio (MapTiler/Protomaps — plano §7).
 const STYLE: maplibregl.StyleSpecification = {
   version: 8,
+  glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
   sources: {
     osm: {
       type: "raster",
@@ -19,33 +20,54 @@ const STYLE: maplibregl.StyleSpecification = {
       maxzoom: 19,
       attribution: "© OpenStreetMap",
     },
+    sat: {
+      type: "raster",
+      tiles: [
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      ],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: "Esri, Maxar, Earthstar Geographics",
+    },
   },
-  layers: [{ id: "osm", type: "raster", source: "osm" }],
+  layers: [
+    { id: "osm", type: "raster", source: "osm" },
+    { id: "sat", type: "raster", source: "sat", layout: { visibility: "none" } },
+  ],
 };
+
 const RUNNER = "#08a6a0";
 const EMPTY = { type: "FeatureCollection", features: [] } as FeatureCollection;
-const EMPTY_HEAT = { type: "FeatureCollection", features: [] } as GeoJSON.FeatureCollection;
+const EMPTY_GJ = { type: "FeatureCollection", features: [] } as GeoJSON.FeatureCollection;
+
+type LayerKey = "heat" | "landmarks" | "routes" | "pois" | "risk" | "hazards";
 
 export function MapView() {
   const holder = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
-  const [showHeat, setShowHeat] = useState(false);
-  const [showLandmarks, setShowLandmarks] = useState(false);
-  const [showPois, setShowPois] = useState(false);
+  const ready = useRef(false);
+
+  const [collapsed, setCollapsed] = useState(false);
+  const [base, setBase] = useState<"osm" | "sat">("osm");
   const [scope, setScope] = useState<"me" | "friends">("me");
   const [heatScope, setHeatScope] = useState<"me" | "friends" | "city">("me");
+  const [on, setOn] = useState<Record<LayerKey, boolean>>({
+    heat: false, landmarks: false, routes: false, pois: false, risk: true, hazards: false,
+  });
+  const toggle = (k: LayerKey) => setOn((s) => ({ ...s, [k]: !s[k] }));
 
   const terr = useQuery({ queryKey: ["territories", scope], queryFn: () => api.territories(scope) });
-  const heat = useQuery({
-    queryKey: ["heatmap", heatScope],
-    queryFn: () => api.heatmap(heatScope),
-    enabled: showHeat,
-  });
-  const lmk = useQuery({ queryKey: ["landmarks"], queryFn: () => api.landmarksProgress(), enabled: showLandmarks });
-  const poi = useQuery({ queryKey: ["amenities"], queryFn: () => api.amenities(), enabled: showPois });
+  const heat = useQuery({ queryKey: ["heatmap", heatScope], queryFn: () => api.heatmap(heatScope), enabled: on.heat });
+  const lmk = useQuery({ queryKey: ["landmarks"], queryFn: () => api.landmarksProgress(), enabled: on.landmarks });
+  const poi = useQuery({ queryKey: ["amenities"], queryFn: () => api.amenities(), enabled: on.pois });
+  const routes = useQuery({ queryKey: ["routesGeo"], queryFn: () => api.routes(), enabled: on.routes });
+  const risk = useQuery({ queryKey: ["riskZones"], queryFn: () => api.riskZones(), enabled: on.risk });
+  const haz = useQuery({ queryKey: ["hazards"], queryFn: () => api.hazards(), enabled: on.hazards });
   const weather = useQuery({ queryKey: ["weather"], queryFn: () => api.weather() });
+
   const fc = terr.data ?? EMPTY;
 
+  // --- init ---
   useEffect(() => {
     if (!holder.current || map.current) return;
     const m = new maplibregl.Map({
@@ -56,211 +78,233 @@ export function MapView() {
       attributionControl: { compact: true },
     });
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-    m.on("load", () => {
-      m.addSource("heatmap", { type: "geojson", data: EMPTY_HEAT });
-      m.addLayer({
-        id: "heatmap-layer",
-        type: "heatmap",
-        source: "heatmap",
-        layout: { visibility: "none" },
-        paint: {
-          "heatmap-weight": ["get", "w"],
-          "heatmap-radius": 18,
-          "heatmap-intensity": 1,
-          "heatmap-opacity": 0.75,
-        },
-      });
-      m.addSource("territories", { type: "geojson", data: EMPTY });
-      m.addLayer({
-        id: "territories-fill",
-        type: "fill",
-        source: "territories",
-        paint: {
-          "fill-color": ["coalesce", ["get", "color_hex"], RUNNER],
-          "fill-opacity": 0.22,
-        },
-      });
-      m.addLayer({
-        id: "territories-line",
-        type: "line",
-        source: "territories",
-        paint: { "line-color": RUNNER, "line-width": 2.5 },
-      });
-      map.current = m;
-      pushData(m, fc);
+
+    const geo = new maplibregl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: true,
+      showAccuracyCircle: true,
     });
+    m.addControl(geo, "top-right");
+
+    m.on("load", () => {
+      m.addSource("risk", { type: "geojson", data: EMPTY_GJ });
+      m.addLayer({ id: "risk-fill", type: "fill", source: "risk", layout: { visibility: "none" }, paint: { "fill-color": "#c7402b", "fill-opacity": 0.16 } });
+      m.addLayer({ id: "risk-line", type: "line", source: "risk", layout: { visibility: "none" }, paint: { "line-color": "#c7402b", "line-width": 1.5, "line-dasharray": [2, 2] } });
+
+      m.addSource("routes", { type: "geojson", data: EMPTY_GJ });
+      m.addLayer({ id: "routes-line", type: "line", source: "routes", layout: { visibility: "none", "line-cap": "round" }, paint: { "line-color": "#6E5AA6", "line-width": 3 } });
+
+      m.addSource("heatmap", { type: "geojson", data: EMPTY_GJ });
+      m.addLayer({
+        id: "heatmap-layer", type: "heatmap", source: "heatmap", layout: { visibility: "none" },
+        paint: { "heatmap-weight": ["coalesce", ["get", "w"], 1], "heatmap-radius": 20, "heatmap-opacity": 0.75 },
+      });
+
+      m.addSource("territories", { type: "geojson", data: EMPTY });
+      m.addLayer({ id: "territories-fill", type: "fill", source: "territories", paint: { "fill-color": ["coalesce", ["get", "color_hex"], RUNNER], "fill-opacity": 0.22 } });
+      m.addLayer({ id: "territories-line", type: "line", source: "territories", paint: { "line-color": ["coalesce", ["get", "color_hex"], RUNNER], "line-width": 2.5 } });
+
+      m.addSource("hazards", { type: "geojson", data: EMPTY_GJ });
+      m.addLayer({
+        id: "hazards-pt", type: "circle", source: "hazards", layout: { visibility: "none" },
+        paint: { "circle-radius": 7, "circle-color": "#C98F2E", "circle-stroke-color": "#fff", "circle-stroke-width": 2 },
+      });
+
+      map.current = m;
+      ready.current = true;
+      pushTerr(m, fc);
+      // já pede a permissão de GPS e centra no usuário
+      setTimeout(() => geo.trigger(), 400);
+    });
+
     return () => {
       m.remove();
       map.current = null;
+      ready.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // --- base ---
   useEffect(() => {
-    if (map.current) pushData(map.current, fc);
+    const m = map.current;
+    if (!m || !ready.current) return;
+    m.setLayoutProperty("osm", "visibility", base === "osm" ? "visible" : "none");
+    m.setLayoutProperty("sat", "visibility", base === "sat" ? "visible" : "none");
+  }, [base]);
+
+  // --- território ---
+  useEffect(() => {
+    if (map.current && ready.current) pushTerr(map.current, fc);
   }, [fc]);
 
+  // --- camadas GeoJSON: visibilidade + dados ---
   useEffect(() => {
     const m = map.current;
-    if (!m || !m.getLayer("heatmap-layer")) return;
-    m.setLayoutProperty("heatmap-layer", "visibility", showHeat ? "visible" : "none");
-    const src = m.getSource("heatmap") as maplibregl.GeoJSONSource | undefined;
-    if (src && heat.data) src.setData(heat.data);
-  }, [showHeat, heat.data]);
+    if (!m || !ready.current) return;
+    const vis = (ids: string[], show: boolean) =>
+      ids.forEach((id) => m.getLayer(id) && m.setLayoutProperty(id, "visibility", show ? "visible" : "none"));
+    const setData = (src: string, data: GeoJSON.FeatureCollection) => {
+      const s = m.getSource(src) as maplibregl.GeoJSONSource | undefined;
+      if (s) s.setData(data);
+    };
 
-  // Markers ref for landmarks & POIs
+    vis(["heatmap-layer"], on.heat);
+    vis(["risk-fill", "risk-line"], on.risk);
+    vis(["routes-line"], on.routes);
+    vis(["hazards-pt"], on.hazards);
+
+    if (heat.data) setData("heatmap", heat.data);
+    if (risk.data) setData("risk", risk.data);
+    if (haz.data) {
+      setData("hazards", {
+        type: "FeatureCollection",
+        features: haz.data.hazards.map((h) => ({
+          type: "Feature",
+          geometry: { type: "Point", coordinates: [h.lng, h.lat] },
+          properties: { type: h.type, note: h.note ?? "" },
+        })),
+      });
+    }
+    if (routes.data) {
+      setData("routes", {
+        type: "FeatureCollection",
+        features: routes.data.routes
+          .filter((r) => !!r.geojson)
+          .map((r) => ({ type: "Feature", geometry: JSON.parse(r.geojson), properties: { name: r.name } })),
+      });
+    }
+  }, [on, heat.data, risk.data, haz.data, routes.data]);
+
+  // --- markers (marcos + POIs) ---
   const markersRef = useRef<maplibregl.Marker[]>([]);
-
   useEffect(() => {
     const m = map.current;
-    if (!m) return;
-
-    // Clear existing markers
-    markersRef.current.forEach((marker) => marker.remove());
+    if (!m || !ready.current) return;
+    markersRef.current.forEach((mk) => mk.remove());
     markersRef.current = [];
 
-    if (showLandmarks && lmk.data) {
+    if (on.landmarks && lmk.data) {
       lmk.data.landmarks.forEach((l) => {
-        const el = document.createElement("div");
-        el.className = "landmark-marker";
-        el.style.background = l.checked_in ? "var(--good)" : "var(--coral)";
-        el.style.color = "#fff";
-        el.style.borderRadius = "50%";
-        el.style.width = "24px";
-        el.style.height = "24px";
-        el.style.display = "flex";
-        el.style.alignItems = "center";
-        el.style.justifyContent = "center";
-        el.style.fontSize = "12px";
-        el.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
-        el.innerText = l.checked_in ? "★" : "📍";
-        el.title = `${l.name} (${l.checked_in ? "Conquistado" : "Pendente"})`;
-
-        const marker = new maplibregl.Marker({ element: el })
-          .setLngLat([l.lng, l.lat])
-          .setPopup(new maplibregl.Popup({ offset: 15 }).setHTML(`<strong>${l.name}</strong><br/>${l.blurb || ""}`))
-          .addTo(m);
-
-        markersRef.current.push(marker);
+        const el = pin(l.checked_in ? "★" : "📍", l.checked_in ? "var(--good)" : "var(--coral)");
+        markersRef.current.push(
+          new maplibregl.Marker({ element: el })
+            .setLngLat([l.lng, l.lat])
+            .setPopup(new maplibregl.Popup({ offset: 15 }).setHTML(`<strong>${esc(l.name)}</strong><br/>${esc(l.blurb || "")}`))
+            .addTo(m),
+        );
       });
     }
-
-    if (showPois && poi.data) {
+    if (on.pois && poi.data) {
       poi.data.amenities.forEach((p) => {
-        const el = document.createElement("div");
-        el.className = "poi-marker";
-        el.style.background = p.category === "bebedouro" ? "var(--teal)" : "var(--sun)";
-        el.style.color = "#fff";
-        el.style.borderRadius = "4px";
-        el.style.padding = "2px 6px";
-        el.style.fontSize = "11px";
-        el.style.fontWeight = "bold";
-        el.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
-        el.innerText = p.category === "bebedouro" ? "💧" : "🚾";
-        el.title = p.name;
-
-        const marker = new maplibregl.Marker({ element: el })
-          .setLngLat([p.lng, p.lat])
-          .setPopup(new maplibregl.Popup({ offset: 15 }).setHTML(`<strong>${p.name}</strong><br/>${p.note || ""}`))
-          .addTo(m);
-
-        markersRef.current.push(marker);
+        const el = pin(p.category === "bebedouro" ? "💧" : "🚾", "var(--teal)");
+        markersRef.current.push(
+          new maplibregl.Marker({ element: el })
+            .setLngLat([p.lng, p.lat])
+            .setPopup(new maplibregl.Popup({ offset: 15 }).setHTML(`<strong>${esc(p.name)}</strong><br/>${esc(p.note || "")}`))
+            .addTo(m),
+        );
       });
     }
-  }, [showLandmarks, showPois, lmk.data, poi.data]);
+  }, [on.landmarks, on.pois, lmk.data, poi.data]);
 
   const count = fc.features.length;
-  const total = fc.features.reduce((s, f) => s + (f.properties?.area_m2 ?? 0), 0);
+  const totalArea = fc.features.reduce((s, f) => s + (f.properties?.area_m2 ?? 0), 0);
 
   return (
     <div className="map-page">
       <div ref={holder} className="map" />
-      <div className="map-overlay">
-        <div className="chip-stat">
-          <span className="v">{count}</span>
-          <span className="l">quarteirões</span>
-        </div>
-        <div className="chip-stat">
-          <span className="v">{area(total)}</span>
-          <span className="l">cobertos</span>
-        </div>
-        <div className="ov-row">
-          {(["me", "friends"] as const).map((s) => (
-            <button
-              key={s}
-              className={`btn sm ${scope === s ? "primary" : "ghost"}`}
-              onClick={() => setScope(s)}
-            >
-              {s === "me" ? "Meu" : "Amigos"}
+
+      {collapsed ? (
+        <button className="map-fab" onClick={() => setCollapsed(false)} aria-label="Abrir camadas">
+          ▨
+        </button>
+      ) : (
+        <div className="map-overlay">
+          <div className="ov-head">
+            <div>
+              <strong>{count}</strong> <span className="muted small">quart.</span>{" "}
+              <strong>{area(totalArea)}</strong>
+            </div>
+            <button className="ov-min" onClick={() => setCollapsed(true)} aria-label="Minimizar">
+              –
             </button>
-          ))}
-        </div>
-        <button
-          className={`btn sm ${showHeat ? "primary" : "ghost"}`}
-          onClick={() => setShowHeat((v) => !v)}
-        >
-          Mapa de calor {showHeat ? "●" : "○"}
-        </button>
-        {showHeat && (
+          </div>
+
+          <div className="ov-sec">Base</div>
           <div className="ov-row">
-            {(["me", "friends", "city"] as const).map((s) => (
-              <button
-                key={s}
-                className={`btn sm ${heatScope === s ? "primary" : "ghost"}`}
-                onClick={() => setHeatScope(s)}
-              >
-                {s === "me" ? "eu" : s === "friends" ? "rede" : "cidade"}
-              </button>
-            ))}
+            <button className={`btn sm ${base === "osm" ? "primary" : "ghost"}`} onClick={() => setBase("osm")}>Mapa</button>
+            <button className={`btn sm ${base === "sat" ? "primary" : "ghost"}`} onClick={() => setBase("sat")}>Satélite</button>
           </div>
-        )}
-        <button
-          className={`btn sm ${showLandmarks ? "primary" : "ghost"}`}
-          onClick={() => setShowLandmarks((v) => !v)}
-        >
-          Marcos {showLandmarks ? "●" : "○"}
-        </button>
-        <button
-          className={`btn sm ${showPois ? "primary" : "ghost"}`}
-          onClick={() => setShowPois((v) => !v)}
-        >
-          Bebedouros & banheiros {showPois ? "●" : "○"}
-        </button>
 
-        {weather.data && (
-          <div
-            style={{
-              padding: "0.55rem 0.7rem",
-              background: "var(--sunken)",
-              borderRadius: "8px",
-              fontSize: "0.78rem",
-              lineHeight: 1.35,
-            }}
-          >
-            <div style={{ fontWeight: 700, color: "var(--teal-strong)" }}>
-              {weather.data.city} · {weather.data.temp_c}°C
-            </div>
-            <div className="muted">
-              Sensação {weather.data.feels_like_c}° · UV {weather.data.uv_index} · Vento{" "}
-              {weather.data.wind_kmh} km/h
-            </div>
+          <div className="ov-sec">Território</div>
+          <div className="ov-row">
+            <button className={`btn sm ${scope === "me" ? "primary" : "ghost"}`} onClick={() => setScope("me")}>Meu</button>
+            <button className={`btn sm ${scope === "friends" ? "primary" : "ghost"}`} onClick={() => setScope("friends")}>Amigos</button>
           </div>
-        )}
 
-        {showHeat && heat.isLoading && <span className="muted small">carregando calor…</span>}
-        {terr.isLoading && <span className="muted small">carregando território…</span>}
-        {terr.isError && <span className="err small">falha ao carregar território</span>}
-        {!terr.isLoading && count === 0 && (
-          <span className="muted small">
-            Seu mapa está em branco. Corra em circuito para pintar o primeiro quarteirão.
-          </span>
-        )}
-      </div>
+          <div className="ov-sec">Camadas</div>
+          <div className="ov-layers">
+            <LayerBtn label="Mapa de calor" active={on.heat} onClick={() => toggle("heat")} />
+            <LayerBtn label="Marcos" active={on.landmarks} onClick={() => toggle("landmarks")} />
+            <LayerBtn label="Rotas" active={on.routes} onClick={() => toggle("routes")} />
+            <LayerBtn label="Bebedouros / banheiros" active={on.pois} onClick={() => toggle("pois")} />
+            <LayerBtn label="Zonas de risco" active={on.risk} onClick={() => toggle("risk")} />
+            <LayerBtn label="Alertas na via" active={on.hazards} onClick={() => toggle("hazards")} />
+          </div>
+
+          {on.heat && (
+            <div className="ov-row">
+              {(["me", "friends", "city"] as const).map((s) => (
+                <button key={s} className={`btn sm ${heatScope === s ? "primary" : "ghost"}`} onClick={() => setHeatScope(s)}>
+                  {s === "me" ? "eu" : s === "friends" ? "rede" : "cidade"}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {weather.data && (
+            <div className="ov-weather">
+              <strong>{weather.data.city} · {weather.data.temp_c}°C</strong>
+              <span className="muted">Sensação {weather.data.feels_like_c}° · UV {weather.data.uv_index} · Vento {weather.data.wind_kmh} km/h</span>
+            </div>
+          )}
+
+          {terr.isError && <span className="err small">falha ao carregar território</span>}
+          {!terr.isLoading && count === 0 && (
+            <span className="muted small">Mapa em branco — corra em circuito para pintar o primeiro quarteirão.</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-function pushData(m: maplibregl.Map, fc: FeatureCollection) {
+function LayerBtn({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button className={`ov-layer${active ? " on" : ""}`} onClick={onClick}>
+      <span className="dot" />
+      {label}
+    </button>
+  );
+}
+
+function pin(glyph: string, color: string) {
+  const el = document.createElement("div");
+  Object.assign(el.style, {
+    background: color, color: "#fff", borderRadius: "50%", width: "26px", height: "26px",
+    display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.35)", cursor: "pointer",
+  });
+  el.textContent = glyph;
+  return el;
+}
+
+function esc(s: string) {
+  return s.replace(/[<>&"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" })[c]!);
+}
+
+function pushTerr(m: maplibregl.Map, fc: FeatureCollection) {
   const src = m.getSource("territories") as maplibregl.GeoJSONSource | undefined;
   if (!src) return;
   src.setData(fc);

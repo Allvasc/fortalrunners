@@ -346,6 +346,15 @@ export const api = {
       `/v1/heatmap?scope=${scope}${bbox ? `&bbox=${bbox.join(",")}` : ""}`,
     ),
 
+  riskZones: () =>
+    request<GeoJSON.FeatureCollection<GeoJSON.Geometry, { id: string; severity: number; note?: string }>>(
+      "/v1/risk-zones",
+    ),
+  hazards: () =>
+    request<{
+      hazards: { id: string; type: string; lat: number; lng: number; severity: number; note?: string }[];
+    }>("/v1/hazards"),
+
   leaderboardGlobal: () => request<Leaderboard>("/v1/leaderboards/global"),
   leaderboardFriends: () => request<Leaderboard>("/v1/leaderboards/friends"),
   leaderboardClub: (id: string) => request<Leaderboard>(`/v1/leaderboards/club/${encodeURIComponent(id)}`),
