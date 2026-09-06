@@ -211,6 +211,37 @@ export type RunMetrics = {
   has_heart_rate: boolean;
 };
 
+export type AdminUser = {
+  id: string;
+  athlete_id: string;
+  username: string;
+  email: string;
+  role: string;
+  status: string;
+  created_at: string;
+};
+
+export type FlaggedRun = {
+  id: string;
+  user_id: string;
+  username: string;
+  started_at: string;
+  distance_m: number;
+  moving_s: number;
+  avg_pace_s: number;
+  fraud_score: number;
+  status: string;
+};
+
+export type AuditEntry = {
+  id: string;
+  actor_role: string;
+  action: string;
+  target_type: string;
+  target_id: string | null;
+  created_at: string;
+};
+
 export type MFAStatus = {
   enabled: boolean;
   pending: boolean;
@@ -278,6 +309,28 @@ export const api = {
   challenges: () => request<{ challenges: ChallengeView[] }>("/v1/challenges"),
   challengeLeaderboard: (slug: string) =>
     request<ChallengeLeaderboard>(`/v1/challenges/${encodeURIComponent(slug)}/leaderboard`),
+
+  // --- admin (role admin/moderator + 2FA) ---
+  adminUsers: (q: string) =>
+    request<{ users: AdminUser[] }>(`/v1/admin/users?q=${encodeURIComponent(q)}`),
+  adminSetUserStatus: (id: string, status: string, reason: string) =>
+    request<void>(`/v1/admin/users/${id}/status`, {
+      method: "POST",
+      body: JSON.stringify({ status, reason }),
+    }),
+  adminFlaggedRuns: () => request<{ runs: FlaggedRun[] }>("/v1/admin/runs/flagged"),
+  adminReviewRun: (id: string, decision: "valid" | "rejected", voidTerritory: boolean) =>
+    request<void>(`/v1/admin/runs/${id}/review`, {
+      method: "POST",
+      body: JSON.stringify({ decision, void_territory: voidTerritory }),
+    }),
+  adminConfig: () => request<Record<string, unknown>>("/v1/admin/config"),
+  adminSetConfig: (key: string, value: unknown) =>
+    request<void>(`/v1/admin/config/${encodeURIComponent(key)}`, {
+      method: "PUT",
+      body: JSON.stringify(value),
+    }),
+  adminAudit: () => request<{ entries: AuditEntry[] }>("/v1/admin/audit?limit=50"),
 
   mfaStatus: () => request<MFAStatus>("/v1/auth/mfa"),
   mfaSetup: () => request<{ secret: string; otpauth_url: string }>("/v1/auth/mfa/setup", { method: "POST" }),

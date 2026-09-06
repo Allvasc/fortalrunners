@@ -8,6 +8,7 @@ import { History } from "./pages/History";
 import { Ranking } from "./pages/Ranking";
 import { Challenges } from "./pages/Challenges";
 import { Profile } from "./pages/Profile";
+import { Admin } from "./pages/Admin";
 
 export function App() {
   const authed = useAuthed();
@@ -35,6 +36,9 @@ function Portal() {
           <NavLink to="/ranking">Ranking</NavLink>
           <NavLink to="/desafios">Desafios</NavLink>
           <NavLink to="/perfil">Perfil</NavLink>
+          {me.data && (me.data.role === "admin" || me.data.role === "moderator") && (
+            <NavLink to="/admin">Admin</NavLink>
+          )}
         </nav>
         <div className="rail-foot">
           {me.data && (
@@ -64,6 +68,7 @@ function Portal() {
           <Route path="/ranking" element={<Ranking />} />
           <Route path="/desafios" element={<Challenges />} />
           <Route path="/perfil" element={<Profile />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

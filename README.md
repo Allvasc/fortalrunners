@@ -82,11 +82,15 @@ Ver `docs/plano.html` § 16.
   - ✅ **mapa de calor pessoal** (`internal/heatmap`): `heat_agg` (grade ~50 m como
     stand-in de H3), refresh no `cmd/scheduler`, `GET /v1/heatmap?scope=me` (GeoJSON);
     amigos/cidade + k-anonimato = Fase 2/3
+  - ✅ **painel de admin** (`internal/admin`, `/v1/admin/*`): role admin/moderator + 2FA
+    verificado (conta privilegiada sem TOTP não entra); `audit_log` append-only em toda
+    mutação; `game_config` runtime (flags/parâmetros — `risk_zone_blocking` etc.); rotas
+    de usuários, corridas sinalizadas, risk-zones CRUD, config, auditoria. UI web em `/admin`
   - ✅ **portal web** (`web/`): rota + shell, mapa MapLibre com território + camada
     de calor ligável, histórico com splits/GAP/cadência, ranking all-time, desafios,
-    perfil com stats/recordes e gestão de 2FA
+    perfil com stats/recordes e gestão de 2FA, painel de admin (role-gated)
   - ⬜ integrações (Strava, Health Connect), login Apple, style JSON próprio do mapa
-    (MapTiler/Protomaps), painel de admin, anti-fraude v1
+    (MapTiler/Protomaps), anti-fraude v1
 
 ## Convenções
 
