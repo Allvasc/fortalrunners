@@ -98,12 +98,12 @@ Ver `docs/plano.html` § 16.
     webhook idempotente (`webhook_events`), refresh de token, jobs (`import_jobs`) no
     `cmd/scheduler`; adaptador por provedor (Garmin/Fitbit/Polar depois). `crypto.Box`
     (AES-256-GCM) para os tokens
-  - ✅ **gravação de corrida no mobile** (`mobile/`): `expo-location` + `expo-task-manager`
-    com foreground service (grava com a tela apagada), pontos no AsyncStorage, tela ativa
-    (km/tempo/pace/prévia SVG do traçado), upload `POST /v1/runs` → resumo com território.
-    Precisa de dev client
+  - ✅ **app mobile** (`mobile/`): gravação de corrida (`expo-location` + `expo-task-manager`,
+    foreground service — grava com tela apagada), cadência pelo pedômetro (`expo-sensors`),
+    tela ativa (km/tempo/pace/prévia SVG), upload `POST /v1/runs` → resumo com território,
+    **mapa MapLibre Native** com o território, 2FA no login. Precisa de dev client
   - ⬜ Health Connect / Apple Health (ponte on-device), style JSON próprio do mapa
-    (MapTiler/Protomaps), MapLibre Native no mobile
+    (chave MapTiler/Protomaps), fusão de sensores para precisão, cobertura H3 (%)
 
 ## Convenções
 
