@@ -106,16 +106,57 @@ Ver `docs/plano.html` § 16.
     check-in por proximidade GPS e auto-checkin no pipeline de corrida com concessão de badges e progresso de coleções; UI no portal web (`/marcos`) e mobile (`Landmarks`)
   - ✅ **rotas comunitárias** (`internal/route`): percursos curados em Fortaleza (Beira-Mar 5k, Cocó 7k),
     avaliações com notas 1-5 estrelas e comentários; UI web (`/rotas`) e mobile (`Routes`)
-  - ✅ **pontos de apoio urbanos** (`internal/poi`): bebedouros, banheiros públicos e postos de apoio em Fortaleza em GeoJSON (`GET /v1/amenities`), integrados como marcadores no mapa
-  - ✅ **social & feed de atividades** (`internal/social`): solicitações de amizade, feed de corridas/conquistas e botão de Kudos; UI web (`/social`) e mobile (`Social`)
-  - ✅ **clubes de corrida** (`internal/club`): cadastro e adesão a equipes de Fortaleza (*Beira-Mar Runners*, *Grupo Cocó Trail*); UI web (`/clubes`) e mobile (`Clubs`)
+  - ✅ **pontos de apoio urbanos** (`internal/poi`): bebedouros, banheiros, sombra (`GET /v1/pois?type=`, alias `/v1/amenities`)
+  - ✅ **social & feed** (`internal/social`): amizade com autorização por posse
+    (só o destinatário aceita), bloquear/remover, feed paginado por cursor que
+    respeita `visibility`; `POST /v1/friends`, `PATCH /v1/friends/:id`
+  - ✅ **clubes de corrida** (`internal/club`): CRUD, entrar/sair,
+    `GET /v1/clubs/leaderboard` (área de território somada dos membros)
   - ✅ **segurança pessoal & SOS** (`internal/safety`): contatos de emergência e alertas de pânico com localização GPS (`POST /v1/safety/sos`)
   - ✅ **condições climáticas** (`internal/weather`): relatório do clima em Fortaleza (sensação, UV, vento) e melhores janelas para corrida integrados no mapa
-  - ✅ **eventos & provas oficiais** (`internal/event`): diretório de corridas noturnas e maratonas de Fortaleza, lotes de ingressos e formulário de inscrição; UI web (`/eventos`) e mobile (`Events`)
-  - ✅ **passaporte digital & QR code** (`internal/qr`): geração de tokens QR rotativos (~45s) para estações de largada e kit do evento (`/v1/qr/token`, `/v1/qr/scan`)
-  - ✅ **checkout & pagamentos** (`internal/payment`): cobranças PIX Copy&Paste e gateway Asaas com confirmação via webhook (`POST /v1/payments/checkout`)
-  - ✅ **coach IA fortalrunners** (`internal/ai`): recomendações personalizadas de treino, vestuário, hidratação e horários ideais para corridas em Fortaleza (`POST /v1/ai/coach`); UI web (`/coach`) e mobile (`AICoach`)
-  - ✅ **wearables & sincronização de saúde** (`internal/integration/wearables.go`): ponte on-device para integração e sincronização com Apple Health e Health Connect (`POST /v1/integrations/health/sync`)
+  - ✅ **eventos & provas** (`internal/event`): diretório, lotes, inscrição gratuita
+    ou paga (gate de pagamento), check-in de checkpoint por GPS (`event_stations`),
+    `GET /v1/events/:id/leaderboard` (checkpoints + área na janela); UI web/mobile
+  - ✅ **passaporte digital & QR** (`internal/qr`): token rotativo **assinado**
+    (HMAC-SHA256, ~45 s); a leitura resolve para a conta do **dono** do ID, com
+    handshake em ações sensíveis; `GET /v1/me/qr`, `POST /v1/scan`, `/scan/confirm`,
+    `GET /v1/me/scans` (aliases `/v1/qr/*`)
+  - ✅ **checkout & pagamentos** (`internal/payment`): **preço calculado no servidor**
+    a partir de `event_prices`; **webhook público assinado + idempotente**
+    (`POST /v1/webhooks/asaas`); cupom, reembolso (`POST /v1/orders/:id/refund`),
+    assinatura premium (`/v1/me/subscription`), `/v1/me/orders`. **Sem SDK real do
+    Asaas** — sem `ASAAS_API_KEY` opera em modo sandbox (PIX marcado como demo)
+  - ✅ **coach IA** (`internal/ai`): camada isolada com `Provider` (Claude via
+    `ANTHROPIC_API_KEY`; sem chave → fallback determinístico). Instrução/dados
+    separados, RAG só com dados do próprio usuário, limite por usuário + teto
+    global, guarda de tema médico, prompt versionado. `POST /v1/coach/ask`,
+    `GET /v1/coach/summary` (alias `/v1/ai/coach`)
+  - ✅ **moderação** (`internal/admin`): check-in de marco por foto e avaliação de
+    rota entram `pending`; filas em `/v1/admin/landmark-checkins`, `/route-reviews`,
+    `/reports`, `/hazards`, `/refunds`. Gate de zona de risco no check-in de marco
+  - ✅ **denúncia & perigos na via** (`internal/report`, `internal/hazard`):
+    `POST /v1/reports`; camada colaborativa `GET/POST /v1/hazards?bbox=` +
+    `confirm/dispute`, decai em 14 dias
+  - ✅ **portal de organizadores** (`internal/organizer`, `/v1/organizer/*`): role
+    organizer/admin + 2FA; CRUD de evento (draft → aprovação admin), lotes,
+    estações, cupons, credencial de scanner (token mostrado 1×), lista de inscritos
+  - ✅ **perfil & equipamento** (`internal/profile`): `PATCH /v1/me`,
+    `GET /v1/me/badges`, `GET /v1/me/calibration`, `/v1/devices` (parear relógio)
+  - ✅ **segurança pessoal & SOS** (`internal/safety`): contatos **cifrados**
+    (AES-256-GCM); SOS gera `share_token` → beacon público `GET /s/:token` (mínimo,
+    sem PII), PIN de cancelamento, update de posição ao vivo, `sos_notifications`;
+    `Notifier` como porta (SMS/push depois)
+  - ✅ **wearables** (`internal/integration/wearables.go`): `POST /v1/integrations/health/sync`
+    recebe o trajeto do treino (Apple Health / Health Connect lidos no aparelho) e
+    passa pelo **mesmo pipeline** (`data_source=import`, dedup por `import_ref`)
+  - ✅ **clima** (`internal/weather`): `GET /v1/conditions?lat=&lon=` com `Provider`
+    como porta; leitura estática de Fortaleza até plugar FUNCEME/INMET
+
+> **Estado do deploy (Render):** só o serviço da API sobe (sem NATS, sem
+> `cmd/worker`). Sem NATS, `queue.Connect` devolve um barramento **em processo** e
+> o `territory.Processor` roda dentro da API. OAuth (Google/Apple), Strava, Asaas
+> e Anthropic precisam de credenciais reais nas env vars — sem elas o código
+> degrada com elegância (501 / sandbox / fallback).
 
 ## Convenções
 
