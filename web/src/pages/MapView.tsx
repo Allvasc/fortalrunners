@@ -17,9 +17,13 @@ export function MapView() {
   const holder = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const [showHeat, setShowHeat] = useState(false);
+  const [showLandmarks, setShowLandmarks] = useState(false);
+  const [showPois, setShowPois] = useState(false);
 
   const terr = useQuery({ queryKey: ["territories"], queryFn: () => api.territories() });
   const heat = useQuery({ queryKey: ["heatmap"], queryFn: () => api.heatmap(), enabled: showHeat });
+  const lmk = useQuery({ queryKey: ["landmarks"], queryFn: () => api.landmarksProgress(), enabled: showLandmarks });
+  const poi = useQuery({ queryKey: ["amenities"], queryFn: () => api.amenities(), enabled: showPois });
   const fc = terr.data ?? EMPTY;
 
   useEffect(() => {
@@ -81,6 +85,67 @@ export function MapView() {
     if (src && heat.data) src.setData(heat.data);
   }, [showHeat, heat.data]);
 
+  // Markers ref for landmarks & POIs
+  const markersRef = useRef<maplibregl.Marker[]>([]);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+
+    // Clear existing markers
+    markersRef.current.forEach((marker) => marker.remove());
+    markersRef.current = [];
+
+    if (showLandmarks && lmk.data) {
+      lmk.data.landmarks.forEach((l) => {
+        const el = document.createElement("div");
+        el.className = "landmark-marker";
+        el.style.background = l.checked_in ? "var(--good)" : "var(--coral)";
+        el.style.color = "#fff";
+        el.style.borderRadius = "50%";
+        el.style.width = "24px";
+        el.style.height = "24px";
+        el.style.display = "flex";
+        el.style.alignItems = "center";
+        el.style.justifyContent = "center";
+        el.style.fontSize = "12px";
+        el.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
+        el.innerText = l.checked_in ? "★" : "📍";
+        el.title = `${l.name} (${l.checked_in ? "Conquistado" : "Pendente"})`;
+
+        const marker = new maplibregl.Marker({ element: el })
+          .setLngLat([l.lng, l.lat])
+          .setPopup(new maplibregl.Popup({ offset: 15 }).setHTML(`<strong>${l.name}</strong><br/>${l.blurb || ""}`))
+          .addTo(m);
+
+        markersRef.current.push(marker);
+      });
+    }
+
+    if (showPois && poi.data) {
+      poi.data.amenities.forEach((p) => {
+        const el = document.createElement("div");
+        el.className = "poi-marker";
+        el.style.background = p.category === "bebedouro" ? "var(--teal)" : "var(--sun)";
+        el.style.color = "#fff";
+        el.style.borderRadius = "4px";
+        el.style.padding = "2px 6px";
+        el.style.fontSize = "11px";
+        el.style.fontWeight = "bold";
+        el.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
+        el.innerText = p.category === "bebedouro" ? "💧" : "🚾";
+        el.title = p.name;
+
+        const marker = new maplibregl.Marker({ element: el })
+          .setLngLat([p.lng, p.lat])
+          .setPopup(new maplibregl.Popup({ offset: 15 }).setHTML(`<strong>${p.name}</strong><br/>${p.note || ""}`))
+          .addTo(m);
+
+        markersRef.current.push(marker);
+      });
+    }
+  }, [showLandmarks, showPois, lmk.data, poi.data]);
+
   const count = fc.features.length;
   const total = fc.features.reduce((s, f) => s + (f.properties?.area_m2 ?? 0), 0);
 
@@ -100,12 +165,21 @@ export function MapView() {
           className={`btn sm ${showHeat ? "primary" : "ghost"}`}
           onClick={() => setShowHeat((v) => !v)}
         >
-          Mapa de calor {showHeat ? "ligado" : "desligado"}
+          Calor {showHeat ? "on" : "off"}
+        </button>
+        <button
+          className={`btn sm ${showLandmarks ? "primary" : "ghost"}`}
+          onClick={() => setShowLandmarks((v) => !v)}
+        >
+          Marcos {showLandmarks ? "on" : "off"}
+        </button>
+        <button
+          className={`btn sm ${showPois ? "primary" : "ghost"}`}
+          onClick={() => setShowPois((v) => !v)}
+        >
+          Apoio 💧🚾 {showPois ? "on" : "off"}
         </button>
         {showHeat && heat.isLoading && <span className="muted small">carregando calor…</span>}
-        {showHeat && heat.data?.features.length === 0 && (
-          <span className="muted small">Sem corridas suficientes para o mapa de calor ainda.</span>
-        )}
         {terr.isLoading && <span className="muted small">carregando território…</span>}
         {terr.isError && <span className="err small">falha ao carregar território</span>}
         {!terr.isLoading && count === 0 && (

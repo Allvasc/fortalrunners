@@ -10,6 +10,8 @@ import { Home } from "./src/screens/Home";
 import { Map } from "./src/screens/Map";
 import { Recording } from "./src/screens/Recording";
 import { Summary } from "./src/screens/Summary";
+import { Landmarks } from "./src/screens/Landmarks";
+import { RoutesScreen } from "./src/screens/Routes";
 import "./src/lib/recorder"; // registra a task de background no import
 
 export type RootStack = {
@@ -17,6 +19,8 @@ export type RootStack = {
   Map: undefined;
   Recording: undefined;
   Summary: { runId: string };
+  Landmarks: undefined;
+  Routes: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStack>();
@@ -55,6 +59,8 @@ function Root() {
       >
         <Stack.Screen name="Home" component={Home} options={{ title: "FortalRunners", headerShown: false }} />
         <Stack.Screen name="Map" component={Map} options={{ title: "Meu mapa" }} />
+        <Stack.Screen name="Landmarks" component={Landmarks} options={{ title: "Marcos & Selos" }} />
+        <Stack.Screen name="Routes" component={RoutesScreen} options={{ title: "Rotas" }} />
         <Stack.Screen name="Recording" component={Recording} options={{ title: "Correndo", gestureEnabled: false }} />
         <Stack.Screen name="Summary" component={Summary} options={{ title: "Resumo", headerBackVisible: false }} />
       </Stack.Navigator>

@@ -14,11 +14,14 @@ import (
 	"github.com/Allvasc/fortalrunners/backend/internal/health"
 	"github.com/Allvasc/fortalrunners/backend/internal/heatmap"
 	"github.com/Allvasc/fortalrunners/backend/internal/integration"
+	"github.com/Allvasc/fortalrunners/backend/internal/landmark"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/config"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/crypto"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/httpx"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/queue"
+	"github.com/Allvasc/fortalrunners/backend/internal/poi"
 	"github.com/Allvasc/fortalrunners/backend/internal/ranking"
+	"github.com/Allvasc/fortalrunners/backend/internal/route"
 	"github.com/Allvasc/fortalrunners/backend/internal/run"
 	"github.com/Allvasc/fortalrunners/backend/internal/shoe"
 	"github.com/Allvasc/fortalrunners/backend/internal/territory"
@@ -75,6 +78,9 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	ranking.NewHandler(pool).Register(secured)
 	challenge.NewHandler(challenge.NewService(pool, log)).Register(secured)
 	heatmap.NewHandler(heatmap.NewService(pool, log)).Register(secured)
+	landmark.NewHandler(landmark.NewService(pool)).Register(secured)
+	route.NewHandler(route.NewService(route.NewStore(pool))).Register(secured)
+	poi.NewHandler(poi.NewStore(pool)).Register(secured)
 	admin.NewHandler(pool, pub).Register(secured) // /v1/admin/* (role admin/moderator + 2FA)
 
 	// integrações (Strava). Reusa a chave de campo do 2FA como chave do cofre.

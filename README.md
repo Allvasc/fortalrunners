@@ -102,6 +102,11 @@ Ver `docs/plano.html` § 16.
     foreground service — grava com tela apagada), cadência pelo pedômetro (`expo-sensors`),
     tela ativa (km/tempo/pace/prévia SVG), upload `POST /v1/runs` → resumo com território,
     **mapa MapLibre Native** com o território, 2FA no login. Precisa de dev client
+  - ✅ **marcos históricos & selos** (`internal/landmark`): 15 cartões-postais de Fortaleza seeded,
+    check-in por proximidade GPS e auto-checkin no pipeline de corrida com concessão de badges e progresso de coleções; UI no portal web (`/marcos`) e mobile (`Landmarks`)
+  - ✅ **rotas comunitárias** (`internal/route`): percursos curados em Fortaleza (Beira-Mar 5k, Cocó 7k),
+    avaliações com notas 1-5 estrelas e comentários; UI web (`/rotas`) e mobile (`Routes`)
+  - ✅ **pontos de apoio urbanos** (`internal/poi`): bebedouros, banheiros públicos e postos de apoio em Fortaleza em GeoJSON (`GET /v1/amenities`), integrados como marcadores no mapa
   - ⬜ Health Connect / Apple Health (ponte on-device), style JSON próprio do mapa
     (chave MapTiler/Protomaps), fusão de sensores para precisão, cobertura H3 (%)
 

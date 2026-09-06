@@ -348,4 +348,94 @@ export const api = {
     }),
   mfaDisable: (code: string) =>
     request<void>("/v1/auth/mfa/disable", { method: "POST", body: JSON.stringify({ code }) }),
+
+  // --- landmarks & selos ---
+  landmarksProgress: () => request<LandmarkProgress>("/v1/landmarks"),
+  landmarkCheckin: (id: string, lat: number, lng: number) =>
+    request<unknown>(`/v1/landmarks/${encodeURIComponent(id)}/checkin`, {
+      method: "POST",
+      body: JSON.stringify({ lat, lng }),
+    }),
+
+  // --- rotas ---
+  routes: () => request<{ routes: RouteItem[] }>("/v1/routes"),
+  routeDetail: (id: string) =>
+    request<{ route: RouteItem; reviews: RouteReview[] }>(`/v1/routes/${encodeURIComponent(id)}`),
+  addRouteReview: (id: string, rating: number, tags: string[], body: string) =>
+    request<RouteReview>(`/v1/routes/${encodeURIComponent(id)}/reviews`, {
+      method: "POST",
+      body: JSON.stringify({ rating, tags, body }),
+    }),
+
+  // --- pontos de apoio ---
+  amenities: (category?: string) =>
+    request<{ amenities: POI[] }>(`/v1/amenities${category ? `?category=${category}` : ""}`),
 };
+
+export type Landmark = {
+  id: string;
+  collection_id?: string;
+  name: string;
+  badge_code?: string;
+  radius_m: number;
+  blurb?: string;
+  hero_photo_key?: string;
+  difficulty: number;
+  lat: number;
+  lng: number;
+  checked_in: boolean;
+  checked_in_at?: string;
+};
+
+export type LandmarkCollection = {
+  id: string;
+  name: string;
+  description?: string;
+  badge_code?: string;
+  reward_xp: number;
+  total: number;
+  unlocked: number;
+};
+
+export type LandmarkProgress = {
+  total_landmarks: number;
+  unlocked_count: number;
+  landmarks: Landmark[];
+  collections: LandmarkCollection[];
+};
+
+export type RouteItem = {
+  id: string;
+  created_by?: string;
+  name: string;
+  description?: string;
+  distance_m: number;
+  surface: string;
+  is_official: boolean;
+  geojson: string;
+  avg_rating: number;
+  review_count: number;
+  created_at: string;
+};
+
+export type RouteReview = {
+  id: string;
+  route_id: string;
+  user_id: string;
+  user_name?: string;
+  rating: number;
+  tags: string[];
+  body?: string;
+  created_at: string;
+};
+
+export type POI = {
+  id: string;
+  city_id: string;
+  name: string;
+  category: "bebedouro" | "banheiro" | "hidratacao" | "emergencia" | "sombra";
+  lat: number;
+  lng: number;
+  note?: string;
+};
+

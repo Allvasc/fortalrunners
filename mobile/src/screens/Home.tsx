@@ -42,9 +42,18 @@ export function Home({ navigation }: Props) {
       <TouchableOpacity style={s.cta} onPress={() => navigation.navigate("Recording")}>
         <Text style={s.ctaText}>Iniciar corrida</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={s.ctaGhost} onPress={() => navigation.navigate("Map")}>
-        <Text style={s.ctaGhostText}>Ver meu mapa</Text>
-      </TouchableOpacity>
+
+      <View style={{ flexDirection: "row", gap: 10 }}>
+        <TouchableOpacity style={[s.ctaGhost, { flex: 1 }]} onPress={() => navigation.navigate("Map")}>
+          <Text style={s.ctaGhostText}>Ver mapa</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[s.ctaGhost, { flex: 1 }]} onPress={() => navigation.navigate("Landmarks")}>
+          <Text style={s.ctaGhostText}>Marcos & Selos</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[s.ctaGhost, { flex: 1 }]} onPress={() => navigation.navigate("Routes")}>
+          <Text style={s.ctaGhostText}>Rotas</Text>
+        </TouchableOpacity>
+      </View>
 
       <Text style={s.section}>Últimas corridas</Text>
       {runs.data?.runs.length === 0 && <Text style={s.muted}>Nenhuma ainda. Bora?</Text>}

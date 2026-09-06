@@ -65,6 +65,10 @@ func (p *Processor) Process(ctx context.Context, runID string) {
 		return
 	}
 
+	if err := p.store.autoCheckinLandmarks(ctx, ri.UserID, runID); err != nil {
+		log.Warn("territory: autoCheckinLandmarks falhou", "err", err)
+	}
+
 	log.Info("território conquistado",
 		"territory_id", terrID, "area_m2", int(areaM2), "blocos", parts)
 }

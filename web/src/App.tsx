@@ -9,6 +9,8 @@ import { Ranking } from "./pages/Ranking";
 import { Challenges } from "./pages/Challenges";
 import { Profile } from "./pages/Profile";
 import { Admin } from "./pages/Admin";
+import { LandmarksPage } from "./pages/Landmarks";
+import { RoutesPage } from "./pages/Routes";
 
 export function App() {
   const authed = useAuthed();
@@ -35,6 +37,8 @@ function Portal() {
           <NavLink to="/historico">Histórico</NavLink>
           <NavLink to="/ranking">Ranking</NavLink>
           <NavLink to="/desafios">Desafios</NavLink>
+          <NavLink to="/marcos">Marcos & Selos</NavLink>
+          <NavLink to="/rotas">Rotas</NavLink>
           <NavLink to="/perfil">Perfil</NavLink>
           {me.data && (me.data.role === "admin" || me.data.role === "moderator") && (
             <NavLink to="/admin">Admin</NavLink>
@@ -67,6 +71,8 @@ function Portal() {
           <Route path="/historico" element={<History />} />
           <Route path="/ranking" element={<Ranking />} />
           <Route path="/desafios" element={<Challenges />} />
+          <Route path="/marcos" element={<LandmarksPage />} />
+          <Route path="/rotas" element={<RoutesPage />} />
           <Route path="/perfil" element={<Profile />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<Navigate to="/" replace />} />

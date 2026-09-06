@@ -132,4 +132,39 @@ export const api = {
     request<{ type: "FeatureCollection"; features: unknown[] }>("/v1/territories?scope=me"),
   coverage: () =>
     request<{ city: { pct: number; covered_cells: number; total_cells: number } }>("/v1/coverage"),
+
+  landmarksProgress: () =>
+    request<{
+      total_landmarks: number;
+      unlocked_count: number;
+      landmarks: {
+        id: string;
+        name: string;
+        radius_m: number;
+        blurb?: string;
+        lat: number;
+        lng: number;
+        checked_in: boolean;
+      }[];
+    }>("/v1/landmarks"),
+
+  landmarkCheckin: (id: string, lat: number, lng: number) =>
+    request<unknown>(`/v1/landmarks/${encodeURIComponent(id)}/checkin`, {
+      method: "POST",
+      body: JSON.stringify({ lat, lng }),
+    }),
+
+  routes: () =>
+    request<{
+      routes: {
+        id: string;
+        name: string;
+        description?: string;
+        distance_m: number;
+        surface: string;
+        is_official: boolean;
+        avg_rating: number;
+      }[];
+    }>("/v1/routes"),
 };
+

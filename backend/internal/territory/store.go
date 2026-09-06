@@ -157,3 +157,35 @@ func (s *store) finishRun(ctx context.Context, runID, status string, areaM2 floa
 		WHERE id = $1`, runID, status, areaM2, parts, errMsg)
 	return err
 }
+
+// autoCheckinLandmarks detecta e realiza check-in automático em marcos históricos atingidos pelo traçado da corrida.
+func (s *store) autoCheckinLandmarks(ctx context.Context, userID, runID string) error {
+	const q = `
+		WITH track AS (
+			SELECT geom FROM run_tracks WHERE run_id = $2
+		),
+		targets AS (
+			SELECT l.id AS landmark_id, l.badge_code
+			FROM landmarks l, track
+			LEFT JOIN landmark_checkins lc ON lc.landmark_id = l.id AND lc.user_id = $1
+			WHERE l.status = 'active'
+			  AND lc.id IS NULL
+			  AND ST_DWithin(l.geom::geography, track.geom::geography, l.radius_m)
+		),
+		ins AS (
+			INSERT INTO landmark_checkins (id, user_id, landmark_id, run_id, taken_at, status)
+			SELECT encode(gen_random_bytes(16), 'hex'), $1, t.landmark_id, $2, now(), 'approved'
+			FROM targets t
+			ON CONFLICT (user_id, landmark_id) DO NOTHING
+			RETURNING landmark_id
+		)
+		INSERT INTO user_badges (user_id, badge_code, source, earned_at)
+		SELECT $1, t.badge_code, 'landmark', now()
+		FROM targets t
+		JOIN ins ON ins.landmark_id = t.landmark_id
+		WHERE t.badge_code IS NOT NULL AND t.badge_code != ''
+		ON CONFLICT (user_id, badge_code) DO NOTHING
+	`
+	_, err := s.pool.Exec(ctx, q, userID, runID)
+	return err
+}
