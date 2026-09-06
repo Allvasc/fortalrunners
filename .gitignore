@@ -1,0 +1,43 @@
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# --- secrets / env ---
+.env
+.env.*
+!.env.example
+*.pem
+*.p8
+*-key.json
+
+# --- backend (Go) ---
+backend/bin/
+backend/tmp/
+backend/coverage.out
+backend/*.test
+
+# --- web ---
+web/node_modules/
+web/dist/
+web/.vite/
+
+# --- mobile (Expo / RN) ---
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+mobile/ios/
+mobile/android/
+*.jks
+*.keystore
+
+# --- infra / local data ---
+infra/data/
+*.log
+
+# --- design canvas build artifact (large; source is the .dc.html files) ---
+docs/mockups/mapa-do-app.html
