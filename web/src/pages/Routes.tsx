@@ -17,7 +17,7 @@ export function RoutesPage() {
     setLoading(true);
     api.routes()
       .then((res) => {
-        setRoutes(res.routes);
+        setRoutes(res.routes ?? []);
         setError(null);
       })
       .catch((err) => setError(err.message))
@@ -155,16 +155,16 @@ export function RoutesPage() {
 
             {/* Reviews list */}
             <h4 style={{ fontFamily: "var(--f-display)", fontSize: "1rem", marginBottom: "0.8rem", borderBottom: "1px solid var(--line)", paddingBottom: "0.4rem" }}>
-              Avaliações da Comunidade ({selectedDetail.reviews.length})
+              Avaliações da Comunidade ({(selectedDetail.reviews ?? []).length})
             </h4>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", maxHeight: "250px", overflowY: "auto", marginBottom: "1.5rem" }}>
-              {selectedDetail.reviews.length === 0 ? (
+              {(selectedDetail.reviews ?? []).length === 0 ? (
                 <div style={{ fontSize: "0.85rem", color: "var(--ink-soft)", fontStyle: "italic" }}>
                   Nenhuma avaliação ainda. Seja o primeiro a avaliar!
                 </div>
               ) : (
-                selectedDetail.reviews.map((rev) => (
+                (selectedDetail.reviews ?? []).map((rev) => (
                   <div key={rev.id} style={{ padding: "0.8rem", background: "var(--bg)", borderRadius: "6px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", fontWeight: 600, marginBottom: "0.2rem" }}>
                       <span>{rev.user_name || "Corredor"}</span>

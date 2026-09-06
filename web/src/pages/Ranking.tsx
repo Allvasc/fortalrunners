@@ -39,15 +39,16 @@ export function Ranking() {
             {cov.data.city.pct}% da cidade — {int(cov.data.city.covered_cells)} de{" "}
             {int(cov.data.city.total_cells)} células.
           </p>
-          <ul className="lb tight">
+          <ul className="cov-list">
             {[...cov.data.neighborhoods]
               .sort((a, b) => b.pct - a.pct)
               .map((n) => (
-                <li key={n.neighborhood_id}>
-                  <div className="lb-row">
-                    <span className="nm">{n.name}</span>
-                    <span className="mv">{n.pct}%</span>
-                  </div>
+                <li key={n.neighborhood_id} className="cov-row">
+                  <span className="nm">{n.name}</span>
+                  <span className="bar">
+                    <i style={{ width: `${Math.min(n.pct, 100)}%` }} />
+                  </span>
+                  <span className="mv">{n.pct}%</span>
                 </li>
               ))}
           </ul>

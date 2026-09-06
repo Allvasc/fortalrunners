@@ -35,6 +35,9 @@ func (h *Handler) listFriends(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "erro ao listar amigos")
 	}
+	if friends == nil {
+		friends = []Friend{}
+	}
 	return c.JSON(http.StatusOK, map[string]any{"friends": friends})
 }
 
@@ -112,6 +115,9 @@ func (h *Handler) feed(c echo.Context) error {
 	events, next, err := h.svc.GetFeed(c.Request().Context(), auth.UserID(c), c.QueryParam("cursor"), limit)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "erro ao buscar feed")
+	}
+	if events == nil {
+		events = []FeedEvent{}
 	}
 	return c.JSON(http.StatusOK, map[string]any{"feed": events, "next_cursor": next})
 }

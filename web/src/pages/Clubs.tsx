@@ -15,7 +15,7 @@ export function ClubsPage() {
   const loadClubs = () => {
     setLoading(true);
     api.clubs()
-      .then((res) => setClubs(res.clubs))
+      .then((res) => setClubs(res.clubs ?? []))
       .catch(() => {})
       .finally(() => setLoading(false));
   };

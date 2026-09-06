@@ -33,6 +33,9 @@ func (h *Handler) list(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "erro ao listar clubes")
 	}
+	if clubs == nil {
+		clubs = []Club{}
+	}
 	return c.JSON(http.StatusOK, map[string]any{"clubs": clubs})
 }
 
@@ -41,6 +44,9 @@ func (h *Handler) leaderboard(c echo.Context) error {
 	board, err := h.svc.Leaderboard(c.Request().Context(), limit)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "erro ao montar ranking")
+	}
+	if board == nil {
+		board = []LeaderEntry{}
 	}
 	return c.JSON(http.StatusOK, map[string]any{"leaderboard": board})
 }

@@ -12,8 +12,8 @@ export function SocialPage() {
     setLoading(true);
     Promise.all([api.feed(), api.friends()])
       .then(([feedRes, friendsRes]) => {
-        setFeed(feedRes.feed);
-        setFriends(friendsRes.friends);
+        setFeed(feedRes.feed ?? []);
+        setFriends(friendsRes.friends ?? []);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
