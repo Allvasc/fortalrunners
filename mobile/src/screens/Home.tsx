@@ -41,6 +41,9 @@ export function Home({ navigation }: Props) {
       <TouchableOpacity style={s.cta} onPress={() => navigation.navigate("Recording")}>
         <Text style={s.ctaText}>Iniciar corrida</Text>
       </TouchableOpacity>
+      <TouchableOpacity style={s.ctaGhost} onPress={() => navigation.navigate("Map")}>
+        <Text style={s.ctaGhostText}>Ver meu mapa</Text>
+      </TouchableOpacity>
 
       <Text style={s.section}>Últimas corridas</Text>
       {runs.data?.runs.length === 0 && <Text style={s.muted}>Nenhuma ainda. Bora?</Text>}
@@ -86,6 +89,8 @@ const s = StyleSheet.create({
   tileL: { fontSize: 11, textTransform: "uppercase", color: C.ink3, marginTop: 2 },
   cta: { backgroundColor: C.coral, borderRadius: 14, paddingVertical: 18, alignItems: "center" },
   ctaText: { color: "#fff", fontWeight: "800", fontSize: 17 },
+  ctaGhost: { borderWidth: 1.5, borderColor: C.line, borderRadius: 14, paddingVertical: 14, alignItems: "center" },
+  ctaGhostText: { color: C.ink, fontWeight: "700" },
   section: { fontWeight: "700", color: C.ink, fontSize: 16, marginTop: 8 },
   runRow: { flexDirection: "row", justifyContent: "space-between", backgroundColor: C.surface, borderRadius: 12, borderWidth: 1, borderColor: C.line, padding: 14 },
   runDate: { fontWeight: "700", color: C.ink },

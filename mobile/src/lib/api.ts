@@ -128,4 +128,6 @@ export const api = {
   run: (id: string) => request<RunView>(`/v1/runs/${id}`),
   runs: (limit = 15) => request<{ runs: RunView[] }>(`/v1/runs?limit=${limit}`),
   lifetime: () => request<Lifetime>("/v1/me/lifetime"),
+  territories: () =>
+    request<{ type: "FeatureCollection"; features: unknown[] }>("/v1/territories?scope=me"),
 };

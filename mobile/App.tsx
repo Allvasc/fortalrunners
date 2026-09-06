@@ -7,12 +7,14 @@ import { isAuthed } from "./src/lib/api";
 import { C } from "./src/theme";
 import { Auth } from "./src/screens/Auth";
 import { Home } from "./src/screens/Home";
+import { Map } from "./src/screens/Map";
 import { Recording } from "./src/screens/Recording";
 import { Summary } from "./src/screens/Summary";
 import "./src/lib/recorder"; // registra a task de background no import
 
 export type RootStack = {
   Home: undefined;
+  Map: undefined;
   Recording: undefined;
   Summary: { runId: string };
 };
@@ -52,6 +54,7 @@ function Root() {
         }}
       >
         <Stack.Screen name="Home" component={Home} options={{ title: "FortalRunners", headerShown: false }} />
+        <Stack.Screen name="Map" component={Map} options={{ title: "Meu mapa" }} />
         <Stack.Screen name="Recording" component={Recording} options={{ title: "Correndo", gestureEnabled: false }} />
         <Stack.Screen name="Summary" component={Summary} options={{ title: "Resumo", headerBackVisible: false }} />
       </Stack.Navigator>
