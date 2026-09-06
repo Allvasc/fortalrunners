@@ -7,6 +7,16 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Para gravar sua corrida mesmo com a tela apagada.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ]
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.allvasc.fortalrunners",

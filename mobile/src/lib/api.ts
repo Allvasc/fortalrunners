@@ -8,6 +8,26 @@ const KEY = "fr.tokens";
 export type Tokens = { access_token: string; refresh_token: string; expires_at: string };
 export type PublicUser = { id: string; athlete_id: string; username: string; email: string; role: string };
 
+export type RunPoint = { lat: number; lon: number; alt?: number; t: number; acc?: number; spd?: number };
+export type RunView = {
+  id: string;
+  distance_m: number;
+  moving_s: number;
+  avg_pace_s: number;
+  elevation_gain_m: number;
+  territory_area_m2: number;
+  new_blocks: number;
+  status: string;
+  started_at: string;
+};
+export type Lifetime = {
+  run_count: number;
+  total_distance_m?: number;
+  total_moving_s?: number;
+  territory_area_m2?: number;
+  current_streak_days?: number;
+};
+
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
@@ -83,4 +103,19 @@ export const api = {
     await setTokens(null);
   },
   me: () => request<PublicUser>("/v1/me"),
+
+  uploadRun: (input: {
+    started_at: string;
+    ended_at: string;
+    points: RunPoint[];
+    mock_location?: boolean;
+  }) =>
+    request<RunView>("/v1/runs", {
+      method: "POST",
+      body: JSON.stringify({ data_source: "phone", gnss_mode: "phone", ...input }),
+    }),
+
+  run: (id: string) => request<RunView>(`/v1/runs/${id}`),
+  runs: (limit = 15) => request<{ runs: RunView[] }>(`/v1/runs?limit=${limit}`),
+  lifetime: () => request<Lifetime>("/v1/me/lifetime"),
 };

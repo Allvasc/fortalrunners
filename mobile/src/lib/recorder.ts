@@ -1,0 +1,151 @@
+// Motor de gravação de corrida. GPS em background via expo-location +
+// expo-task-manager; os pontos vão para o AsyncStorage (canal entre a task de
+// background e a tela). A tela lê num intervalo e recalcula distância/pace.
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Location from "expo-location";
+import * as TaskManager from "expo-task-manager";
+
+export const LOCATION_TASK = "fr-location-task";
+const BUF_KEY = "fr.rec.points";
+const META_KEY = "fr.rec.meta";
+
+export type GPSPoint = {
+  lat: number;
+  lon: number;
+  alt?: number;
+  t: number; // unix ms
+  acc?: number; // precisão horizontal (m)
+  spd?: number; // m/s
+};
+
+type Meta = { startedAt: number; paused: boolean };
+
+// --- task de background: só acumula os pontos ---
+TaskManager.defineTask(LOCATION_TASK, async ({ data, error }) => {
+  if (error || !data) return;
+  const { locations } = data as { locations: Location.LocationObject[] };
+  const meta = await readMeta();
+  if (!meta || meta.paused) return;
+
+  const pts: GPSPoint[] = locations.map((l) => ({
+    lat: l.coords.latitude,
+    lon: l.coords.longitude,
+    alt: l.coords.altitude ?? undefined,
+    t: Math.round(l.timestamp),
+    acc: l.coords.accuracy ?? undefined,
+    spd: l.coords.speed ?? undefined,
+  }));
+  await appendPoints(pts);
+});
+
+async function readMeta(): Promise<Meta | null> {
+  const raw = await AsyncStorage.getItem(META_KEY);
+  return raw ? (JSON.parse(raw) as Meta) : null;
+}
+async function appendPoints(pts: GPSPoint[]) {
+  const raw = await AsyncStorage.getItem(BUF_KEY);
+  const buf: GPSPoint[] = raw ? JSON.parse(raw) : [];
+  buf.push(...pts);
+  await AsyncStorage.setItem(BUF_KEY, JSON.stringify(buf));
+}
+
+// --- API de controle ---
+
+export async function ensurePermissions(): Promise<boolean> {
+  const fg = await Location.requestForegroundPermissionsAsync();
+  if (fg.status !== "granted") return false;
+  const bg = await Location.requestBackgroundPermissionsAsync();
+  return bg.status === "granted" || fg.status === "granted"; // background é desejável, não obrigatório
+}
+
+export async function startRecording(): Promise<boolean> {
+  if (!(await ensurePermissions())) return false;
+  await AsyncStorage.multiRemove([BUF_KEY, META_KEY]);
+  await AsyncStorage.setItem(META_KEY, JSON.stringify({ startedAt: Date.now(), paused: false } satisfies Meta));
+
+  const running = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK).catch(() => false);
+  if (running) await Location.stopLocationUpdatesAsync(LOCATION_TASK);
+
+  await Location.startLocationUpdatesAsync(LOCATION_TASK, {
+    accuracy: Location.Accuracy.BestForNavigation,
+    timeInterval: 1000,
+    distanceInterval: 3,
+    deferredUpdatesInterval: 1000,
+    pausesUpdatesAutomatically: false,
+    activityType: Location.ActivityType.Fitness,
+    foregroundService: {
+      notificationTitle: "FortalRunners",
+      notificationBody: "Gravando sua corrida…",
+      notificationColor: "#E0562F",
+    },
+  });
+  return true;
+}
+
+export async function setPaused(paused: boolean) {
+  const meta = await readMeta();
+  if (meta) await AsyncStorage.setItem(META_KEY, JSON.stringify({ ...meta, paused }));
+}
+
+export async function stopRecording(): Promise<{ startedAt: number; points: GPSPoint[] }> {
+  const running = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK).catch(() => false);
+  if (running) await Location.stopLocationUpdatesAsync(LOCATION_TASK);
+  const meta = await readMeta();
+  const raw = await AsyncStorage.getItem(BUF_KEY);
+  const points: GPSPoint[] = raw ? JSON.parse(raw) : [];
+  await AsyncStorage.multiRemove([BUF_KEY, META_KEY]);
+  return { startedAt: meta?.startedAt ?? (points[0]?.t ?? Date.now()), points };
+}
+
+export async function readLive(): Promise<{ meta: Meta | null; points: GPSPoint[] }> {
+  const [metaRaw, bufRaw] = await AsyncStorage.multiGet([META_KEY, BUF_KEY]);
+  return {
+    meta: metaRaw[1] ? JSON.parse(metaRaw[1]) : null,
+    points: bufRaw[1] ? JSON.parse(bufRaw[1]) : [],
+  };
+}
+
+// --- métricas derivadas (espelham o clean.go do backend) ---
+
+export function haversine(a: GPSPoint, b: GPSPoint): number {
+  const R = 6371000;
+  const φ1 = (a.lat * Math.PI) / 180;
+  const φ2 = (b.lat * Math.PI) / 180;
+  const dφ = ((b.lat - a.lat) * Math.PI) / 180;
+  const dλ = ((b.lon - a.lon) * Math.PI) / 180;
+  const h =
+    Math.sin(dφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(dλ / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
+
+export type LiveStats = {
+  distanceM: number;
+  movingS: number;
+  elapsedS: number;
+  paceS: number; // s/km em movimento
+  points: GPSPoint[];
+};
+
+export function computeStats(points: GPSPoint[], startedAt: number): LiveStats {
+  let dist = 0;
+  let moving = 0;
+  const kept: GPSPoint[] = [];
+  let prev: GPSPoint | null = null;
+  for (const p of points) {
+    if (p.acc != null && p.acc > 30) continue;
+    if (prev) {
+      const d = haversine(prev, p);
+      const dt = (p.t - prev.t) / 1000;
+      if (dt <= 0) continue;
+      if (d < 1 && dt < 1) continue;
+      if (d / dt > 12) continue; // teleporte
+      dist += d;
+      if (d / dt > 0.5) moving += dt;
+    }
+    kept.push(p);
+    prev = p;
+  }
+  const elapsedS = (Date.now() - startedAt) / 1000;
+  const paceS = dist > 100 ? moving / (dist / 1000) : 0;
+  return { distanceM: dist, movingS: moving, elapsedS, paceS, points: kept };
+}
