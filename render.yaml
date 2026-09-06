@@ -58,7 +58,7 @@ services:
         fromService:
           type: web
           name: fortalrunners-api
-          property: url
+          property: host
 
   # 4. Redis Service
   - type: redis
