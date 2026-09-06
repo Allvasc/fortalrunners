@@ -31,6 +31,41 @@ services:
       # origem do portal web para o CORS (o front roda em outro domínio)
       - key: CORS_ORIGINS
         value: https://fortalrunners-web.onrender.com
+      # --- segredos: valor definido no dashboard (Environment), não no blueprint ---
+      - key: WEATHER_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: AI_MODEL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URL
+        sync: false
+      - key: STRAVA_CLIENT_ID
+        sync: false
+      - key: STRAVA_CLIENT_SECRET
+        sync: false
+      - key: STRAVA_REDIRECT_URL
+        sync: false
+      - key: STRAVA_WEBHOOK_VERIFY_TOKEN
+        sync: false
+      - key: ASAAS_API_KEY
+        sync: false
+      - key: ASAAS_WEBHOOK_SECRET
+        sync: false
+      - key: APPLE_CLIENT_ID
+        sync: false
+      - key: APPLE_TEAM_ID
+        sync: false
+      - key: APPLE_KEY_ID
+        sync: false
+      - key: APPLE_P8_KEY
+        sync: false
+      - key: APPLE_REDIRECT_URL
+        sync: false
 
   # 2. Web Frontend Portal (Gratuito)
   - type: web
