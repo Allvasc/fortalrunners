@@ -102,9 +102,10 @@
       <li><a href="#pagamentos">04 · Pagamentos (Asaas)</a></li>
       <li><a href="#ia">05 · Coach IA</a></li>
       <li><a href="#clima">06 · Clima</a></li>
-      <li><a href="#operacao">07 · Operação</a></li>
-      <li><a href="#front">08 · Front (web &amp; mobile)</a></li>
-      <li><a href="#render">09 · O que já está no render.yaml</a></li>
+      <li><a href="#qualidade">07 · Map-matching, e-mail &amp; erros</a></li>
+      <li><a href="#operacao">08 · Operação</a></li>
+      <li><a href="#front">09 · Front (web &amp; mobile)</a></li>
+      <li><a href="#render">10 · O que já está no render.yaml</a></li>
     </ol>
   </header>
 
@@ -254,11 +255,32 @@
   <div class="var">
     <div class="var-head"><span class="var-name">WEATHER_API_KEY</span><span class="tag opt">opcional</span></div>
     <div class="var-body">
-      <p>Reservada para um provedor real (FUNCEME / INMET / OpenWeather). <strong>Hoje ignorada</strong> — <code>GET /v1/conditions</code> devolve uma leitura estática de Fortaleza marcada como tal. A interface <code>Provider</code> já está pronta para plugar.</p>
+      <p>Chave do <a href="https://openweathermap.org/api">OpenWeather</a> (plano gratuito, API clássica 2.5). Com ela, <code>GET /v1/conditions</code> devolve a leitura real de Fortaleza (temperatura, sensação, UV, vento, janelas boas). <strong>Sem ela</strong>, cai numa leitura estática marcada como tal — a mesma interface <code>Provider</code>, com fallback automático se a chamada real falhar.</p>
     </div>
   </div>
 
-  <h2 id="operacao"><span class="n">07</span> Operação</h2>
+  <h2 id="qualidade"><span class="n">07</span> Map-matching, e-mail &amp; erros</h2>
+  <p>Três integrações opcionais. Cada uma é <strong>no-op sem a variável</strong> — o app funciona igual, só sem aquele reforço.</p>
+  <div class="var">
+    <div class="var-head"><span class="var-name">OSRM_URL</span><span class="tag opt">opcional</span></div>
+    <div class="var-body">
+      <p>Base de um servidor <a href="https://project-osrm.org/">OSRM</a> com perfil a pé (ex.: <code>https://osrm.seu-dominio.com</code>, sem barra final). Ao registrar a corrida, o traçado limpo é encaixado na malha viária (<code>/match</code>) antes de virar geometria — o território passa a seguir os quarteirões reais. <code>points_jsonb</code> continua com o GPS cru; métricas e anti-fraude não mudam. Falha de rede ou baixa confiança → segue com o traçado cru, sem erro. <strong>Vazio = desligado</strong> (comportamento atual).</p>
+    </div>
+  </div>
+  <div class="var">
+    <div class="var-head"><span class="var-name">RESEND_API_KEY</span> · <span class="var-name">EMAIL_FROM</span><span class="tag opt">opcional</span></div>
+    <div class="var-body">
+      <p>Chave da <a href="https://resend.com/">Resend</a> (plano gratuito cobre o MVP) para o e-mail de <strong>redefinição de senha</strong>. <code>EMAIL_FROM</code> é o remetente verificado, ex.: <code>FortalRunners &lt;nao-responda@seu-dominio&gt;</code> (default: <code>onboarding@resend.dev</code>). <strong>Sem a chave</strong>, o link de redefinição só aparece no log do servidor.</p>
+    </div>
+  </div>
+  <div class="var">
+    <div class="var-head"><span class="var-name">SENTRY_DSN</span><span class="tag opt">opcional</span></div>
+    <div class="var-body">
+      <p>DSN do projeto no <a href="https://sentry.io/">Sentry</a> (plano gratuito). Com ele, todo erro 5xx e todo <em>panic</em> vão para o Sentry com tags de rota, método e request-id. <code>RENDER_GIT_COMMIT</code> (injetada pelo Render) marca a release. <strong>Vazio</strong> = SDK em modo noop.</p>
+    </div>
+  </div>
+
+  <h2 id="operacao"><span class="n">08</span> Operação</h2>
   <div class="var">
     <div class="var-head"><span class="var-name">AUTO_MIGRATE</span><span class="tag opt">opcional</span></div>
     <div class="var-body">
@@ -272,7 +294,7 @@
     </div>
   </div>
 
-  <h2 id="front"><span class="n">08</span> Front — web &amp; mobile</h2>
+  <h2 id="front"><span class="n">09</span> Front — web &amp; mobile</h2>
   <div class="var">
     <div class="var-head"><span class="var-name">VITE_API_URL</span><span class="tag opt">build-time (web)</span></div>
     <div class="var-body">
@@ -286,13 +308,13 @@
     </div>
   </div>
 
-  <h2 id="render"><span class="n">09</span> O que já está no render.yaml</h2>
+  <h2 id="render"><span class="n">10</span> O que já está no render.yaml</h2>
   <p>Estas o Blueprint já injeta — você só precisa <strong>trocar os segredos por valores gerados</strong> e <strong>adicionar as opcionais que quiser ativar</strong> (login social, Strava, Asaas, IA) nas <em>Environment</em> do serviço <code>fortalrunners-api</code> no painel do Render.</p>
   <div class="var">
     <div class="var-body">
       <p class="kv"><b>Automáticas</b> <code>DATABASE_URL</code>, <code>REDIS_URL</code>, <code>PORT</code></p>
       <p class="kv"><b>Fixas no blueprint</b> <code>APP_ENV=prod</code>, <code>JWT_SECRET</code>, <code>MFA_ENC_KEY</code>, <code>CORS_ORIGINS</code>, <code>ASAAS_WEBHOOK_SECRET</code> (adicionar), demais opcionais</p>
-      <p class="kv"><b>Você adiciona</b> quando ativar: <code>GOOGLE_*</code>, <code>APPLE_*</code>, <code>STRAVA_*</code>, <code>ASAAS_API_KEY</code>, <code>ANTHROPIC_API_KEY</code></p>
+      <p class="kv"><b>Você adiciona</b> quando ativar: <code>GOOGLE_*</code>, <code>APPLE_*</code>, <code>STRAVA_*</code>, <code>ASAAS_API_KEY</code>, <code>ANTHROPIC_API_KEY</code>, <code>WEATHER_API_KEY</code>, <code>OSRM_URL</code>, <code>RESEND_API_KEY</code>, <code>EMAIL_FROM</code>, <code>SENTRY_DSN</code> (todas já declaradas com <code>sync:false</code> no blueprint)</p>
     </div>
   </div>
 
