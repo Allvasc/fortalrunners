@@ -336,15 +336,33 @@ export const api = {
 
   me: () => request<PublicUser>("/v1/me"),
 
-  territories: (bbox?: [number, number, number, number]) =>
-    request<FeatureCollection>(`/v1/territories${bbox ? `?bbox=${bbox.join(",")}` : ""}`),
+  territories: (scope: "me" | "friends" = "me", bbox?: [number, number, number, number]) =>
+    request<FeatureCollection>(
+      `/v1/territories?scope=${scope}${bbox ? `&bbox=${bbox.join(",")}` : ""}`,
+    ),
 
-  heatmap: (bbox?: [number, number, number, number]) =>
+  heatmap: (scope: "me" | "friends" | "city" = "me", bbox?: [number, number, number, number]) =>
     request<GeoJSON.FeatureCollection<GeoJSON.Point, { w: number; hits: number }>>(
-      `/v1/heatmap?scope=me${bbox ? `&bbox=${bbox.join(",")}` : ""}`,
+      `/v1/heatmap?scope=${scope}${bbox ? `&bbox=${bbox.join(",")}` : ""}`,
     ),
 
   leaderboardGlobal: () => request<Leaderboard>("/v1/leaderboards/global"),
+  leaderboardFriends: () => request<Leaderboard>("/v1/leaderboards/friends"),
+  leaderboardClub: (id: string) => request<Leaderboard>(`/v1/leaderboards/club/${encodeURIComponent(id)}`),
+
+  // --- perfil / privacidade / LGPD ---
+  updateMe: (patch: {
+    display_name?: string;
+    color_hex?: string;
+    home?: { lat: number; lng: number; radius_m: number };
+  }) => request<{ updated: boolean }>("/v1/me", { method: "PATCH", body: JSON.stringify(patch) }),
+  exportMyData: () => request<Record<string, unknown>>("/v1/me/export"),
+  deleteAccount: () =>
+    request<void>("/v1/me", { method: "DELETE", body: JSON.stringify({ confirm: "EXCLUIR" }) }),
+  myBadges: () =>
+    request<{ badges: { code: string; name: string; description?: string; earned_at: string }[] }>(
+      "/v1/me/badges",
+    ),
 
   coverage: () =>
     request<{

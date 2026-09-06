@@ -294,6 +294,22 @@ export const api = {
       "/v1/coach/summary",
     ),
 
+  // --- privacidade / LGPD ---
+  setHomeZone: (lat: number, lng: number, radius_m: number) =>
+    request<{ updated: boolean }>("/v1/me", {
+      method: "PATCH",
+      body: JSON.stringify({ home: { lat, lng, radius_m } }),
+    }),
+  exportMyData: () => request<Record<string, unknown>>("/v1/me/export"),
+  deleteAccount: () =>
+    request<void>("/v1/me", { method: "DELETE", body: JSON.stringify({ confirm: "EXCLUIR" }) }),
+  territoriesScope: (scope: "me" | "friends") =>
+    request<{ type: "FeatureCollection"; features: unknown[] }>(`/v1/territories?scope=${scope}`),
+  heatmapScope: (scope: "me" | "friends" | "city") =>
+    request<{ type: "FeatureCollection"; features: unknown[] }>(`/v1/heatmap?scope=${scope}`),
+  leaderboardFriends: () =>
+    request<{ entries: { rank: number; username: string; area_m2: number }[] }>("/v1/leaderboards/friends"),
+
   events: () =>
     request<{
       events: {

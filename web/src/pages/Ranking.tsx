@@ -1,9 +1,16 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api, type LeaderEntry } from "../lib/api";
 import { area, int } from "../lib/format";
 
+type Tab = "global" | "friends";
+
 export function Ranking() {
-  const q = useQuery({ queryKey: ["leaderboard", "global"], queryFn: api.leaderboardGlobal });
+  const [tab, setTab] = useState<Tab>("global");
+  const q = useQuery({
+    queryKey: ["leaderboard", tab],
+    queryFn: () => (tab === "friends" ? api.leaderboardFriends() : api.leaderboardGlobal()),
+  });
   const cov = useQuery({ queryKey: ["coverage"], queryFn: api.coverage });
 
   return (
@@ -11,10 +18,19 @@ export function Ranking() {
       <header className="page-head">
         <h1>Ranking</h1>
         <p className="muted">
-          Classificação geral de Fortaleza por área total coberta. Território é permanente — a
-          posição reflete tudo que você já conquistou, não uma semana.
+          Por área total coberta. Território é permanente — a posição reflete tudo que você já
+          conquistou, não uma semana.
         </p>
       </header>
+
+      <div className="seg" style={{ maxWidth: "22rem" }}>
+        <button className={tab === "global" ? "on" : ""} onClick={() => setTab("global")}>
+          Fortaleza
+        </button>
+        <button className={tab === "friends" ? "on" : ""} onClick={() => setTab("friends")}>
+          Amigos
+        </button>
+      </div>
 
       {cov.data && (
         <section>

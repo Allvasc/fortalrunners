@@ -42,9 +42,92 @@ export function Profile() {
       </section>
 
       <section>
+        <h2>Privacidade & dados</h2>
+        <PrivacyPanel />
+      </section>
+
+      <section>
         <h2>Verificação em duas etapas</h2>
         <MFAPanel />
       </section>
+    </div>
+  );
+}
+
+function PrivacyPanel() {
+  const [radius, setRadius] = useState(200);
+  const [msg, setMsg] = useState("");
+
+  async function setHomeZone() {
+    setMsg("Obtendo sua posição…");
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          await api.updateMe({
+            home: { lat: pos.coords.latitude, lng: pos.coords.longitude, radius_m: radius },
+          });
+          setMsg(`Zona de ocultação de ${radius} m salva na sua posição atual. O traçado dentro dela não é mais gravado.`);
+        } catch (e: any) {
+          setMsg(e?.message ?? "Erro ao salvar");
+        }
+      },
+      () => setMsg("Não foi possível obter sua localização."),
+    );
+  }
+
+  async function exportData() {
+    setMsg("Preparando o arquivo…");
+    const data = await api.exportMyData();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "fortalrunners-meus-dados.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setMsg("Download iniciado.");
+  }
+
+  async function del() {
+    if (!confirm("Excluir a conta anonimiza seus dados pessoais imediatamente e não pode ser desfeito. Continuar?")) return;
+    try {
+      await api.deleteAccount();
+      await api.logout();
+      location.href = "/";
+    } catch (e: any) {
+      setMsg(e?.message ?? "Erro ao excluir");
+    }
+  }
+
+  return (
+    <div className="card" style={{ display: "grid", gap: "0.8rem" }}>
+      <div>
+        <p className="small mono muted" style={{ textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.3rem" }}>
+          Zona de ocultação
+        </p>
+        <p className="small muted" style={{ margin: "0 0 0.5rem" }}>
+          Um raio em torno de casa/trabalho onde o traçado nunca é gravado nem exibido.
+        </p>
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+          <label style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
+            raio
+            <select value={radius} onChange={(e) => setRadius(Number(e.target.value))}>
+              {[100, 150, 200, 300, 500].map((r) => (
+                <option key={r} value={r}>{r} m</option>
+              ))}
+            </select>
+          </label>
+          <button className="btn" onClick={setHomeZone}>Usar minha posição atual</button>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", borderTop: "1px solid var(--line)", paddingTop: "0.7rem" }}>
+        <button className="btn" onClick={exportData}>Exportar meus dados (LGPD)</button>
+        <button className="btn" style={{ color: "var(--coral)", borderColor: "var(--coral)" }} onClick={del}>
+          Excluir minha conta
+        </button>
+      </div>
+
+      {msg && <p className="small" style={{ color: "var(--ink)" }}>{msg}</p>}
     </div>
   );
 }

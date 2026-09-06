@@ -19,9 +19,15 @@ export function MapView() {
   const [showHeat, setShowHeat] = useState(false);
   const [showLandmarks, setShowLandmarks] = useState(false);
   const [showPois, setShowPois] = useState(false);
+  const [scope, setScope] = useState<"me" | "friends">("me");
+  const [heatScope, setHeatScope] = useState<"me" | "friends" | "city">("me");
 
-  const terr = useQuery({ queryKey: ["territories"], queryFn: () => api.territories() });
-  const heat = useQuery({ queryKey: ["heatmap"], queryFn: () => api.heatmap(), enabled: showHeat });
+  const terr = useQuery({ queryKey: ["territories", scope], queryFn: () => api.territories(scope) });
+  const heat = useQuery({
+    queryKey: ["heatmap", heatScope],
+    queryFn: () => api.heatmap(heatScope),
+    enabled: showHeat,
+  });
   const lmk = useQuery({ queryKey: ["landmarks"], queryFn: () => api.landmarksProgress(), enabled: showLandmarks });
   const poi = useQuery({ queryKey: ["amenities"], queryFn: () => api.amenities(), enabled: showPois });
   const weather = useQuery({ queryKey: ["weather"], queryFn: () => api.weather() });
@@ -56,7 +62,10 @@ export function MapView() {
         id: "territories-fill",
         type: "fill",
         source: "territories",
-        paint: { "fill-color": RUNNER, "fill-opacity": 0.22 },
+        paint: {
+          "fill-color": ["coalesce", ["get", "color_hex"], RUNNER],
+          "fill-opacity": 0.22,
+        },
       });
       m.addLayer({
         id: "territories-line",
@@ -162,12 +171,36 @@ export function MapView() {
           <span className="v">{area(total)}</span>
           <span className="l">cobertos</span>
         </div>
+        <div style={{ display: "flex", gap: "0.3rem" }}>
+          {(["me", "friends"] as const).map((s) => (
+            <button
+              key={s}
+              className={`btn sm ${scope === s ? "primary" : "ghost"}`}
+              onClick={() => setScope(s)}
+            >
+              {s === "me" ? "Meu mapa" : "Amigos"}
+            </button>
+          ))}
+        </div>
         <button
           className={`btn sm ${showHeat ? "primary" : "ghost"}`}
           onClick={() => setShowHeat((v) => !v)}
         >
           Calor {showHeat ? "on" : "off"}
         </button>
+        {showHeat && (
+          <div style={{ display: "flex", gap: "0.3rem" }}>
+            {(["me", "friends", "city"] as const).map((s) => (
+              <button
+                key={s}
+                className={`btn sm ${heatScope === s ? "primary" : "ghost"}`}
+                onClick={() => setHeatScope(s)}
+              >
+                {s === "me" ? "eu" : s === "friends" ? "rede" : "cidade"}
+              </button>
+            ))}
+          </div>
+        )}
         <button
           className={`btn sm ${showLandmarks ? "primary" : "ghost"}`}
           onClick={() => setShowLandmarks((v) => !v)}

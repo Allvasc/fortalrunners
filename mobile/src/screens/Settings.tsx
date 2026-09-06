@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import * as Location from "expo-location";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { C } from "../theme";
@@ -81,6 +82,62 @@ export function SettingsScreen() {
         <TextInput style={s.input} placeholder="Modelo" placeholderTextColor={C.ink3} value={model} onChangeText={setModel} />
         <TouchableOpacity style={s.btn} onPress={addDevice}>
           <Text style={s.btnText}>Parear</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={s.card}>
+        <Text style={s.section}>Privacidade & dados</Text>
+        <Text style={s.meta}>
+          Zona de ocultação: um raio de 200 m em torno da sua posição atual onde o traçado
+          nunca é gravado.
+        </Text>
+        <TouchableOpacity
+          style={s.btn}
+          onPress={async () => {
+            const p = await Location.requestForegroundPermissionsAsync();
+            if (!p.granted) return Alert.alert("Sem GPS", "Precisa da localização.");
+            const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+            try {
+              await api.setHomeZone(pos.coords.latitude, pos.coords.longitude, 200);
+              Alert.alert("Salvo", "Zona de ocultação definida na sua posição atual.");
+            } catch (e: any) {
+              Alert.alert("Ops", e?.message ?? "Erro");
+            }
+          }}
+        >
+          <Text style={s.btnText}>Definir zona de ocultação aqui</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={s.btnGhost}
+          onPress={async () => {
+            const d = await api.exportMyData();
+            Alert.alert("Seus dados", JSON.stringify(d).slice(0, 800) + "…\n\n(exportação completa no portal web)");
+          }}
+        >
+          <Text style={s.btnGhostText}>Exportar meus dados (LGPD)</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[s.btnGhost, { borderColor: C.crit }]}
+          onPress={() =>
+            Alert.alert("Excluir conta", "Anonimiza seus dados na hora e não pode ser desfeito.", [
+              { text: "Cancelar", style: "cancel" },
+              {
+                text: "Excluir",
+                style: "destructive",
+                onPress: async () => {
+                  try {
+                    await api.deleteAccount();
+                    await api.logout();
+                    qc.clear();
+                  } catch (e: any) {
+                    Alert.alert("Ops", e?.message ?? "Erro");
+                  }
+                },
+              },
+            ])
+          }
+        >
+          <Text style={[s.btnGhostText, { color: C.crit }]}>Excluir minha conta</Text>
         </TouchableOpacity>
       </View>
 
