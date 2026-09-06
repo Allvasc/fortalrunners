@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { api, type PublicUser } from "../lib/api";
 import { C } from "../theme";
 import { area, clock, km } from "../format";
+import { AuroraBg } from "../ui/AuroraBg";
+import { FadeIn } from "../ui/Motion";
 
 // "Números de sempre" — estatísticas de vida, recordes e selos (plano §4).
 
@@ -35,13 +37,15 @@ export function ProfileScreen() {
   const l = life.data;
 
   return (
-    <ScrollView style={{ backgroundColor: C.bg }} contentContainerStyle={s.wrap}>
-      <View>
+    <View style={{ flex: 1, backgroundColor: C.bg }}>
+      <AuroraBg tint="gold" />
+      <ScrollView contentContainerStyle={s.wrap} showsVerticalScrollIndicator={false}>
+      <FadeIn>
         <Text style={s.name}>{me.data?.username ?? "corredor"}</Text>
         <Text style={s.muted}>
           {me.data?.athlete_id} · {me.data?.email}
         </Text>
-      </View>
+      </FadeIn>
 
       <Text style={s.section}>Números de sempre</Text>
       <View style={s.tiles}>
@@ -85,7 +89,8 @@ export function ProfileScreen() {
           </View>
         ))}
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 

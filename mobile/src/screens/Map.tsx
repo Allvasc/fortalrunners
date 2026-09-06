@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import * as Location from "expo-location";
 import {
   Camera,
   CircleLayer,
@@ -7,8 +8,6 @@ import {
   HeatmapLayer,
   LineLayer,
   MapView as MLRNMapView,
-  RasterLayer,
-  RasterSource,
   ShapeSource,
   UserLocation,
 } from "@maplibre/maplibre-react-native";
@@ -25,25 +24,43 @@ const FORTALEZA: [number, number] = [-38.523, -3.731];
 const RUNNER = "#08a6a0";
 const EMPTY: GeoFC = { type: "FeatureCollection", features: [] };
 
-// Style vazio; as fontes raster (OSM / Esri) entram como componentes <RasterSource>.
-const BASE_STYLE = {
-  version: 8,
-  sources: {},
-  layers: [{ id: "bg", type: "background", paint: { "background-color": "#e9e4d8" } }],
-} as const;
+// Estilos raster completos (sem chave) — MapLibre native carrega o style inteiro.
+const rasterStyle = (id: string, tiles: string[], attribution: string) =>
+  JSON.stringify({
+    version: 8,
+    sources: { [id]: { type: "raster", tiles, tileSize: 256, maxzoom: 19, attribution } },
+    layers: [
+      { id: "bg", type: "background", paint: { "background-color": "#e9e4d8" } },
+      { id, type: "raster", source: id },
+    ],
+  });
+
+const STYLE_OSM = rasterStyle("osm", ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"], "© OpenStreetMap");
+const STYLE_SAT = rasterStyle(
+  "sat",
+  ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+  "Esri, Maxar",
+);
 
 type LKey = "heat" | "landmarks" | "routes" | "pois" | "risk" | "hazards";
 
 export function Map({ navigation }: Props) {
+  const cam = useRef<React.ComponentRef<typeof Camera>>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [base, setBase] = useState<"osm" | "sat">("osm");
   const [scope, setScope] = useState<"me" | "friends">("me");
   const [heatScope, setHeatScope] = useState<"me" | "friends" | "city">("me");
-  const [follow, setFollow] = useState(false);
+  const [hasLoc, setHasLoc] = useState(false);
   const [on, setOn] = useState<Record<LKey, boolean>>({
     heat: false, landmarks: false, routes: false, pois: false, risk: true, hazards: false,
   });
   const toggle = (k: LKey) => setOn((s) => ({ ...s, [k]: !s[k] }));
+
+  useEffect(() => {
+    Location.requestForegroundPermissionsAsync()
+      .then((r) => setHasLoc(r.status === "granted"))
+      .catch(() => {});
+  }, []);
 
   const terr = useQuery({ queryKey: ["territories", scope], queryFn: () => api.territoriesScope(scope) });
   const heat = useQuery({ queryKey: ["heatmap", heatScope], queryFn: () => api.heatmap(heatScope), enabled: on.heat });
@@ -54,7 +71,8 @@ export function Map({ navigation }: Props) {
   const haz = useQuery({ queryKey: ["hazards"], queryFn: () => api.hazards(), enabled: on.hazards });
   const weather = useQuery({ queryKey: ["weather"], queryFn: api.weather });
 
-  const fc = (terr.data && Array.isArray(terr.data.features) ? terr.data : EMPTY) as GeoFC;
+  const safe = (g?: GeoFC): GeoFC => (g && Array.isArray(g.features) ? g : EMPTY);
+  const fc = safe(terr.data);
 
   const landmarksFC = useMemo<GeoFC>(() => ({
     type: "FeatureCollection",
@@ -70,7 +88,7 @@ export function Map({ navigation }: Props) {
     features: (poi.data?.amenities ?? []).map((p) => ({
       type: "Feature",
       geometry: { type: "Point", coordinates: [p.lng, p.lat] },
-      properties: { name: p.name, cat: p.category },
+      properties: { name: p.name },
     })),
   }), [poi.data]);
 
@@ -78,7 +96,14 @@ export function Map({ navigation }: Props) {
     type: "FeatureCollection",
     features: (routes.data?.routes ?? [])
       .filter((r) => !!r.geojson)
-      .map((r) => ({ type: "Feature", geometry: JSON.parse(r.geojson as string), properties: { name: r.name } })),
+      .map((r) => {
+        try {
+          return { type: "Feature" as const, geometry: JSON.parse(r.geojson as string), properties: { name: r.name } };
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean) as GeoJSON.Feature[],
   }), [routes.data]);
 
   const hazFC = useMemo<GeoFC>(() => ({
@@ -90,67 +115,61 @@ export function Map({ navigation }: Props) {
     })),
   }), [haz.data]);
 
-  const safe = (g?: GeoFC): GeoFC => (g && Array.isArray(g.features) ? g : EMPTY);
   const count = fc.features.length;
-  const totalArea = fc.features.reduce((s, f) => s + Number((f.properties as any)?.area_m2 ?? 0), 0);
+  const totalArea = fc.features.reduce((sum, f) => sum + Number((f.properties as any)?.area_m2 ?? 0), 0);
+
+  const centerOnMe = async () => {
+    try {
+      let ok = hasLoc;
+      if (!ok) {
+        const r = await Location.requestForegroundPermissionsAsync();
+        ok = r.status === "granted";
+        setHasLoc(ok);
+      }
+      if (!ok) return;
+      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      cam.current?.setCamera({
+        centerCoordinate: [pos.coords.longitude, pos.coords.latitude],
+        zoomLevel: 15,
+        animationDuration: 700,
+      });
+    } catch {}
+  };
 
   return (
     <View style={s.wrap}>
-      <MLRNMapView style={s.map} mapStyle={BASE_STYLE} logoEnabled={false} attributionEnabled compassEnabled={false}>
-        <Camera
-          defaultSettings={{ centerCoordinate: FORTALEZA, zoomLevel: 11.5 }}
-          followUserLocation={follow}
-          followZoomLevel={15}
-        />
-        <UserLocation visible androidRenderMode="compass" />
+      <MLRNMapView
+        style={s.map}
+        mapStyle={base === "osm" ? STYLE_OSM : STYLE_SAT}
+        logoEnabled={false}
+        attributionEnabled
+        compassEnabled={false}
+      >
+        <Camera ref={cam} defaultSettings={{ centerCoordinate: FORTALEZA, zoomLevel: 11.5 }} />
+        {hasLoc && <UserLocation visible androidRenderMode="compass" />}
 
-        {/* base raster */}
-        <RasterSource
-          id="osm"
-          tileUrlTemplates={["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"]}
-          tileSize={256}
-          maxZoomLevel={19}
-        >
-          <RasterLayer id="osm-l" style={{ visibility: base === "osm" ? "visible" : "none" }} />
-        </RasterSource>
-        <RasterSource
-          id="sat"
-          tileUrlTemplates={["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"]}
-          tileSize={256}
-          maxZoomLevel={19}
-        >
-          <RasterLayer id="sat-l" style={{ visibility: base === "sat" ? "visible" : "none" }} />
-        </RasterSource>
-
-        {/* zonas de risco */}
         {on.risk && (
           <ShapeSource id="risk" shape={safe(risk.data)}>
             <FillLayer id="risk-fill" style={{ fillColor: "#c7402b", fillOpacity: 0.16 }} />
             <LineLayer id="risk-line" style={{ lineColor: "#c7402b", lineWidth: 1.4, lineDasharray: [2, 2] }} />
           </ShapeSource>
         )}
-
-        {/* mapa de calor */}
         {on.heat && (
           <ShapeSource id="heat" shape={safe(heat.data)}>
             <HeatmapLayer id="heat-l" style={{ heatmapRadius: 22, heatmapOpacity: 0.75 }} />
           </ShapeSource>
         )}
-
-        {/* rotas */}
         {on.routes && (
           <ShapeSource id="routes" shape={routesFC}>
             <LineLayer id="routes-l" style={{ lineColor: "#6E5AA6", lineWidth: 3, lineCap: "round" }} />
           </ShapeSource>
         )}
 
-        {/* território */}
         <ShapeSource id="terr" shape={fc}>
           <FillLayer id="terr-fill" style={{ fillColor: ["coalesce", ["get", "color_hex"], RUNNER], fillOpacity: 0.22 }} />
           <LineLayer id="terr-line" style={{ lineColor: ["coalesce", ["get", "color_hex"], RUNNER], lineWidth: 2.5 }} />
         </ShapeSource>
 
-        {/* marcos */}
         {on.landmarks && (
           <ShapeSource id="lmk" shape={landmarksFC}>
             <CircleLayer
@@ -164,15 +183,11 @@ export function Map({ navigation }: Props) {
             />
           </ShapeSource>
         )}
-
-        {/* pontos de apoio */}
         {on.pois && (
           <ShapeSource id="pois" shape={poisFC}>
             <CircleLayer id="pois-l" style={{ circleRadius: 5, circleColor: C.teal, circleStrokeColor: "#fff", circleStrokeWidth: 2 }} />
           </ShapeSource>
         )}
-
-        {/* alertas na via */}
         {on.hazards && (
           <ShapeSource id="haz" shape={hazFC}>
             <CircleLayer id="haz-l" style={{ circleRadius: 6, circleColor: "#C98F2E", circleStrokeColor: "#fff", circleStrokeWidth: 2 }} />
@@ -180,9 +195,8 @@ export function Map({ navigation }: Props) {
         )}
       </MLRNMapView>
 
-      {/* botão GPS */}
-      <TouchableOpacity style={s.gps} onPress={() => setFollow((f) => !f)}>
-        <Text style={[s.gpsIcon, follow && { color: C.teal }]}>◎</Text>
+      <TouchableOpacity style={s.gps} onPress={centerOnMe}>
+        <Text style={[s.gpsIcon, hasLoc && { color: C.teal }]}>◎</Text>
       </TouchableOpacity>
 
       {collapsed ? (
@@ -201,7 +215,7 @@ export function Map({ navigation }: Props) {
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={{ maxHeight: 320 }} showsVerticalScrollIndicator={false}>
+          <ScrollView style={{ maxHeight: 300 }} showsVerticalScrollIndicator={false}>
             <Text style={s.sec}>Base</Text>
             <View style={s.row}>
               <Seg label="Mapa" active={base === "osm"} onPress={() => setBase("osm")} />
@@ -239,7 +253,9 @@ export function Map({ navigation }: Props) {
                 </Text>
               </View>
             )}
-
+            {!hasLoc && (
+              <Text style={s.hint}>Ative a permissão de localização para ver sua posição no mapa.</Text>
+            )}
             {count === 0 && !terr.isLoading && (
               <Text style={s.hint}>Mapa em branco — corra em circuito para pintar o primeiro quarteirão.</Text>
             )}
@@ -275,43 +291,18 @@ const s = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: C.bg },
   map: { flex: 1 },
   gps: {
-    position: "absolute",
-    top: 16,
-    right: 16,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: C.surface,
-    borderWidth: 1,
-    borderColor: C.line,
-    alignItems: "center",
-    justifyContent: "center",
+    position: "absolute", top: 16, right: 16, width: 44, height: 44, borderRadius: 22,
+    backgroundColor: C.surface, borderWidth: 1, borderColor: C.line, alignItems: "center", justifyContent: "center",
   },
   gpsIcon: { fontSize: 22, color: C.ink3 },
   fab: {
-    position: "absolute",
-    left: 16,
-    bottom: 96,
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: C.surface,
-    borderWidth: 1,
-    borderColor: C.line,
-    alignItems: "center",
-    justifyContent: "center",
+    position: "absolute", left: 16, bottom: 96, width: 52, height: 52, borderRadius: 26,
+    backgroundColor: C.surface, borderWidth: 1, borderColor: C.line, alignItems: "center", justifyContent: "center",
   },
   fabIcon: { fontSize: 22, color: C.ink },
   panel: {
-    position: "absolute",
-    top: 16,
-    left: 16,
-    width: 250,
-    backgroundColor: C.surface,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: C.line,
-    padding: 12,
+    position: "absolute", top: 16, left: 16, width: 250, backgroundColor: C.surface,
+    borderRadius: 14, borderWidth: 1, borderColor: C.line, padding: 12,
   },
   panelHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
   panelStat: { fontSize: 13, color: C.ink2 },
@@ -331,13 +322,8 @@ const s = StyleSheet.create({
   wSub: { fontSize: 11, color: C.ink3, marginTop: 2 },
   hint: { fontSize: 11, color: C.ink3, marginTop: 10, lineHeight: 15 },
   run: {
-    position: "absolute",
-    bottom: 24,
-    alignSelf: "center",
-    backgroundColor: C.coral,
-    paddingHorizontal: 28,
-    paddingVertical: 15,
-    borderRadius: 999,
+    position: "absolute", bottom: 24, alignSelf: "center", backgroundColor: C.coral,
+    paddingHorizontal: 28, paddingVertical: 15, borderRadius: 999,
   },
   runText: { color: "#fff", fontWeight: "800", fontSize: 16 },
 });
