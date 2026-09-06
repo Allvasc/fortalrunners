@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Manrope', system-ui, sans-serif; }
+    a { color: #0E7C86; text-decoration: none; } a:hover { color: #0A5A61; }
+    .screen { position: relative; width: 390px; height: 844px; overflow: hidden; background: #F4F1E9; color: #20302E; }
+    .wrap { position: absolute; inset: 0; overflow: hidden; padding: 54px 0 88px; }
+    .hd { display: flex; align-items: center; justify-content: space-between; padding: 4px 18px 12px; }
+    .title { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -0.015em; margin: 0; }
+    .period { display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #E7E1D2; border-radius: 999px; padding: 5px 6px 5px 12px; font-size: 12px; font-weight: 600; color: #5B6360; }
+    .period svg { width: 15px; height: 15px; color: #9A917B; }
+    .sum { display: flex; margin: 0 18px 6px; background: #fff; border-radius: 16px; padding: 13px 6px; box-shadow: 0 8px 20px -10px rgba(20,40,44,0.2); }
+    .sum > div { flex: 1; text-align: center; position: relative; }
+    .sum > div + div::before { content: ""; position: absolute; left: 0; top: 4px; bottom: 4px; width: 1px; background: #EEE9DB; }
+    .sum .v { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: -0.02em; }
+    .sum .v small { font-size: 11px; font-weight: 600; color: #8A8570; }
+    .sum .k { font-size: 10px; color: #8A8570; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .list { padding: 6px 18px 0; overflow-y: auto; height: 100%; }
+    .daylabel { font-family: 'Archivo', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; color: #A29876; margin: 14px 0 2px; }
+    .run { display: flex; gap: 12px; padding: 13px 0; border-bottom: 1px solid #EBE5D6; }
+    .run .mini { width: 66px; height: 66px; border-radius: 12px; overflow: hidden; flex: none; background: #ECE7DB; }
+    .run .mini svg { display: block; width: 100%; height: 100%; }
+    .run .body { flex: 1; min-width: 0; }
+    .run .top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+    .run .name { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 14px; }
+    .run .when { font-size: 11px; color: #8A8570; white-space: nowrap; }
+    .run .stats { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4A524F; margin-top: 3px; display: flex; gap: 12px; }
+    .run .chips { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .run .c { font-size: 10.5px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #EFEADC; color: #6B726F; }
+    .run .c.terr { background: rgba(14,124,134,0.12); color: #0A5A61; }
+    .run .c.trophy { background: rgba(201,143,46,0.16); color: #96660F; }
+    .nav { position: absolute; left: 0; right: 0; bottom: 0; height: 88px; background: #fff; border-top: 1px solid #ECE7DA; display: flex; padding: 11px 6px 0; }
+    .nav a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; color: #9AA0A0; }
+    .nav a.on { color: #0E7C86; }
+    .nav svg { width: 23px; height: 23px; }
+  </style>
+</helmet>
+
+<div class="screen">
+  <div class="wrap">
+    <div class="hd">
+      <p class="title">Histórico</p>
+      <span class="period">Set 2026
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </span>
+    </div>
+
+    <div class="sum">
+      <div><div class="v">14</div><div class="k">corridas</div></div>
+      <div><div class="v">98<small> km</small></div><div class="k">distância</div></div>
+      <div><div class="v">+21</div><div class="k">quarteirões</div></div>
+      <div><div class="v">9<small>h</small>12</div><div class="k">tempo</div></div>
+    </div>
+
+    <div class="list">
+      <div class="daylabel">HOJE</div>
+
+      <div class="run">
+        <div class="mini">
+          <svg viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg"><rect width="66" height="66" fill="#ECE7DB"/><g stroke="#FBF8F0" stroke-width="4"><path d="M14 0V66M40 0V66M0 20H66M0 46H66"/></g><rect x="14" y="20" width="26" height="26" fill="#0E7C86" fill-opacity="0.22" stroke="#0E7C86" stroke-width="2"/><path d="M27 58V33H45" fill="none" stroke="#E0562F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="body">
+          <div class="top"><span class="name">Volta pela Aldeota</span><span class="when">06:12</span></div>
+          <div class="stats"><span>8,20 km</span><span>5'41"/km</span><span>46:38</span></div>
+          <div class="chips"><span class="c terr">+3 quarteirões</span><span class="c">Pegasus 40</span><span class="c trophy">Recorde 5 km</span></div>
+        </div>
+      </div>
+
+      <div class="daylabel">ESTA SEMANA</div>
+
+      <div class="run">
+        <div class="mini">
+          <svg viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg"><rect width="66" height="66" fill="#ECE7DB"/><g stroke="#FBF8F0" stroke-width="4"><path d="M10 0V66M36 0V66M0 16H66M0 44H66"/></g><path d="M6 30Q22 8 40 14T62 10" fill="none" stroke="#E0562F" stroke-width="3" stroke-linecap="round"/></svg>
+        </div>
+        <div class="body">
+          <div class="top"><span class="name">Beira-Mar — ida e volta</span><span class="when">Qui · 05:48</span></div>
+          <div class="stats"><span>12,04 km</span><span>5'33"/km</span><span>1:06:52</span></div>
+          <div class="chips"><span class="c terr">+1 quarteirão</span><span class="c">Adizero</span></div>
+        </div>
+      </div>
+
+      <div class="run">
+        <div class="mini">
+          <svg viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg"><rect width="66" height="66" fill="#ECE7DB"/><g stroke="#FBF8F0" stroke-width="4"><path d="M18 0V66M44 0V66M0 24H66M0 50H66"/></g><rect x="18" y="24" width="26" height="26" fill="#0E7C86" fill-opacity="0.22" stroke="#0E7C86" stroke-width="2"/><path d="M31 12V50H44" fill="none" stroke="#E0562F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="body">
+          <div class="top"><span class="name">Treino intervalado — Cocó</span><span class="when">Ter · 18:20</span></div>
+          <div class="stats"><span>6,50 km</span><span>4'58"/km</span><span>32:17</span></div>
+          <div class="chips"><span class="c terr">+2 quarteirões</span><span class="c">Pegasus 40</span></div>
+        </div>
+      </div>
+
+      <div class="run">
+        <div class="mini">
+          <svg viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg"><rect width="66" height="66" fill="#ECE7DB"/><g stroke="#FBF8F0" stroke-width="4"><path d="M14 0V66M40 0V66M0 20H66M0 46H66"/></g><path d="M20 56V20H46V40" fill="none" stroke="#E0562F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="body">
+          <div class="top"><span class="name">Corrida leve</span><span class="when">Seg · 06:05</span></div>
+          <div class="stats"><span>5,10 km</span><span>6'12"/km</span><span>31:37</span></div>
+          <div class="chips"><span class="c">Sem novo território</span><span class="c">Adizero</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10Z"/><circle cx="12" cy="11" r="2.2"/></svg>Mapa</a>
+    <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v3a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M9 20h6M12 15v5"/></svg>Ranking</a>
+    <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3"/></svg>Missões</a>
+    <a class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="3.2"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/></svg>Perfil</a>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

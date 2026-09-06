@@ -1,0 +1,149 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Manrope', system-ui, sans-serif; }
+    a { color: #0E7C86; text-decoration: none; } a:hover { color: #0A5A61; }
+    .screen { position: relative; width: 390px; height: 844px; overflow: hidden; background: #F4F1E9; color: #20302E; }
+    .scroll { position: absolute; inset: 0; overflow-y: auto; }
+    .topbar { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; justify-content: space-between; padding: 52px 16px 10px; background: linear-gradient(#F4F1E9, #F4F1E9 70%, rgba(244,241,233,0)); }
+    .icbtn { width: 36px; height: 36px; border-radius: 11px; background: #fff; border: 1px solid #E7E1D2; display: flex; align-items: center; justify-content: center; color: #3B4442; }
+    .icbtn svg { width: 18px; height: 18px; }
+    .topbar .dt { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 14px; }
+    .map { width: 100%; height: 264px; display: block; background: #E9E3D3; }
+    .head { padding: 14px 18px 4px; }
+    .rt { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 20px; letter-spacing: -0.02em; margin: 0; }
+    .rt-sub { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6B726F; margin-top: 2px; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: #E9E3D3; margin: 12px 18px 0; border-radius: 14px; overflow: hidden; }
+    .grid .cell { background: #fff; padding: 11px 8px; text-align: center; }
+    .grid .v { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 16px; letter-spacing: -0.02em; }
+    .grid .k { font-size: 9.5px; color: #8A8570; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .sec { padding: 20px 18px 0; }
+    .sec h3 { font-family: 'Archivo', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.14em; color: #A29876; margin: 0 0 10px; }
+    .splits { display: flex; align-items: flex-end; gap: 6px; height: 92px; }
+    .splits .s { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .splits .bar { width: 100%; background: #CFE0DE; border-radius: 4px 4px 0 0; }
+    .splits .s.fast .bar { background: #E0562F; }
+    .splits .lb { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #8A8570; }
+    .kv { background: #fff; border-radius: 14px; padding: 4px 14px; }
+    .kv .r { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid #EEE9DB; font-size: 13px; }
+    .kv .r:last-child { border-bottom: none; }
+    .kv .ic { width: 30px; height: 30px; border-radius: 9px; background: #EFEADC; display: flex; align-items: center; justify-content: center; color: #4A524F; flex: none; }
+    .kv .ic svg { width: 16px; height: 16px; }
+    .kv .nm { flex: 1; color: #5B6360; }
+    .kv .val { font-family: 'IBM Plex Mono', monospace; font-weight: 500; }
+    .kv .val b { font-family: 'Manrope', sans-serif; }
+    .chips { display: flex; gap: 7px; flex-wrap: wrap; }
+    .chips .c { font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 999px; }
+    .chips .c.terr { background: rgba(14,124,134,0.12); color: #0A5A61; }
+    .chips .c.tr { background: rgba(201,143,46,0.16); color: #96660F; }
+    .chips .c.badge { background: rgba(110,90,166,0.14); color: #574689; }
+    .actions { display: flex; gap: 10px; padding: 20px 18px 30px; }
+    .btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; border-radius: 13px; background: #fff; border: 1.5px solid #E4DECF; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 13.5px; color: #20302E; }
+    .btn svg { width: 15px; height: 15px; }
+  </style>
+</helmet>
+
+<div class="screen">
+  <div class="scroll">
+    <div class="topbar">
+      <span class="icbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></span>
+      <span class="dt">Hoje · 06:12</span>
+      <span class="icbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v13M8 7l4-4 4 4"/></svg></span>
+    </div>
+
+    <svg class="map" viewBox="0 0 390 264" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="390" height="264" fill="#E9E3D3"/>
+      <g transform="rotate(-19 195 132)">
+        <rect x="-200" y="-200" width="800" height="700" fill="#E9E3D3"/>
+        <g stroke="#D3CAB4" fill="none">
+          <path d="M40,-40 L40,400" stroke-width="9"/><path d="M100,-40 L100,400" stroke-width="9"/><path d="M160,-40 L160,400" stroke-width="9"/><path d="M220,-40 L220,400" stroke-width="9"/><path d="M280,-40 L280,400" stroke-width="9"/><path d="M340,-40 L340,400" stroke-width="9"/>
+          <path d="M-40,20 L440,20" stroke-width="9"/><path d="M-40,80 L440,80" stroke-width="9"/><path d="M-40,140 L440,140" stroke-width="9"/><path d="M-40,200 L440,200" stroke-width="9"/>
+          <path d="M160,-40 L160,400" stroke-width="15"/><path d="M-40,140 L440,140" stroke-width="15"/>
+        </g>
+        <g stroke="#FBF8F0" fill="none">
+          <path d="M40,-40 L40,400" stroke-width="5"/><path d="M100,-40 L100,400" stroke-width="5"/><path d="M160,-40 L160,400" stroke-width="5"/><path d="M220,-40 L220,400" stroke-width="5"/><path d="M280,-40 L280,400" stroke-width="5"/><path d="M340,-40 L340,400" stroke-width="5"/>
+          <path d="M-40,20 L440,20" stroke-width="5"/><path d="M-40,80 L440,80" stroke-width="5"/><path d="M-40,140 L440,140" stroke-width="5"/><path d="M-40,200 L440,200" stroke-width="5"/>
+          <path d="M160,-40 L160,400" stroke-width="9"/><path d="M-40,140 L440,140" stroke-width="9"/>
+        </g>
+        <path d="M100,80 L220,80 L220,140 L280,140 L280,200 L160,200 L160,140 L100,140 Z" fill="#0E7C86" fill-opacity="0.24" stroke="#0E7C86" stroke-width="3" stroke-linejoin="round"/>
+        <polyline points="130,236 130,80 220,80 220,200 160,200 160,116" fill="none" stroke="#E0562F" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="130" cy="236" r="5" fill="#fff" stroke="#E0562F" stroke-width="3"/>
+        <circle cx="160" cy="116" r="6" fill="#E0562F" stroke="#fff" stroke-width="2.5"/>
+      </g>
+    </svg>
+
+    <div class="head">
+      <p class="rt">Volta pela Aldeota</p>
+      <div class="rt-sub">8,20 km · 46:38 · +3 quarteirões</div>
+    </div>
+
+    <div class="grid">
+      <div class="cell"><div class="v">5'41"</div><div class="k">pace</div></div>
+      <div class="cell"><div class="v">5'36"</div><div class="k">GAP</div></div>
+      <div class="cell"><div class="v">156</div><div class="k">FC média</div></div>
+      <div class="cell"><div class="v">182</div><div class="k">cadência</div></div>
+      <div class="cell"><div class="v">38 m</div><div class="k">elevação</div></div>
+      <div class="cell"><div class="v">7 214</div><div class="k">passos</div></div>
+      <div class="cell"><div class="v">512</div><div class="k">kcal</div></div>
+      <div class="cell"><div class="v">0,11</div><div class="k">km² ganhos</div></div>
+    </div>
+
+    <div class="sec">
+      <h3>PACE POR KM</h3>
+      <div class="splits">
+        <div class="s"><div class="bar" style="height:58%"></div><div class="lb">1</div></div>
+        <div class="s"><div class="bar" style="height:66%"></div><div class="lb">2</div></div>
+        <div class="s"><div class="bar" style="height:72%"></div><div class="lb">3</div></div>
+        <div class="s fast"><div class="bar" style="height:88%"></div><div class="lb">4</div></div>
+        <div class="s"><div class="bar" style="height:74%"></div><div class="lb">5</div></div>
+        <div class="s"><div class="bar" style="height:70%"></div><div class="lb">6</div></div>
+        <div class="s"><div class="bar" style="height:64%"></div><div class="lb">7</div></div>
+        <div class="s"><div class="bar" style="height:80%"></div><div class="lb">8</div></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h3>EQUIPAMENTO E CONDIÇÕES</h3>
+      <div class="kv">
+        <div class="r">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 16h13l4-2 3 1v3H2zM2 16l3-5 4 1 3-3 3 4h4"/></svg></span>
+          <span class="nm">Nike Pegasus 40</span><span class="val"><b>320 km</b> · 46%</span>
+        </div>
+        <div class="r">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 5 6.5 5 9.5A5 5 0 0 1 7 12c0-1 .3-2 .8-3"/></svg></span>
+          <span class="nm">Clima na corrida</span><span class="val">28°C · UV alto · vento 12</span>
+        </div>
+        <div class="r">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M6 20v-5M18 20V6M3 20h18"/></svg></span>
+          <span class="nm">Qualidade do sinal</span><span class="val">98% · GNSS L1+L5</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h3>NESTA CORRIDA</h3>
+      <div class="chips">
+        <span class="c terr">+3 quarteirões novos</span>
+        <span class="c tr">Recorde pessoal 5 km</span>
+        <span class="c badge">Selo: Desbravador</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <div class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3Z"/><path d="M9 3v15M15 6v15"/></svg>Ver no mapa</div>
+      <div class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M4 21h16"/></svg>Exportar GPX</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

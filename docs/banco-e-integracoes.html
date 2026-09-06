@@ -1,0 +1,1333 @@
+<title>FortalRunners — Banco &amp; Integrações</title>
+<meta name="description" content="Modelo de dados completo (tabelas, tipos, chaves, relacionamentos) e catálogo de serviços internos, data stores e integrações de terceiros do FortalRunners.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100,400;100,600;100,700;120,700&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --bg: #F4F1E8; --surface: #FBFAF4; --surface-2: #FFFFFF; --sunken: #ECE6D9;
+    --ink: #16262A; --ink-2: #46565A; --ink-3: #7B8688;
+    --line: #E4DED0; --line-2: #CFC7B4;
+    --teal: #0C7F86; --teal-deep: #0A5A61; --teal-weak: #E0EEEC;
+    --coral: #E0562F; --gold: #BC8A22; --violet: #6E5AA6;
+    --good: #2E8F63; --warn: #B9822B; --crit: #C7402B;
+    --f-display: "Archivo", ui-sans-serif, system-ui, sans-serif;
+    --f-ui: "Manrope", ui-sans-serif, system-ui, sans-serif;
+    --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --maxw: 74ch;
+    --s--1: clamp(.8rem,.78rem+.1vw,.86rem);
+    --s0: clamp(.94rem,.9rem+.16vw,1rem);
+    --s1: clamp(1.1rem,1.03rem+.3vw,1.28rem);
+    --s2: clamp(1.35rem,1.24rem+.5vw,1.7rem);
+    --s3: clamp(1.8rem,1.55rem+1.1vw,2.6rem);
+    --s4: clamp(2.3rem,1.9rem+2vw,3.4rem);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:#0E1618; --surface:#152124; --surface-2:#1B292C; --sunken:#0A1214;
+      --ink:#E9E4D7; --ink-2:#A8B1B1; --ink-3:#7C8888; --line:#29363A; --line-2:#3A4A4E;
+      --teal:#3CB4BE; --teal-deep:#6FD0D8; --teal-weak:#17332F;
+      --coral:#FF7C50; --gold:#E3B657; --violet:#A48CDE;
+      --good:#45B37F; --warn:#E0AC55; --crit:#E4634A;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:#0E1618; --surface:#152124; --surface-2:#1B292C; --sunken:#0A1214;
+    --ink:#E9E4D7; --ink-2:#A8B1B1; --ink-3:#7C8888; --line:#29363A; --line-2:#3A4A4E;
+    --teal:#3CB4BE; --teal-deep:#6FD0D8; --teal-weak:#17332F;
+    --coral:#FF7C50; --gold:#E3B657; --violet:#A48CDE;
+    --good:#45B37F; --warn:#E0AC55; --crit:#E4634A;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-ui); font-size: var(--s0); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  h1,h2,h3,h4 { font-family: var(--f-display); }
+  a { color: var(--teal-deep); }
+  :root[data-theme="dark"] a, :root:not([data-theme="light"]) a { color: var(--teal); }
+  code { font-family: var(--f-mono); font-size: .86em; background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: .05em .36em; }
+
+  .themetoggle { position: fixed; top: 12px; right: 12px; z-index: 50; display: flex; gap: 2px; background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 999px; padding: 3px; box-shadow: 0 4px 14px -3px rgba(20,40,44,.2); }
+  .themetoggle button { font: inherit; font-family: var(--f-display); font-size: 12px; font-weight: 600; border: 0; background: transparent; color: var(--ink-3); padding: 5px 10px; border-radius: 999px; cursor: pointer; }
+  .themetoggle button[aria-pressed="true"] { background: var(--teal); color: #fff; }
+  :root[data-theme="dark"] .themetoggle button[aria-pressed="true"] { color: #06181A; }
+
+  .wrap { display: grid; grid-template-columns: 1fr; max-width: 1260px; margin: 0 auto; padding: 0 clamp(1rem,4vw,3rem); }
+  @media (min-width: 1060px) { .wrap { grid-template-columns: 244px minmax(0,1fr); gap: clamp(2rem,5vw,4rem); } }
+  header.hero { grid-column: 1/-1; padding: clamp(2.4rem,6vw,4rem) 0 2rem; border-bottom: 1px solid var(--line); }
+  .eyebrow { font-family: var(--f-mono); font-size: var(--s--1); letter-spacing: .18em; text-transform: uppercase; color: var(--teal-deep); margin: 0 0 1rem; }
+  :root[data-theme="dark"] .eyebrow, :root:not([data-theme="light"]) .eyebrow { color: var(--teal); }
+  h1 { font-weight: 700; font-stretch: 120%; font-size: var(--s4); line-height: 1; letter-spacing: -.02em; margin: 0 0 1rem; text-wrap: balance; }
+  .lede { font-size: var(--s1); color: var(--ink-2); max-width: 60ch; margin: 0 0 1rem; }
+  .backlink { font-size: var(--s--1); font-family: var(--f-mono); }
+
+  nav.toc { grid-column: 1/-1; padding: 1.4rem 0; }
+  @media (min-width: 1060px) { nav.toc { grid-column: 1; position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto; padding: clamp(2rem,5vw,3rem) 0; border-right: 1px solid var(--line); } }
+  .toc-t { font-family: var(--f-mono); font-size: var(--s--1); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 .8rem; }
+  .toc ol { list-style: none; margin: 0; padding: 0; counter-reset: t; }
+  .toc li { counter-increment: t; }
+  .toc a { display: grid; grid-template-columns: 1.5rem 1fr; gap: .35rem; padding: .28rem .3rem; text-decoration: none; color: var(--ink-2); font-family: var(--f-display); font-size: .87rem; line-height: 1.25; border-radius: 4px; }
+  .toc a::before { content: counter(t,decimal-leading-zero); font-family: var(--f-mono); font-size: .7rem; color: var(--teal); }
+  .toc a:hover { background: var(--surface); color: var(--ink); }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+  main { grid-column: 1/-1; padding-bottom: 6rem; min-width: 0; }
+  @media (min-width: 1060px) { main { grid-column: 2; padding-top: clamp(2rem,5vw,3rem); } }
+  section { margin: 0 0 clamp(2.6rem,6vw,4rem); scroll-margin-top: 1.5rem; }
+  section > :is(p,ul,ol,.note) { max-width: var(--maxw); }
+  h2 { font-weight: 700; font-stretch: 118%; font-size: var(--s3); line-height: 1.05; letter-spacing: -.015em; margin: 0 0 .4rem; text-wrap: balance; }
+  .h2n { display: block; font-family: var(--f-mono); font-size: var(--s--1); font-weight: 400; letter-spacing: .14em; color: var(--teal); margin-bottom: .5rem; }
+  h2 + .sub { color: var(--ink-2); font-size: var(--s1); margin: 0 0 1.6rem; max-width: var(--maxw); }
+  h3 { font-weight: 700; font-size: var(--s2); letter-spacing: -.01em; margin: 2.4rem 0 .5rem; padding-top: .6rem; border-top: 2px solid var(--line); }
+  h4 { font-weight: 600; font-size: var(--s1); margin: 1.7rem 0 .1rem; font-family: var(--f-mono); color: var(--ink); }
+  h4 .pk { font-family: var(--f-ui); font-size: .7rem; font-weight: 600; color: var(--teal-deep); background: var(--teal-weak); padding: 2px 7px; border-radius: 999px; margin-left: 8px; vertical-align: 2px; }
+  :root[data-theme="dark"] h4 .pk, :root:not([data-theme="light"]) h4 .pk { color: var(--teal); }
+  h4 + p { font-size: var(--s--1); color: var(--ink-2); margin: .3rem 0 .5rem; }
+  p { margin: 0 0 1rem; }
+  ul, ol { margin: 0 0 1rem; padding-left: 1.25rem; }
+  li { margin: .3rem 0; }
+  li::marker { color: var(--teal); }
+  strong { font-weight: 700; }
+
+  .note { border-left: 3px solid var(--teal); background: var(--teal-weak); padding: .9rem 1.1rem; border-radius: 0 8px 8px 0; margin: 1.4rem 0; font-size: var(--s--1); }
+  .note b { font-family: var(--f-mono); font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; color: var(--teal-deep); display: block; margin-bottom: .3rem; }
+  :root[data-theme="dark"] .note b, :root:not([data-theme="light"]) .note b { color: var(--teal); }
+  .note.warn { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, var(--surface)); }
+  .note.warn b { color: var(--warn); }
+
+  .tw { overflow-x: auto; margin: .5rem 0 1.2rem; border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: var(--s--1); }
+  th, td { text-align: left; padding: .5rem .8rem; vertical-align: top; border-bottom: 1px solid var(--line); }
+  thead th { font-family: var(--f-mono); font-size: .68rem; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); background: var(--surface-2); }
+  tbody tr:last-child td { border-bottom: none; }
+  td:first-child { font-family: var(--f-mono); white-space: nowrap; }
+  .t-col td:nth-child(2) { font-family: var(--f-mono); color: var(--ink-2); white-space: nowrap; }
+  .k { font-family: var(--f-ui); font-weight: 700; font-size: .64rem; padding: 1px 5px; border-radius: 3px; letter-spacing: .03em; }
+  .k.pk { background: var(--teal); color: #fff; }
+  .k.fk { background: var(--violet); color: #fff; }
+  .k.uq { background: var(--sunken); color: var(--ink-2); border: 1px solid var(--line-2); }
+  .k.ix { background: var(--gold); color: #211800; }
+  .k.gx { background: var(--good); color: #fff; }
+
+  figure { margin: 1.6rem 0; }
+  figure svg { display: block; width: 100%; height: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+  figcaption { font-size: var(--s--1); color: var(--ink-3); margin-top: .6rem; font-family: var(--f-display); max-width: 64ch; }
+
+  .legend-k { display: flex; flex-wrap: wrap; gap: 6px 12px; margin: 1rem 0; font-size: var(--s--1); }
+  footer.pg { grid-column: 1/-1; border-top: 1px solid var(--line); padding: 2rem 0 3rem; font-family: var(--f-mono); font-size: var(--s--1); color: var(--ink-3); }
+  ::selection { background: color-mix(in srgb, var(--teal) 30%, transparent); }
+</style>
+
+<div class="themetoggle" role="group" aria-label="Tema">
+  <button data-set="light" aria-pressed="false">Claro</button>
+  <button data-set="dark" aria-pressed="false">Escuro</button>
+  <button data-set="system" aria-pressed="true">Sistema</button>
+</div>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Referência técnica · v1.0 · 05 set 2026</p>
+    <h1>Banco de dados &amp; Integrações</h1>
+    <p class="lede">O modelo de dados completo — tabelas, tipos, chaves e relacionamentos — e o catálogo de serviços internos, data stores e integrações de terceiros. Consolida e detalha o que estava espalhado no plano.</p>
+    <p class="backlink">← <a href="https://claude.ai/code/artifact/f171dbf5-8933-40a3-98ff-32f169ff869b">Plano de produto</a> · <a href="https://claude.ai/code/artifact/e662d35e-b65a-4f5c-a0ad-d2480c77f2ac">Manual de Design</a></p>
+  </header>
+
+  <nav class="toc" aria-label="Índice">
+    <p class="toc-t">Seções</p>
+    <ol>
+      <li><a href="#convencoes">Convenções</a></li>
+      <li><a href="#dominios">Mapa de domínios</a></li>
+      <li><a href="#identidade">Identidade &amp; acesso</a></li>
+      <li><a href="#corrida">Corrida, território &amp; equipamento</a></li>
+      <li><a href="#gamificacao">Gamificação</a></li>
+      <li><a href="#social">Social &amp; conteúdo</a></li>
+      <li><a href="#eventos">Eventos, QR &amp; organizadores</a></li>
+      <li><a href="#pagamentos">Pagamentos</a></li>
+      <li><a href="#ia">IA</a></li>
+      <li><a href="#seguranca">Segurança, moderação &amp; operação</a></li>
+      <li><a href="#enums">Enums</a></li>
+      <li><a href="#indices">Índices &amp; particionamento</a></li>
+      <li><a href="#relacionamentos">Relacionamentos (completo)</a></li>
+      <li><a href="#servicos">Serviços internos</a></li>
+      <li><a href="#stores">Data stores</a></li>
+      <li><a href="#integracoes">Integrações de terceiros</a></li>
+      <li><a href="#ambientes">Ambientes &amp; deploy</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <section id="convencoes">
+      <h2><span class="h2n">01</span>Convenções</h2>
+      <ul>
+        <li><strong>SGBD:</strong> PostgreSQL 16 + <strong>PostGIS</strong>. Extensões: <code>postgis</code>, <code>pg_trgm</code> (busca), <code>citext</code>, <code>h3</code> (ou índice H3 na aplicação via <code>uber/h3-go</code>).</li>
+        <li><strong>Chave primária:</strong> <code>id</code> do tipo <strong>ULID</strong> (armazenado como <code>text</code> de 26 chars ou <code>uuid</code> v7) — ordenável no tempo, sem enumeração sequencial.</li>
+        <li><strong>Timestamps:</strong> toda tabela tem <code>created_at timestamptz not null default now()</code>; tabelas mutáveis têm <code>updated_at</code> (trigger). Datas em UTC; apresentação em <code>America/Fortaleza</code>.</li>
+        <li><strong>Exclusão:</strong> <em>soft delete</em> onde há histórico (<code>deleted_at timestamptz</code> + view sem deletados); <em>hard delete</em> em dados efêmeros. Exclusão de conta → anonimização em até 30 dias (§ Retenção do pacote de compliance).</li>
+        <li><strong>Geometria:</strong> <code>geometry(Type, 4326)</code> (WGS84). Índices <span class="k gx">GIST</span> em toda coluna geográfica.</li>
+        <li><strong>Dinheiro:</strong> inteiro em <strong>centavos</strong> (<code>amount_cents int</code>), moeda <code>char(3)</code> default <code>'BRL'</code>. Nunca <code>float</code>.</li>
+        <li><strong>Enums:</strong> tipos nativos do Postgres (§10) ou <code>text</code> + <code>CHECK</code> quando o conjunto muda com frequência.</li>
+        <li><strong>JSON:</strong> <code>jsonb</code> para dados variáveis/telemetria; nunca para o que precisa de FK ou filtro pesado.</li>
+        <li><strong>Migrações:</strong> <code>goose</code>/<code>atlas</code>, sempre reversíveis (up/down). Queries tipadas com <code>sqlc</code>.</li>
+        <li><strong>Nomes:</strong> tabela no plural, coluna <code>snake_case</code>, FK <code>&lt;entidade&gt;_id</code>, join table <code>&lt;a&gt;_&lt;b&gt;</code>.</li>
+      </ul>
+      <div class="legend-k">
+        <span><span class="k pk">PK</span> chave primária</span>
+        <span><span class="k fk">FK</span> chave estrangeira</span>
+        <span><span class="k uq">UQ</span> único</span>
+        <span><span class="k ix">IX</span> índice B-tree</span>
+        <span><span class="k gx">GIST</span> índice geoespacial</span>
+      </div>
+    </section>
+
+    <section id="dominios">
+      <h2><span class="h2n">02</span>Mapa de domínios</h2>
+      <p class="sub"><code>users</code> é o centro — quase toda tabela referencia <code>user_id</code>. Oito domínios em volta; as setas mostram a dependência principal entre eles.</p>
+      <figure>
+        <svg viewBox="0 0 860 560" role="img" aria-label="Diagrama de domínios: users no centro; Corrida/Território, Gamificação, Social, Eventos/QR, Pagamentos, IA, Segurança/Ops e Identidade em volta, com as chaves estrangeiras que ligam cada domínio a users e entre si.">
+          <defs>
+            <marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><polygon points="0 0, 8 3.2, 0 6.4" fill="currentColor"/></marker>
+          </defs>
+          <g font-family="var(--f-mono)" font-size="11" color="var(--ink-3)">
+            <!-- center -->
+            <rect x="360" y="248" width="140" height="64" rx="10" fill="var(--teal-weak)" stroke="var(--teal)" stroke-width="2"/>
+            <text x="430" y="276" text-anchor="middle" font-size="13" fill="var(--ink)" font-weight="700">users</text>
+            <text x="430" y="294" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">athlete_id · role</text>
+
+            <!-- domains -->
+            <g fill="var(--surface-2)" stroke="var(--line-2)">
+              <rect x="40" y="30" width="200" height="76" rx="10"/>
+              <rect x="330" y="24" width="200" height="70" rx="10"/>
+              <rect x="620" y="30" width="200" height="86" rx="10"/>
+              <rect x="640" y="230" width="200" height="100" rx="10"/>
+              <rect x="620" y="440" width="200" height="86" rx="10"/>
+              <rect x="330" y="470" width="200" height="66" rx="10"/>
+              <rect x="40" y="440" width="210" height="96" rx="10"/>
+              <rect x="20" y="220" width="210" height="120" rx="10"/>
+            </g>
+            <g font-size="10.5" fill="var(--ink-2)">
+              <text x="52" y="50" fill="var(--ink)" font-weight="700">Identidade &amp; acesso</text>
+              <text x="52" y="68">identities · auth_sessions</text>
+              <text x="52" y="83">devices · integrations</text>
+              <text x="52" y="98">safety_contacts</text>
+
+              <text x="342" y="44" fill="var(--ink)" font-weight="700">Gamificação</text>
+              <text x="342" y="61">seasons · weekly_cycles</text>
+              <text x="342" y="76">trophies · badges · user_badges</text>
+              <text x="342" y="91">personal_records · landmarks</text>
+
+              <text x="632" y="50" fill="var(--ink)" font-weight="700">Social &amp; conteúdo</text>
+              <text x="632" y="68">friendships · clubs</text>
+              <text x="632" y="83">club_members · routes</text>
+              <text x="632" y="98">route_reviews · activity_events</text>
+              <text x="632" y="112">reports</text>
+
+              <text x="652" y="250" fill="var(--ink)" font-weight="700">Eventos, QR &amp; org.</text>
+              <text x="652" y="268">organizers · events · event_prices</text>
+              <text x="652" y="283">event_stations · scanner_credentials</text>
+              <text x="652" y="298">event_participants · event_teams</text>
+              <text x="652" y="313">qr_tokens · scan_events</text>
+
+              <text x="632" y="460" fill="var(--ink)" font-weight="700">Pagamentos</text>
+              <text x="632" y="478">orders · order_items · payments</text>
+              <text x="632" y="493">refunds · coupons</text>
+              <text x="632" y="508">payout_accounts · subscriptions</text>
+
+              <text x="342" y="490" fill="var(--ink)" font-weight="700">IA</text>
+              <text x="342" y="508">ai_interactions</text>
+              <text x="342" y="523">ai_prompts · ai_evals</text>
+
+              <text x="52" y="460" fill="var(--ink)" font-weight="700">Segurança &amp; ops</text>
+              <text x="52" y="478">audit_log · webhook_events</text>
+              <text x="52" y="493">import_jobs · sos_events</text>
+              <text x="52" y="508">hazard_reports · risk_zones</text>
+              <text x="52" y="523">map_pois</text>
+
+              <text x="32" y="240" fill="var(--ink)" font-weight="700">Corrida &amp; território</text>
+              <text x="32" y="258">runs · run_tracks</text>
+              <text x="32" y="273">territories · territory_disputes</text>
+              <text x="32" y="288">h3_cells · heat_agg</text>
+              <text x="32" y="303">shoes · shoe_stats</text>
+              <text x="32" y="318">neighborhoods</text>
+              <text x="32" y="333">stride_calibration</text>
+            </g>
+
+            <!-- arrows to users -->
+            <g stroke="var(--ink-3)" stroke-width="1.4" fill="none" color="var(--ink-3)">
+              <path d="M230 250 L356 268" marker-end="url(#a)"/>
+              <path d="M230 90 Q320 180 366 250" marker-end="url(#a)"/>
+              <path d="M430 94 L430 244" marker-end="url(#a)"/>
+              <path d="M620 84 Q520 170 500 246" marker-end="url(#a)"/>
+              <path d="M640 280 L504 280" marker-end="url(#a)"/>
+              <path d="M620 470 Q520 400 496 314" marker-end="url(#a)"/>
+              <path d="M430 470 L430 314" marker-end="url(#a)"/>
+              <path d="M250 480 Q340 400 372 312" marker-end="url(#a)"/>
+            </g>
+          </g>
+          <!-- cross-domain notes -->
+          <g font-family="var(--f-mono)" font-size="9" fill="var(--teal-deep)">
+            <text x="250" y="360" transform="rotate(-20 250 360)">runs → territories → h3_cells</text>
+            <text x="540" y="360">orders → payments · orders → event_participants</text>
+            <text x="540" y="200">events → event_participants ← users (athlete_id)</text>
+          </g>
+        </svg>
+        <figcaption>Detalhe por domínio nas seções 3–10. A lista exaustiva de FKs com cardinalidade está na seção 13.</figcaption>
+      </figure>
+    </section>
+
+    <section id="identidade">
+      <h2><span class="h2n">03</span>Identidade &amp; acesso</h2>
+
+      <h4>users <span class="pk">raiz</span></h4>
+      <p>Conta do corredor. <code>athlete_id</code> é o número público (ex.: <code>FR-0001234</code>).</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>athlete_id</td><td>text</td><td><span class="k uq">UQ</span> público, imutável</td></tr>
+          <tr><td>username</td><td>citext</td><td><span class="k uq">UQ</span></td></tr>
+          <tr><td>email</td><td>citext</td><td><span class="k uq">UQ</span>, <span class="k ix">IX</span></td></tr>
+          <tr><td>email_verified_at</td><td>timestamptz</td><td>null até verificar</td></tr>
+          <tr><td>password_hash</td><td>text</td><td>Argon2id; null se só social</td></tr>
+          <tr><td>totp_secret_enc</td><td>bytea</td><td>2FA; cifrado (AES-GCM)</td></tr>
+          <tr><td>recovery_codes_enc</td><td>bytea</td><td>hashes</td></tr>
+          <tr><td>display_name</td><td>text</td><td>—</td></tr>
+          <tr><td>color_hex</td><td>char(7)</td><td>slot 1 da paleta de corredor</td></tr>
+          <tr><td>avatar_key</td><td>text</td><td>chave no object storage</td></tr>
+          <tr><td>birth_date</td><td>date</td><td>idade mínima 16</td></tr>
+          <tr><td>home_blur_geom</td><td>geometry(Polygon,4326)</td><td><span class="k gx">GIST</span> zona de ocultação</td></tr>
+          <tr><td>privacy_jsonb</td><td>jsonb</td><td>visibilidade padrão, modo fantasma</td></tr>
+          <tr><td>consent_jsonb</td><td>jsonb</td><td>bases legais aceitas + data</td></tr>
+          <tr><td>role</td><td>enum user_role</td><td>runner / organizer / moderator / admin</td></tr>
+          <tr><td>status</td><td>enum user_status</td><td>active / suspended / shadow_banned / banned / deleted</td></tr>
+          <tr><td>city_id</td><td>text</td><td>multi-cidade (default <code>fortaleza</code>)</td></tr>
+          <tr><td>created_at / updated_at / deleted_at</td><td>timestamptz</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>identities <span class="pk">1:N de users</span></h4>
+      <p>Logins sociais ligados à conta.</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k ix">IX</span></td></tr>
+          <tr><td>provider</td><td>enum id_provider</td><td>google / apple / email</td></tr>
+          <tr><td>provider_uid</td><td>text</td><td><span class="k uq">UQ</span>(provider, provider_uid)</td></tr>
+          <tr><td>email</td><td>citext</td><td>do provedor</td></tr>
+          <tr><td>linked_at</td><td>timestamptz</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>auth_sessions <span class="pk">1:N de users</span></h4>
+      <p>Refresh token rotativo por dispositivo.</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k ix">IX</span></td></tr>
+          <tr><td>refresh_token_hash</td><td>text</td><td><span class="k uq">UQ</span></td></tr>
+          <tr><td>family_id</td><td>ulid</td><td><span class="k ix">IX</span> detecção de reuso</td></tr>
+          <tr><td>device_id</td><td>ulid</td><td><span class="k fk">FK</span> devices (nullable)</td></tr>
+          <tr><td>ip / user_agent</td><td>inet / text</td><td>—</td></tr>
+          <tr><td>expires_at</td><td>timestamptz</td><td><span class="k ix">IX</span></td></tr>
+          <tr><td>revoked_at</td><td>timestamptz</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>devices <span class="pk">1:N de users</span></h4>
+      <p>Celular, relógio, foot pod ou cinta pareados.</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k ix">IX</span></td></tr>
+          <tr><td>kind</td><td>enum device_kind</td><td>phone / watch / footpod / hrm</td></tr>
+          <tr><td>platform</td><td>text</td><td>ios / android / garmin / …</td></tr>
+          <tr><td>brand / model</td><td>text</td><td>—</td></tr>
+          <tr><td>push_token</td><td>text</td><td><span class="k ix">IX</span> FCM/APNs/Expo</td></tr>
+          <tr><td>attestation_jsonb</td><td>jsonb</td><td>Play Integrity / App Attest</td></tr>
+          <tr><td>precision_profile_jsonb</td><td>jsonb</td><td>perfil de erro do modelo</td></tr>
+          <tr><td>last_seen_at</td><td>timestamptz</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>integrations <span class="pk">1:N de users</span></h4>
+      <p>Contas externas conectadas (Strava, Garmin, Fitbit, Polar, Health Connect...).</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k ix">IX</span></td></tr>
+          <tr><td>provider</td><td>enum integ_provider</td><td>strava / garmin / fitbit / polar / apple_health / health_connect</td></tr>
+          <tr><td>external_athlete_id</td><td>text</td><td><span class="k uq">UQ</span>(provider, external_athlete_id)</td></tr>
+          <tr><td>access_token_enc / refresh_token_enc</td><td>bytea</td><td>AES-GCM, chave no cofre</td></tr>
+          <tr><td>scopes</td><td>text[]</td><td>—</td></tr>
+          <tr><td>webhook_sub_id</td><td>text</td><td>id da assinatura no provedor</td></tr>
+          <tr><td>last_sync_at</td><td>timestamptz</td><td>—</td></tr>
+          <tr><td>status</td><td>enum integ_status</td><td>active / expired / revoked / error</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>import_jobs <span class="pk">1:N de users / integrations</span></h4>
+      <p>Backfill de histórico + fila de webhooks.</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k fk">FK</span> users</td></tr>
+          <tr><td>integration_id</td><td>ulid</td><td><span class="k fk">FK</span> integrations · <span class="k ix">IX</span></td></tr>
+          <tr><td>kind</td><td>enum import_kind</td><td>backfill / delta</td></tr>
+          <tr><td>cursor</td><td>text</td><td>paginação do provedor</td></tr>
+          <tr><td>status</td><td>enum job_status</td><td>queued / running / done / failed</td></tr>
+          <tr><td>stats_jsonb</td><td>jsonb</td><td>importadas / duplicadas / erros</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>safety_contacts <span class="pk">1:N de users</span></h4>
+      <p>Contatos de emergência (cifrados).</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k ix">IX</span></td></tr>
+          <tr><td>name_enc / phone_enc</td><td>bytea</td><td>AES-GCM</td></tr>
+          <tr><td>relation</td><td>text</td><td>—</td></tr>
+          <tr><td>verified_at</td><td>timestamptz</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>user_stride_calibration <span class="pk">1:1 de users</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k pk">PK</span> <span class="k fk">FK</span> users</td></tr>
+          <tr><td>stride_len_m</td><td>numeric(4,3)</td><td>—</td></tr>
+          <tr><td>confidence</td><td>numeric(3,2)</td><td>0–1</td></tr>
+          <tr><td>sample_count</td><td>int</td><td>—</td></tr>
+          <tr><td>updated_at</td><td>timestamptz</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="corrida">
+      <h2><span class="h2n">04</span>Corrida, território &amp; equipamento</h2>
+
+      <h4>neighborhoods <span class="pk">referência</span></h4>
+      <p>Bairros oficiais de Fortaleza (seed IBGE/prefeitura). Multi-cidade via <code>city_id</code>.</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>city_id</td><td>text</td><td><span class="k ix">IX</span></td></tr>
+          <tr><td>name</td><td>text</td><td>—</td></tr>
+          <tr><td>geom</td><td>geometry(MultiPolygon,4326)</td><td><span class="k gx">GIST</span></td></tr>
+          <tr><td>h3_total</td><td>int</td><td>células H3 res 9 dentro do bairro</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>shoes <span class="pk">1:N de users</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k ix">IX</span></td></tr>
+          <tr><td>catalog_id</td><td>ulid</td><td><span class="k fk">FK</span> shoe_catalog (nullable)</td></tr>
+          <tr><td>brand / model / nickname</td><td>text</td><td>—</td></tr>
+          <tr><td>photo_key</td><td>text</td><td>—</td></tr>
+          <tr><td>purchased_at</td><td>date</td><td>—</td></tr>
+          <tr><td>purchase_price_cents</td><td>int</td><td>custo/km derivado</td></tr>
+          <tr><td>initial_distance_m</td><td>int</td><td>se já usado</td></tr>
+          <tr><td>lifespan_goal_m</td><td>int</td><td>default 700 000</td></tr>
+          <tr><td>surface_pref</td><td>text[]</td><td>asfalto / calçadão / trilha</td></tr>
+          <tr><td>status</td><td>enum shoe_status</td><td>active / rotation / retired</td></tr>
+          <tr><td>retired_at</td><td>timestamptz</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>shoe_stats <span class="pk">1:1 de shoes</span></h4>
+      <p>Rollup mantido pelo worker a cada corrida válida.</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>shoe_id</td><td>ulid</td><td><span class="k pk">PK</span> <span class="k fk">FK</span> shoes</td></tr>
+          <tr><td>total_distance_m / total_steps / total_moving_s</td><td>bigint</td><td>—</td></tr>
+          <tr><td>run_count / elevation_gain_m</td><td>int</td><td>—</td></tr>
+          <tr><td>avg_pace_s</td><td>int</td><td>—</td></tr>
+          <tr><td>cost_per_km_cents</td><td>int</td><td>—</td></tr>
+          <tr><td>surface_breakdown_jsonb</td><td>jsonb</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>runs <span class="pk">1:N de users</span></h4>
+      <p>Uma corrida (nativa ou importada). O evento pesado é processado pelo <code>territory-worker</code>.</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k ix">IX</span>(user_id, started_at)</td></tr>
+          <tr><td>shoe_id</td><td>ulid</td><td><span class="k fk">FK</span> shoes (nullable)</td></tr>
+          <tr><td>device_id</td><td>ulid</td><td><span class="k fk">FK</span> devices (nullable)</td></tr>
+          <tr><td>event_id</td><td>ulid</td><td><span class="k fk">FK</span> events (nullable — corrida de prova)</td></tr>
+          <tr><td>started_at / ended_at</td><td>timestamptz</td><td>—</td></tr>
+          <tr><td>distance_m / moving_s / duration_s</td><td>int</td><td>—</td></tr>
+          <tr><td>elevation_gain_m / avg_hr / calories</td><td>int</td><td>—</td></tr>
+          <tr><td>avg_pace_s / gap_pace_s / avg_cadence_spm</td><td>int</td><td>—</td></tr>
+          <tr><td>step_count</td><td>int</td><td>—</td></tr>
+          <tr><td>stride_len_m</td><td>numeric(4,3)</td><td>—</td></tr>
+          <tr><td>running_power_w / vert_osc_mm / ground_contact_ms</td><td>numeric</td><td>relógio compatível</td></tr>
+          <tr><td>gnss_mode</td><td>text</td><td>l1 / l1l5 / multi</td></tr>
+          <tr><td>avg_hdop</td><td>numeric(4,2)</td><td>—</td></tr>
+          <tr><td>signal_quality_pct</td><td>smallint</td><td>—</td></tr>
+          <tr><td>data_source</td><td>enum run_source</td><td>phone / watch / import</td></tr>
+          <tr><td>weather_jsonb</td><td>jsonb</td><td>temp, sensação, UV, vento</td></tr>
+          <tr><td>fraud_score</td><td>numeric(4,3)</td><td>—</td></tr>
+          <tr><td>status</td><td>enum run_status</td><td>processing / valid / flagged / rejected</td></tr>
+          <tr><td>raw_gpx_key</td><td>text</td><td>bruto no object storage</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>run_tracks <span class="pk">1:1 de runs</span></h4>
+      <p>Traçado limpo + amostra bruta. <strong>Particionada por mês</strong> em <code>started_at</code>.</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>run_id</td><td>ulid</td><td><span class="k pk">PK</span> <span class="k fk">FK</span> runs</td></tr>
+          <tr><td>started_at</td><td>timestamptz</td><td>chave de partição</td></tr>
+          <tr><td>geom</td><td>geometry(LineStringZ,4326)</td><td><span class="k gx">GIST</span> traçado limpo (com Z)</td></tr>
+          <tr><td>points_jsonb</td><td>jsonb</td><td>amostra bruta (lat,lon,alt,ts,acc,spd)</td></tr>
+          <tr><td>sensor_streams_jsonb</td><td>jsonb</td><td>acel/giro/baro/FC por tempo</td></tr>
+          <tr><td>quality_segments_jsonb</td><td>jsonb</td><td>índice de sinal por trecho</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>territories <span class="pk">1:N de users / runs</span></h4>
+      <p>Uma linha por conquista. O estado atual do corredor = união dos ativos.</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k ix">IX</span></td></tr>
+          <tr><td>run_id</td><td>ulid</td><td><span class="k fk">FK</span> runs</td></tr>
+          <tr><td>neighborhood_id</td><td>ulid</td><td><span class="k fk">FK</span> neighborhoods (nullable)</td></tr>
+          <tr><td>geom</td><td>geometry(MultiPolygon,4326)</td><td><span class="k gx">GIST</span> após <code>ST_Difference</code> de risco/outros</td></tr>
+          <tr><td>area_m2</td><td>numeric(12,2)</td><td>—</td></tr>
+          <tr><td>claimed_at / decays_at</td><td>timestamptz</td><td>—</td></tr>
+          <tr><td>status</td><td>enum terr_status</td><td>active / contested / decayed / revoked</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>territory_disputes <span class="pk">N:N users via geom</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>geom</td><td>geometry(MultiPolygon,4326)</td><td><span class="k gx">GIST</span> parte sobreposta</td></tr>
+          <tr><td>attacker_id / defender_id</td><td>ulid</td><td><span class="k fk">FK</span> users</td></tr>
+          <tr><td>attacker_run_id</td><td>ulid</td><td><span class="k fk">FK</span> runs</td></tr>
+          <tr><td>opened_at / resolves_at</td><td>timestamptz</td><td>janela de 24h</td></tr>
+          <tr><td>status</td><td>enum dispute_status</td><td>open / consolidated / reverted</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>h3_cells <span class="pk">unidade de contagem</span></h4>
+      <p>Posse por célula H3 res 9. Base de "% de Fortaleza dominado".</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>h3_index</td><td>bigint</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>city_id</td><td>text</td><td><span class="k ix">IX</span></td></tr>
+          <tr><td>neighborhood_id</td><td>ulid</td><td><span class="k fk">FK</span> neighborhoods · <span class="k ix">IX</span></td></tr>
+          <tr><td>owner_id</td><td>ulid</td><td><span class="k fk">FK</span> users (nullable = neutro) · <span class="k ix">IX</span></td></tr>
+          <tr><td>territory_id</td><td>ulid</td><td><span class="k fk">FK</span> territories</td></tr>
+          <tr><td>claimed_at</td><td>timestamptz</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>heat_agg <span class="pk">agregação</span></h4>
+      <p>Passagem agregada para o mapa de calor. Refresh incremental por job. Nunca traçados individuais.</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>h3_index</td><td>bigint</td><td>parte da <span class="k pk">PK</span> composta</td></tr>
+          <tr><td>scope</td><td>text</td><td><span class="k pk">PK</span> — <code>user:&lt;id&gt;</code> / <code>club:&lt;id&gt;</code> / <code>city</code></td></tr>
+          <tr><td>period</td><td>text</td><td><span class="k pk">PK</span> — <code>all</code> / <code>2026-w36</code> / <code>2026-09</code></td></tr>
+          <tr><td>activity</td><td>text</td><td><span class="k pk">PK</span> — run / walk / trail</td></tr>
+          <tr><td>weight</td><td>numeric</td><td>densidade normalizada</td></tr>
+          <tr><td>runner_count</td><td>int</td><td>k-anonimato: cidade só servida com ≥ N</td></tr>
+          <tr><td>updated_at</td><td>timestamptz</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>risk_zones <span class="pk">gate de conquista</span></h4>
+      <p><code>territoryAllowedAt()</code> e <code>missionAllowedAt()</code> consultam esta tabela.</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>city_id</td><td>text</td><td><span class="k ix">IX</span></td></tr>
+          <tr><td>geom</td><td>geometry(MultiPolygon,4326)</td><td><span class="k gx">GIST</span></td></tr>
+          <tr><td>severity</td><td>smallint</td><td>1–5</td></tr>
+          <tr><td>source</td><td>enum risk_source</td><td>admin / hazard_cluster / public_data</td></tr>
+          <tr><td>note</td><td>text</td><td>linguagem neutra</td></tr>
+          <tr><td>active_from / active_to</td><td>timestamptz</td><td>validade</td></tr>
+          <tr><td>status</td><td>text</td><td>active / expired</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="gamificacao">
+      <h2><span class="h2n">05</span>Gamificação</h2>
+
+      <h4>seasons <span class="pk">referência</span> · weekly_cycles <span class="pk">1:N de seasons</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>seasons.id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>seasons.name / starts_at / ends_at</td><td>text / timestamptz</td><td>~13 semanas</td></tr>
+          <tr><td>weekly_cycles.id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>weekly_cycles.season_id</td><td>ulid</td><td><span class="k fk">FK</span> seasons · <span class="k ix">IX</span></td></tr>
+          <tr><td>weekly_cycles.week_no / starts_at / ends_at</td><td>int / timestamptz</td><td>fecha dom 23h59 America/Fortaleza</td></tr>
+          <tr><td>weekly_cycles.closed_at</td><td>timestamptz</td><td>null enquanto aberto</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>trophies <span class="pk">N:N users × weekly_cycles</span></h4>
+      <p>Resultado congelado de cada ciclo.</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>cycle_id</td><td>ulid</td><td><span class="k fk">FK</span> weekly_cycles · <span class="k ix">IX</span></td></tr>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k ix">IX</span></td></tr>
+          <tr><td>type</td><td>enum trophy_type</td><td>conquistador / barao_bairro / muralha / desbravador / maratonista / podio_bairro</td></tr>
+          <tr><td>neighborhood_id</td><td>ulid</td><td><span class="k fk">FK</span> neighborhoods (nullable)</td></tr>
+          <tr><td>rank</td><td>smallint</td><td>1 / 2 / 3</td></tr>
+          <tr><td>metric_value</td><td>numeric</td><td>—</td></tr>
+          <tr><td>awarded_at</td><td>timestamptz</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>badges <span class="pk">referência</span> · user_badges <span class="pk">N:N users × badges</span></h4>
+      <p>Selos permanentes (inclui selos de marco — origem via <code>landmark_checkins</code>).</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>badges.code</td><td>text</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>badges.name / description / shape</td><td>text</td><td>shape: circle / hex / shield</td></tr>
+          <tr><td>badges.type</td><td>enum badge_type</td><td>landmark / collection / coverage / activity / seasonal</td></tr>
+          <tr><td>badges.criteria_jsonb</td><td>jsonb</td><td>regra de concessão</td></tr>
+          <tr><td>badges.collection_id</td><td>ulid</td><td><span class="k fk">FK</span> landmark_collections (nullable)</td></tr>
+          <tr><td>user_badges.user_id</td><td>ulid</td><td><span class="k pk">PK</span> <span class="k fk">FK</span> users</td></tr>
+          <tr><td>user_badges.badge_code</td><td>text</td><td><span class="k pk">PK</span> <span class="k fk">FK</span> badges</td></tr>
+          <tr><td>user_badges.checkin_id</td><td>ulid</td><td><span class="k fk">FK</span> landmark_checkins (nullable)</td></tr>
+          <tr><td>user_badges.tier</td><td>text</td><td>bronze / prata / ouro (badges graduadas)</td></tr>
+          <tr><td>user_badges.earned_at</td><td>timestamptz</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>personal_records <span class="pk">1:N de users</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k uq">UQ</span>(user_id, distance_key)</td></tr>
+          <tr><td>distance_key</td><td>text</td><td>1k / 5k / 10k / 15k / 21k / 42k / 1h / longest / max_elev</td></tr>
+          <tr><td>value_s</td><td>int</td><td>tempo (ou valor)</td></tr>
+          <tr><td>run_id</td><td>ulid</td><td><span class="k fk">FK</span> runs</td></tr>
+          <tr><td>achieved_at</td><td>timestamptz</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>lifetime_stats <span class="pk">1:1 de users</span></h4>
+      <p>Materializada — base das "horas de prática".</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k pk">PK</span> <span class="k fk">FK</span> users</td></tr>
+          <tr><td>total_moving_s / total_distance_m / total_steps</td><td>bigint</td><td>—</td></tr>
+          <tr><td>run_count / elevation_gain_m / calories</td><td>int / bigint</td><td>—</td></tr>
+          <tr><td>active_days / longest_streak_days / current_streak_days</td><td>int</td><td>—</td></tr>
+          <tr><td>by_surface_jsonb / by_hour_jsonb / by_shoe_jsonb</td><td>jsonb</td><td>fatias</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>landmarks <span class="pk">referência</span> · landmark_collections <span class="pk">1:N</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>landmark_collections.id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>landmark_collections.name / badge_code / reward_xp</td><td>text / int</td><td>badge_code → badges</td></tr>
+          <tr><td>landmarks.id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>landmarks.collection_id</td><td>ulid</td><td><span class="k fk">FK</span> landmark_collections (nullable)</td></tr>
+          <tr><td>landmarks.name / badge_code</td><td>text</td><td><span class="k fk">FK</span> badges</td></tr>
+          <tr><td>landmarks.geom</td><td>geometry(Point,4326)</td><td><span class="k gx">GIST</span></td></tr>
+          <tr><td>landmarks.radius_m</td><td>int</td><td>~40</td></tr>
+          <tr><td>landmarks.blurb / hero_photo_key / difficulty</td><td>text / int</td><td>—</td></tr>
+          <tr><td>landmarks.requires_on_foot / quiz_jsonb</td><td>bool / jsonb</td><td>—</td></tr>
+          <tr><td>landmarks.active_from / active_to / status</td><td>timestamptz / text</td><td>janela sazonal</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>landmark_checkins <span class="pk">1:N de users / landmarks</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k uq">UQ</span>(user_id, landmark_id)</td></tr>
+          <tr><td>landmark_id</td><td>ulid</td><td><span class="k fk">FK</span> landmarks · <span class="k ix">IX</span></td></tr>
+          <tr><td>run_id</td><td>ulid</td><td><span class="k fk">FK</span> runs (nullable)</td></tr>
+          <tr><td>photo_key</td><td>text</td><td>object storage</td></tr>
+          <tr><td>geom</td><td>geometry(Point,4326)</td><td>posição da foto</td></tr>
+          <tr><td>taken_at</td><td>timestamptz</td><td>—</td></tr>
+          <tr><td>sensor_sig_jsonb / quiz_ok</td><td>jsonb / bool</td><td>—</td></tr>
+          <tr><td>status</td><td>enum checkin_status</td><td>pending / approved / rejected</td></tr>
+          <tr><td>moderated_by</td><td>ulid</td><td><span class="k fk">FK</span> users (admin)</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>activity_events <span class="pk">feed</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>actor_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k ix">IX</span>(actor_id, created_at)</td></tr>
+          <tr><td>type</td><td>enum activity_type</td><td>run / claim / trophy / badge / invasion / comment / checkin</td></tr>
+          <tr><td>subject_type / subject_id</td><td>text / ulid</td><td>polimórfico</td></tr>
+          <tr><td>payload_jsonb</td><td>jsonb</td><td>resumo pré-renderizado</td></tr>
+          <tr><td>visibility</td><td>enum visibility</td><td>public / friends / private</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="social">
+      <h2><span class="h2n">06</span>Social &amp; conteúdo</h2>
+
+      <h4>friendships <span class="pk">N:N users × users</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k pk">PK</span> <span class="k fk">FK</span> users (menor id)</td></tr>
+          <tr><td>friend_id</td><td>ulid</td><td><span class="k pk">PK</span> <span class="k fk">FK</span> users (maior id)</td></tr>
+          <tr><td>requested_by</td><td>ulid</td><td>quem pediu</td></tr>
+          <tr><td>status</td><td>enum friend_status</td><td>pending / accepted / blocked</td></tr>
+          <tr><td>created_at / accepted_at</td><td>timestamptz</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>clubs <span class="pk">1:N de users (owner)</span> · club_members <span class="pk">N:N</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>clubs.id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>clubs.name / neighborhood_id / owner_id</td><td>text / ulid</td><td><span class="k fk">FK</span> users, neighborhoods</td></tr>
+          <tr><td>clubs.color_hex / avatar_key / visibility</td><td>—</td><td>—</td></tr>
+          <tr><td>club_members.club_id</td><td>ulid</td><td><span class="k pk">PK</span> <span class="k fk">FK</span> clubs</td></tr>
+          <tr><td>club_members.user_id</td><td>ulid</td><td><span class="k pk">PK</span> <span class="k fk">FK</span> users</td></tr>
+          <tr><td>club_members.role</td><td>text</td><td>owner / admin / member</td></tr>
+          <tr><td>club_members.joined_at</td><td>timestamptz</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>routes <span class="pk">1:N de users</span> · route_reviews <span class="pk">1:N</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>routes.id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>routes.created_by</td><td>ulid</td><td><span class="k fk">FK</span> users (nullable = oficial)</td></tr>
+          <tr><td>routes.name / distance_m / surface / is_official</td><td>—</td><td>—</td></tr>
+          <tr><td>routes.geom</td><td>geometry(LineString,4326)</td><td><span class="k gx">GIST</span></td></tr>
+          <tr><td>route_reviews.id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>route_reviews.route_id</td><td>ulid</td><td><span class="k fk">FK</span> routes · <span class="k ix">IX</span></td></tr>
+          <tr><td>route_reviews.user_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k uq">UQ</span>(route_id, user_id)</td></tr>
+          <tr><td>route_reviews.rating</td><td>smallint</td><td>1–5</td></tr>
+          <tr><td>route_reviews.tags_jsonb / body</td><td>jsonb / text</td><td>segurança, sombra, piso…</td></tr>
+          <tr><td>route_reviews.status</td><td>enum mod_status</td><td>pending / approved / hidden / removed</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>reports <span class="pk">moderação</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>reporter_id</td><td>ulid</td><td><span class="k fk">FK</span> users</td></tr>
+          <tr><td>target_type</td><td>text</td><td>run / route / review / comment / user / event / checkin</td></tr>
+          <tr><td>target_id</td><td>ulid</td><td><span class="k ix">IX</span>(target_type, target_id)</td></tr>
+          <tr><td>reason / body</td><td>text</td><td>—</td></tr>
+          <tr><td>status</td><td>enum report_status</td><td>open / actioned / dismissed</td></tr>
+          <tr><td>handled_by / handled_at</td><td>ulid / timestamptz</td><td><span class="k fk">FK</span> users</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="eventos">
+      <h2><span class="h2n">07</span>Eventos, QR &amp; organizadores</h2>
+
+      <h4>organizers <span class="pk">1:N de users (owner)</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>owner_id</td><td>ulid</td><td><span class="k fk">FK</span> users</td></tr>
+          <tr><td>name / kind</td><td>text / enum org_kind</td><td>race / company / brand / ngo</td></tr>
+          <tr><td>contact_email / doc_number</td><td>text</td><td>CNPJ/CPF</td></tr>
+          <tr><td>plan / billing_ref</td><td>text</td><td>—</td></tr>
+          <tr><td>status</td><td>text</td><td>pending / active / suspended</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>events <span class="pk">1:N de organizers</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>slug</td><td>text</td><td><span class="k uq">UQ</span></td></tr>
+          <tr><td>organizer_id</td><td>ulid</td><td><span class="k fk">FK</span> organizers · <span class="k ix">IX</span></td></tr>
+          <tr><td>title / type</td><td>text / enum event_type</td><td>race / challenge / corporate / brand / charity</td></tr>
+          <tr><td>starts_at / ends_at</td><td>timestamptz</td><td>—</td></tr>
+          <tr><td>area_geom / route_geom</td><td>geometry(...,4326)</td><td><span class="k gx">GIST</span></td></tr>
+          <tr><td>goals_jsonb / rewards_jsonb</td><td>jsonb</td><td>distância, checkpoints, selos…</td></tr>
+          <tr><td>refund_policy_jsonb</td><td>jsonb</td><td>≥ mínimo legal (CDC)</td></tr>
+          <tr><td>visibility / status</td><td>text</td><td>draft / pending / live / closed</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>event_prices <span class="pk">1:N de events</span> · event_teams <span class="pk">1:N</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>event_prices.id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>event_prices.event_id</td><td>ulid</td><td><span class="k fk">FK</span> events · <span class="k ix">IX</span></td></tr>
+          <tr><td>event_prices.name / category</td><td>text</td><td>lote / categoria</td></tr>
+          <tr><td>event_prices.amount_cents / starts_at / ends_at</td><td>int / timestamptz</td><td>—</td></tr>
+          <tr><td>event_prices.quota / sold</td><td>int</td><td>—</td></tr>
+          <tr><td>event_teams.id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>event_teams.event_id / organizer_id / name</td><td>ulid / text</td><td>time de empresa</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>event_stations <span class="pk">1:N de events</span> · scanner_credentials <span class="pk">1:N</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>event_stations.id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>event_stations.event_id</td><td>ulid</td><td><span class="k fk">FK</span> events · <span class="k ix">IX</span></td></tr>
+          <tr><td>event_stations.name / role / ord</td><td>text / enum station_role / int</td><td>kit / start / checkpoint / finish / lap / aid / sponsor</td></tr>
+          <tr><td>event_stations.geom / radius_m</td><td>geometry(Point,4326) / int</td><td><span class="k gx">GIST</span></td></tr>
+          <tr><td>scanner_credentials.id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>scanner_credentials.event_id / station_id / organizer_id</td><td>ulid</td><td><span class="k fk">FK</span></td></tr>
+          <tr><td>scanner_credentials.token_hash / expires_at / revoked</td><td>text / timestamptz / bool</td><td>assina as leituras da estação</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>event_participants <span class="pk">N:N users × events</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>event_id</td><td>ulid</td><td><span class="k pk">PK</span> <span class="k fk">FK</span> events</td></tr>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k pk">PK</span> <span class="k fk">FK</span> users</td></tr>
+          <tr><td>team_id</td><td>ulid</td><td><span class="k fk">FK</span> event_teams (nullable)</td></tr>
+          <tr><td>order_id</td><td>ulid</td><td><span class="k fk">FK</span> orders (nullable — inscrição paga)</td></tr>
+          <tr><td>bib_number</td><td>text</td><td>número de peito</td></tr>
+          <tr><td>category / shirt_size</td><td>text</td><td>—</td></tr>
+          <tr><td>emergency_contact_jsonb</td><td>jsonb</td><td>compartilhado com o organizador</td></tr>
+          <tr><td>progress_jsonb / joined_at / completed_at</td><td>jsonb / timestamptz</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>qr_tokens <span class="pk">1:N de users</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k ix">IX</span></td></tr>
+          <tr><td>kind</td><td>enum qr_kind</td><td>rotating (app, ~45s) / static (peito impresso)</td></tr>
+          <tr><td>payload_sig</td><td>text</td><td>assinatura</td></tr>
+          <tr><td>event_id</td><td>ulid</td><td><span class="k fk">FK</span> events (nullable)</td></tr>
+          <tr><td>issued_at / expires_at / revoked</td><td>timestamptz / bool</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>scan_events <span class="pk">1:N — grava na conta do dono do ID</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>athlete_id</td><td>text</td><td><span class="k fk">FK</span> users.athlete_id · <span class="k ix">IX</span></td></tr>
+          <tr><td>station_id</td><td>ulid</td><td><span class="k fk">FK</span> event_stations (nullable)</td></tr>
+          <tr><td>event_id</td><td>ulid</td><td><span class="k fk">FK</span> events (nullable)</td></tr>
+          <tr><td>scanned_by</td><td>ulid</td><td><span class="k fk">FK</span> users (P2P) ou scanner_credential</td></tr>
+          <tr><td>kind</td><td>enum scan_kind</td><td>kit / start / checkpoint / finish / lap / aid / sponsor / friend / landmark</td></tr>
+          <tr><td>geom</td><td>geometry(Point,4326)</td><td>—</td></tr>
+          <tr><td>scanned_at</td><td>timestamptz</td><td>timestamp da estação = fonte da verdade</td></tr>
+          <tr><td>owner_confirmed_at</td><td>timestamptz</td><td>handshake (ações sensíveis)</td></tr>
+          <tr><td>status</td><td>enum scan_status</td><td>recorded / pending / disputed / rejected</td></tr>
+          <tr><td>offline_synced_at</td><td>timestamptz</td><td>fila offline</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="pagamentos">
+      <h2><span class="h2n">08</span>Pagamentos</h2>
+      <p class="sub">Metadados apenas — o cartão vive no Asaas (PCI SAQ-A).</p>
+
+      <h4>orders <span class="pk">1:N de users</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k ix">IX</span></td></tr>
+          <tr><td>kind</td><td>enum order_kind</td><td>event_registration / subscription / cosmetic / donation</td></tr>
+          <tr><td>status</td><td>enum order_status</td><td>pending / paid / failed / refunded / cancelled</td></tr>
+          <tr><td>amount_cents / discount_cents / platform_fee_cents</td><td>int</td><td>—</td></tr>
+          <tr><td>currency</td><td>char(3)</td><td>BRL</td></tr>
+          <tr><td>coupon_id</td><td>ulid</td><td><span class="k fk">FK</span> coupons (nullable)</td></tr>
+          <tr><td>asaas_customer_id</td><td>text</td><td>—</td></tr>
+          <tr><td>idempotency_key</td><td>text</td><td><span class="k uq">UQ</span></td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>order_items <span class="pk">1:N de orders</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>order_id</td><td>ulid</td><td><span class="k fk">FK</span> orders · <span class="k ix">IX</span></td></tr>
+          <tr><td>ref_type / ref_id</td><td>text / ulid</td><td>event_price / plan / cosmetic</td></tr>
+          <tr><td>qty / unit_amount_cents</td><td>int</td><td>—</td></tr>
+          <tr><td>options_jsonb</td><td>jsonb</td><td>camiseta, categoria, kit</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>payments <span class="pk">1:N de orders</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>order_id</td><td>ulid</td><td><span class="k fk">FK</span> orders · <span class="k ix">IX</span></td></tr>
+          <tr><td>asaas_charge_id</td><td>text</td><td><span class="k uq">UQ</span></td></tr>
+          <tr><td>method</td><td>enum pay_method</td><td>pix / boleto / card</td></tr>
+          <tr><td>status</td><td>enum pay_status</td><td>pending / confirmed / received / overdue / refunded / chargeback</td></tr>
+          <tr><td>paid_at / net_amount_cents</td><td>timestamptz / int</td><td>—</td></tr>
+          <tr><td>split_jsonb</td><td>jsonb</td><td>repasse organizador × plataforma × Asaas</td></tr>
+          <tr><td>card_brand / card_last4</td><td>text</td><td>sem PAN</td></tr>
+          <tr><td>receipt_url</td><td>text</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>refunds <span class="pk">1:N de payments</span> · coupons <span class="pk">referência</span> · payout_accounts <span class="pk">1:1 de organizers</span> · subscriptions <span class="pk">1:1 de users</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>refunds.id / payment_id / asaas_refund_id</td><td>ulid / text</td><td><span class="k fk">FK</span> payments</td></tr>
+          <tr><td>refunds.amount_cents / reason / status / requested_by</td><td>int / text / ulid</td><td>—</td></tr>
+          <tr><td>coupons.id / scope / code</td><td>ulid / text</td><td><span class="k uq">UQ</span> code · scope: event / global / campaign</td></tr>
+          <tr><td>coupons.discount_type / value / max_uses / used / valid_until / event_id</td><td>—</td><td><span class="k fk">FK</span> events (nullable)</td></tr>
+          <tr><td>payout_accounts.organizer_id</td><td>ulid</td><td><span class="k pk">PK</span> <span class="k fk">FK</span> organizers</td></tr>
+          <tr><td>payout_accounts.asaas_wallet_id / asaas_subaccount_id / status / kyc_state</td><td>text</td><td>—</td></tr>
+          <tr><td>subscriptions.user_id</td><td>ulid</td><td><span class="k pk">PK</span> <span class="k fk">FK</span> users</td></tr>
+          <tr><td>subscriptions.asaas_subscription_id / plan / status</td><td>text</td><td>—</td></tr>
+          <tr><td>subscriptions.current_period_end / cancel_at</td><td>timestamptz</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="ia">
+      <h2><span class="h2n">09</span>IA</h2>
+
+      <h4>ai_interactions <span class="pk">1:N de users</span></h4>
+      <p>Telemetria — <strong>sem</strong> conteúdo com PII.</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k ix">IX</span>(user_id, created_at)</td></tr>
+          <tr><td>feature</td><td>text</td><td>coach / summary / route_suggest / moderation / vision</td></tr>
+          <tr><td>model / prompt_key / prompt_version</td><td>text</td><td><span class="k fk">FK</span> ai_prompts</td></tr>
+          <tr><td>prompt_tokens / completion_tokens / cost_cents / latency_ms</td><td>int</td><td>—</td></tr>
+          <tr><td>tool_calls_jsonb / safety_flags</td><td>jsonb / text[]</td><td>—</td></tr>
+          <tr><td>outcome</td><td>text</td><td>ok / refused / error / rate_limited</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>ai_prompts <span class="pk">versionado</span> · ai_evals <span class="pk">1:N</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>ai_prompts.key</td><td>text</td><td><span class="k pk">PK</span>(key, version)</td></tr>
+          <tr><td>ai_prompts.version / hash / body / active / created_by</td><td>int / text / bool / ulid</td><td>—</td></tr>
+          <tr><td>ai_evals.id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>ai_evals.prompt_key / prompt_version</td><td>text / int</td><td><span class="k fk">FK</span> ai_prompts · <span class="k ix">IX</span></td></tr>
+          <tr><td>ai_evals.dataset / scores_jsonb / run_at</td><td>text / jsonb / timestamptz</td><td>precisão, alucinação, segurança</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="seguranca">
+      <h2><span class="h2n">10</span>Segurança, moderação &amp; operação</h2>
+
+      <h4>audit_log <span class="pk">append-only</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>actor_id / actor_role</td><td>ulid / text</td><td><span class="k fk">FK</span> users · <span class="k ix">IX</span></td></tr>
+          <tr><td>action</td><td>text</td><td>ex.: <code>user.suspend</code>, <code>refund.issue</code></td></tr>
+          <tr><td>target_type / target_id</td><td>text / ulid</td><td><span class="k ix">IX</span>(target_type, target_id)</td></tr>
+          <tr><td>diff_jsonb / ip</td><td>jsonb / inet</td><td>sem PII desnecessária</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>webhook_events <span class="pk">idempotência</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>provider</td><td>text</td><td>asaas / strava / garmin / …</td></tr>
+          <tr><td>external_id</td><td>text</td><td><span class="k uq">UQ</span>(provider, external_id)</td></tr>
+          <tr><td>event_type / payload_jsonb</td><td>text / jsonb</td><td>—</td></tr>
+          <tr><td>signature_ok / processed_at</td><td>bool / timestamptz</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>sos_events <span class="pk">1:N de users</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k ix">IX</span></td></tr>
+          <tr><td>run_id</td><td>ulid</td><td><span class="k fk">FK</span> runs (nullable)</td></tr>
+          <tr><td>geom_track</td><td>geometry(LineString,4326)</td><td>posição ao vivo</td></tr>
+          <tr><td>share_token</td><td>text</td><td><span class="k uq">UQ</span> — expira ao terminar</td></tr>
+          <tr><td>started_at / ended_at / status / resolved_by</td><td>timestamptz / text / ulid</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>hazard_reports <span class="pk">colaborativo</span> · map_pois <span class="pk">referência</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>hazard_reports.id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>hazard_reports.reporter_id</td><td>ulid</td><td><span class="k fk">FK</span> users</td></tr>
+          <tr><td>hazard_reports.type / severity / note / photo_key</td><td>text / smallint</td><td>linguagem neutra</td></tr>
+          <tr><td>hazard_reports.geom</td><td>geometry(Point,4326)</td><td><span class="k gx">GIST</span></td></tr>
+          <tr><td>hazard_reports.confirms / disputes / expires_at / status</td><td>int / timestamptz / text</td><td>decai no tempo</td></tr>
+          <tr><td>map_pois.id / type</td><td>ulid / text</td><td>water / toilet / gym / bike_rack / shade / hospital</td></tr>
+          <tr><td>map_pois.geom / name / source / verified / attrs_jsonb</td><td>geometry(Point,4326) / …</td><td><span class="k gx">GIST</span></td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>shoe_catalog <span class="pk">referência global</span></h4>
+      <p>Base de marca/modelo que o usuário seleciona; durabilidade média agregada da comunidade.</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>brand / model / year</td><td>text / int</td><td><span class="k uq">UQ</span>(brand, model, year)</td></tr>
+          <tr><td>default_lifespan_m</td><td>int</td><td>—</td></tr>
+          <tr><td>agg_median_lifespan_m / agg_user_count / agg_rating</td><td>int / numeric</td><td>rollup anônimo</td></tr>
+          <tr><td>status</td><td>text</td><td>approved / pending (submissão da comunidade)</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="enums">
+      <h2><span class="h2n">11</span>Enums</h2>
+      <div class="tw"><table>
+        <thead><tr><th>Tipo</th><th>Valores</th></tr></thead>
+        <tbody>
+          <tr><td>user_role</td><td>runner · organizer · moderator · admin</td></tr>
+          <tr><td>user_status</td><td>active · suspended · shadow_banned · banned · deleted</td></tr>
+          <tr><td>id_provider</td><td>google · apple · email</td></tr>
+          <tr><td>integ_provider</td><td>strava · garmin · fitbit · polar · apple_health · health_connect</td></tr>
+          <tr><td>integ_status</td><td>active · expired · revoked · error</td></tr>
+          <tr><td>device_kind</td><td>phone · watch · footpod · hrm</td></tr>
+          <tr><td>run_source</td><td>phone · watch · import</td></tr>
+          <tr><td>run_status</td><td>processing · valid · flagged · rejected</td></tr>
+          <tr><td>terr_status</td><td>active · contested · decayed · revoked</td></tr>
+          <tr><td>dispute_status</td><td>open · consolidated · reverted</td></tr>
+          <tr><td>shoe_status</td><td>active · rotation · retired</td></tr>
+          <tr><td>risk_source</td><td>admin · hazard_cluster · public_data</td></tr>
+          <tr><td>trophy_type</td><td>conquistador · barao_bairro · muralha · desbravador · maratonista · podio_bairro</td></tr>
+          <tr><td>badge_type</td><td>landmark · collection · coverage · activity · seasonal</td></tr>
+          <tr><td>checkin_status</td><td>pending · approved · rejected</td></tr>
+          <tr><td>activity_type</td><td>run · claim · trophy · badge · invasion · comment · checkin</td></tr>
+          <tr><td>visibility</td><td>public · friends · private</td></tr>
+          <tr><td>friend_status</td><td>pending · accepted · blocked</td></tr>
+          <tr><td>mod_status / report_status</td><td>pending·approved·hidden·removed / open·actioned·dismissed</td></tr>
+          <tr><td>org_kind</td><td>race · company · brand · ngo</td></tr>
+          <tr><td>event_type</td><td>race · challenge · corporate · brand · charity</td></tr>
+          <tr><td>station_role</td><td>kit · start · checkpoint · finish · lap · aid · sponsor</td></tr>
+          <tr><td>qr_kind</td><td>rotating · static</td></tr>
+          <tr><td>scan_kind</td><td>kit · start · checkpoint · finish · lap · aid · sponsor · friend · landmark</td></tr>
+          <tr><td>scan_status</td><td>recorded · pending · disputed · rejected</td></tr>
+          <tr><td>order_kind</td><td>event_registration · subscription · cosmetic · donation</td></tr>
+          <tr><td>order_status</td><td>pending · paid · failed · refunded · cancelled</td></tr>
+          <tr><td>pay_method</td><td>pix · boleto · card</td></tr>
+          <tr><td>pay_status</td><td>pending · confirmed · received · overdue · refunded · chargeback</td></tr>
+          <tr><td>import_kind / job_status</td><td>backfill·delta / queued·running·done·failed</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="indices">
+      <h2><span class="h2n">12</span>Índices &amp; particionamento</h2>
+      <ul>
+        <li><strong>Geoespaciais (GIST):</strong> <code>run_tracks.geom</code>, <code>territories.geom</code>, <code>h3_cells</code> (B-tree em <code>h3_index</code>), <code>neighborhoods.geom</code>, <code>risk_zones.geom</code>, <code>landmarks.geom</code>, <code>hazard_reports.geom</code>, <code>map_pois.geom</code>, <code>events.area_geom</code>, <code>event_stations.geom</code>.</li>
+        <li><strong>Particionamento:</strong> <code>run_tracks</code> e <code>activity_events</code> por mês (<code>RANGE</code> em <code>started_at</code>/<code>created_at</code>); <code>ai_interactions</code> e <code>audit_log</code> por mês; <code>scan_events</code> por evento quando alto volume.</li>
+        <li><strong>Ranking:</strong> agregados de área e cobertura em <strong>Redis sorted sets</strong> (global, semanal, por bairro, por clube, entre amigos) — recalculados de forma incremental, nunca varrendo a cidade a cada corrida. Snapshot semanal em <code>trophies</code>.</li>
+        <li><strong>Composite IX comuns:</strong> <code>runs(user_id, started_at desc)</code>, <code>territories(user_id, status)</code>, <code>h3_cells(owner_id)</code>, <code>activity_events(actor_id, created_at desc)</code>, <code>scan_events(athlete_id, scanned_at)</code>, <code>ai_interactions(user_id, created_at)</code>.</li>
+        <li><strong>Busca textual:</strong> <code>pg_trgm</code> em <code>users.username</code>, <code>routes.name</code>, <code>events.title</code>, <code>shoe_catalog(brand,model)</code>.</li>
+        <li><strong>Grandes polígonos:</strong> <code>ST_Subdivide</code> nas geometrias de bairro/risco para acelerar <code>ST_Intersects</code>/<code>ST_Difference</code>.</li>
+      </ul>
+    </section>
+
+    <section id="relacionamentos">
+      <h2><span class="h2n">13</span>Relacionamentos (completo)</h2>
+      <div class="tw"><table>
+        <thead><tr><th>De</th><th>Card.</th><th>Para</th><th>Via</th><th>On delete</th></tr></thead>
+        <tbody>
+          <tr><td>identities</td><td>N:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
+          <tr><td>auth_sessions</td><td>N:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
+          <tr><td>auth_sessions</td><td>N:1</td><td>devices</td><td>device_id</td><td>set null</td></tr>
+          <tr><td>devices</td><td>N:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
+          <tr><td>integrations</td><td>N:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
+          <tr><td>import_jobs</td><td>N:1</td><td>integrations</td><td>integration_id</td><td>cascade</td></tr>
+          <tr><td>safety_contacts</td><td>N:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
+          <tr><td>user_stride_calibration</td><td>1:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
+          <tr><td>shoes</td><td>N:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
+          <tr><td>shoes</td><td>N:1</td><td>shoe_catalog</td><td>catalog_id</td><td>set null</td></tr>
+          <tr><td>shoe_stats</td><td>1:1</td><td>shoes</td><td>shoe_id</td><td>cascade</td></tr>
+          <tr><td>runs</td><td>N:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
+          <tr><td>runs</td><td>N:1</td><td>shoes</td><td>shoe_id</td><td>set null</td></tr>
+          <tr><td>runs</td><td>N:1</td><td>devices</td><td>device_id</td><td>set null</td></tr>
+          <tr><td>runs</td><td>N:1</td><td>events</td><td>event_id</td><td>set null</td></tr>
+          <tr><td>run_tracks</td><td>1:1</td><td>runs</td><td>run_id</td><td>cascade</td></tr>
+          <tr><td>territories</td><td>N:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
+          <tr><td>territories</td><td>N:1</td><td>runs</td><td>run_id</td><td>set null</td></tr>
+          <tr><td>territories</td><td>N:1</td><td>neighborhoods</td><td>neighborhood_id</td><td>set null</td></tr>
+          <tr><td>territory_disputes</td><td>N:1 ×2</td><td>users</td><td>attacker_id / defender_id</td><td>cascade</td></tr>
+          <tr><td>h3_cells</td><td>N:1</td><td>users</td><td>owner_id</td><td>set null</td></tr>
+          <tr><td>h3_cells</td><td>N:1</td><td>territories</td><td>territory_id</td><td>set null</td></tr>
+          <tr><td>h3_cells</td><td>N:1</td><td>neighborhoods</td><td>neighborhood_id</td><td>restrict</td></tr>
+          <tr><td>weekly_cycles</td><td>N:1</td><td>seasons</td><td>season_id</td><td>restrict</td></tr>
+          <tr><td>trophies</td><td>N:1</td><td>weekly_cycles</td><td>cycle_id</td><td>cascade</td></tr>
+          <tr><td>trophies</td><td>N:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
+          <tr><td>trophies</td><td>N:1</td><td>neighborhoods</td><td>neighborhood_id</td><td>set null</td></tr>
+          <tr><td>user_badges</td><td>N:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
+          <tr><td>user_badges</td><td>N:1</td><td>badges</td><td>badge_code</td><td>restrict</td></tr>
+          <tr><td>user_badges</td><td>N:1</td><td>landmark_checkins</td><td>checkin_id</td><td>set null</td></tr>
+          <tr><td>badges</td><td>N:1</td><td>landmark_collections</td><td>collection_id</td><td>set null</td></tr>
+          <tr><td>personal_records</td><td>N:1</td><td>users / runs</td><td>user_id / run_id</td><td>cascade / set null</td></tr>
+          <tr><td>lifetime_stats</td><td>1:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
+          <tr><td>landmarks</td><td>N:1</td><td>landmark_collections</td><td>collection_id</td><td>set null</td></tr>
+          <tr><td>landmark_checkins</td><td>N:1</td><td>users / landmarks / runs</td><td>user_id / landmark_id / run_id</td><td>cascade / restrict / set null</td></tr>
+          <tr><td>activity_events</td><td>N:1</td><td>users</td><td>actor_id</td><td>cascade</td></tr>
+          <tr><td>friendships</td><td>N:1 ×2</td><td>users</td><td>user_id / friend_id</td><td>cascade</td></tr>
+          <tr><td>clubs</td><td>N:1</td><td>users / neighborhoods</td><td>owner_id / neighborhood_id</td><td>restrict / set null</td></tr>
+          <tr><td>club_members</td><td>N:1 ×2</td><td>clubs / users</td><td>club_id / user_id</td><td>cascade</td></tr>
+          <tr><td>routes</td><td>N:1</td><td>users</td><td>created_by</td><td>set null</td></tr>
+          <tr><td>route_reviews</td><td>N:1 ×2</td><td>routes / users</td><td>route_id / user_id</td><td>cascade</td></tr>
+          <tr><td>reports</td><td>N:1 ×2</td><td>users</td><td>reporter_id / handled_by</td><td>cascade / set null</td></tr>
+          <tr><td>organizers</td><td>N:1</td><td>users</td><td>owner_id</td><td>restrict</td></tr>
+          <tr><td>events</td><td>N:1</td><td>organizers</td><td>organizer_id</td><td>restrict</td></tr>
+          <tr><td>event_prices / event_teams / event_stations</td><td>N:1</td><td>events</td><td>event_id</td><td>cascade</td></tr>
+          <tr><td>scanner_credentials</td><td>N:1 ×2</td><td>events / event_stations</td><td>event_id / station_id</td><td>cascade</td></tr>
+          <tr><td>event_participants</td><td>N:1</td><td>events / users</td><td>event_id / user_id</td><td>cascade</td></tr>
+          <tr><td>event_participants</td><td>N:1</td><td>event_teams / orders</td><td>team_id / order_id</td><td>set null</td></tr>
+          <tr><td>qr_tokens</td><td>N:1</td><td>users / events</td><td>user_id / event_id</td><td>cascade / set null</td></tr>
+          <tr><td>scan_events</td><td>N:1</td><td>users (athlete_id)</td><td>athlete_id</td><td>cascade</td></tr>
+          <tr><td>scan_events</td><td>N:1</td><td>event_stations / events</td><td>station_id / event_id</td><td>set null</td></tr>
+          <tr><td>orders</td><td>N:1</td><td>users / coupons</td><td>user_id / coupon_id</td><td>restrict / set null</td></tr>
+          <tr><td>order_items</td><td>N:1</td><td>orders</td><td>order_id</td><td>cascade</td></tr>
+          <tr><td>payments</td><td>N:1</td><td>orders</td><td>order_id</td><td>restrict</td></tr>
+          <tr><td>refunds</td><td>N:1</td><td>payments</td><td>payment_id</td><td>restrict</td></tr>
+          <tr><td>coupons</td><td>N:1</td><td>events</td><td>event_id</td><td>cascade</td></tr>
+          <tr><td>payout_accounts</td><td>1:1</td><td>organizers</td><td>organizer_id</td><td>cascade</td></tr>
+          <tr><td>subscriptions</td><td>1:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
+          <tr><td>ai_interactions</td><td>N:1</td><td>users / ai_prompts</td><td>user_id / (prompt_key,version)</td><td>cascade / restrict</td></tr>
+          <tr><td>ai_evals</td><td>N:1</td><td>ai_prompts</td><td>(prompt_key, prompt_version)</td><td>cascade</td></tr>
+          <tr><td>audit_log</td><td>N:1</td><td>users</td><td>actor_id</td><td>set null</td></tr>
+          <tr><td>sos_events</td><td>N:1</td><td>users / runs</td><td>user_id / run_id</td><td>cascade / set null</td></tr>
+          <tr><td>hazard_reports</td><td>N:1</td><td>users</td><td>reporter_id</td><td>set null</td></tr>
+        </tbody>
+      </table></div>
+      <div class="note"><b>N:N via join table</b><code>friendships</code> (users×users) · <code>club_members</code> (clubs×users) · <code>user_badges</code> (users×badges) · <code>trophies</code> (users×weekly_cycles) · <code>event_participants</code> (users×events) · <code>territory_disputes</code> (users×users, por geometria).</div>
+    </section>
+
+    <section id="servicos">
+      <h2><span class="h2n">14</span>Serviços internos</h2>
+      <p class="sub">Monólito modular em Go (um binário) + o <code>territory-worker</code> como processo separado. Módulos por domínio, comunicação por interface.</p>
+      <div class="tw"><table>
+        <thead><tr><th>Módulo</th><th>Responsável por</th><th>Depende de</th></tr></thead>
+        <tbody>
+          <tr><td>http / gateway</td><td>Roteamento REST + WebSocket, auth middleware, rate limit, CORS</td><td>todos os módulos, Redis</td></tr>
+          <tr><td>auth</td><td>Registro, login, OAuth, refresh rotativo, 2FA, sessões</td><td>Postgres, Redis, Google/Apple</td></tr>
+          <tr><td>run</td><td>Ingestão de corrida, validação, enfileiramento</td><td>Postgres, object storage, fila</td></tr>
+          <tr><td><strong>territory-worker</strong> <em>(binário próprio)</em></td><td>Limpeza, map-matching, detecção de laço, preenchimento, gate de risco, resolução de conflito, H3, anti-fraude, rollups</td><td>Postgres+PostGIS, OSRM, fila, Redis</td></tr>
+          <tr><td>leaderboard</td><td>Sorted sets de ranking, fechamento de ciclo semanal, decaimento</td><td>Redis, Postgres, jobs</td></tr>
+          <tr><td>social</td><td>Amizades, clubes, feed, bloqueio</td><td>Postgres, Redis pub/sub</td></tr>
+          <tr><td>route</td><td>Rotas, avaliações, curadoria</td><td>Postgres+PostGIS</td></tr>
+          <tr><td>gamification</td><td>Selos, troféus, badges, records, missões, check-in de marco</td><td>Postgres, object storage</td></tr>
+          <tr><td>event</td><td>Eventos, lotes, estações, credenciais de scanner, participantes</td><td>Postgres, payments</td></tr>
+          <tr><td>identity-qr</td><td>QR rotativo, leitura, handshake, fila offline de scan</td><td>Postgres, Redis</td></tr>
+          <tr><td>payments</td><td>Pedidos, checkout, split, reembolso, assinatura, conciliação — atrás de <code>PaymentProvider</code></td><td>Asaas, Postgres, jobs</td></tr>
+          <tr><td>ai-service</td><td>Coach, resumo, recomendação de rota, moderação assistida, visão — atrás de <code>AIProvider</code>; guardrails, validação de saída, allowlist de ferramentas, evals</td><td>Anthropic, Postgres, Redis</td></tr>
+          <tr><td>safety</td><td>Contatos de emergência, SOS, beacon, camada de alertas da via, zonas de risco, POIs, condições (clima/maré)</td><td>Postgres+PostGIS, provedores de clima</td></tr>
+          <tr><td>notifications</td><td>Push, e-mail transacional, central de preferências</td><td>FCM/APNs, provedor de e-mail</td></tr>
+          <tr><td>admin</td><td>Namespace isolado — usuários, moderação, financeiro, config do jogo, auditoria, zonas de risco</td><td>todos</td></tr>
+          <tr><td>jobs / scheduler</td><td>Cron: fechar ciclo (dom 23h59), decaimento semanal, conciliação Asaas, refresh de <code>heat_agg</code>, reconstrução de <code>risk_zones</code> a partir de clusters, expiração de tokens, backfill de integrações, rollup de <code>shoe_catalog</code></td><td>Postgres, Redis, Asaas</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="stores">
+      <h2><span class="h2n">15</span>Data stores</h2>
+      <div class="tw"><table>
+        <thead><tr><th>Store</th><th>Para quê</th><th>Nota</th></tr></thead>
+        <tbody>
+          <tr><td><strong>PostgreSQL 16 + PostGIS</strong></td><td>Fonte de verdade — tudo neste documento</td><td>Gerenciado (Neon / RDS / Supabase). <code>run_tracks</code> particionada; considerar TimescaleDB para streams de sensor.</td></tr>
+          <tr><td><strong>Redis</strong></td><td>Cache, sessões, rate limit, <strong>sorted sets de ranking</strong>, pub/sub do feed/WebSocket, locks</td><td>Gerenciado. Chaves com TTL.</td></tr>
+          <tr><td><strong>Fila</strong> — NATS JetStream ou Redis Streams</td><td>Upload de corrida → worker, import de integrações, IA em lote, jobs</td><td>DLQ + replay + deduplicação de eventos.</td></tr>
+          <tr><td><strong>Object storage</strong> S3-compatível</td><td>GPX bruto, fotos (missão, avatar, tênis), exports, share cards, PDFs de número de peito</td><td>URLs assinadas com expiração, domínio isolado, versionamento.</td></tr>
+          <tr><td><strong>Tile store</strong> (opcional self-host)</td><td>Tiles vetoriais do extrato OSM do Ceará</td><td>Alternativa ao MapTiler/Protomaps quando o volume justificar.</td></tr>
+          <tr><td><strong>Cofre de secrets</strong></td><td>Chaves de API, tokens de terceiros, chave de criptografia de campo</td><td>Vault / AWS Secrets Manager / Doppler — injetado em runtime.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="integracoes">
+      <h2><span class="h2n">16</span>Integrações de terceiros</h2>
+      <p class="sub">Cada uma com finalidade, protocolo, autenticação, dados que trafegam, criticidade e fallback.</p>
+
+      <h3>Mapa &amp; geo</h3>
+      <div class="tw"><table>
+        <thead><tr><th>Serviço</th><th>Para quê</th><th>Protocolo · Auth</th><th>Dados</th><th>Criticidade · Fallback</th></tr></thead>
+        <tbody>
+          <tr><td>OpenStreetMap (extrato Geofabrik)</td><td>Dados de ruas, calçadas, prédios, praças</td><td>Download periódico · —</td><td>—</td><td>Build-time · —</td></tr>
+          <tr><td>MapTiler / Protomaps</td><td>Tiles vetoriais + estilo base</td><td>HTTPS tiles · API key</td><td>Requisições de bbox</td><td>Alta · self-host de tiles</td></tr>
+          <tr><td>MapTiler Satellite / Esri World Imagery</td><td>Camada de satélite</td><td>HTTPS tiles · API key</td><td>bbox</td><td>Média · desabilitar camada</td></tr>
+          <tr><td>OSRM ou Valhalla (self-hosted)</td><td>Roteamento e map-matching</td><td>HTTP interno · —</td><td>Coordenadas do traçado</td><td>Média · heurística de snap simples</td></tr>
+          <tr><td>uber/h3</td><td>Indexação hexagonal (biblioteca)</td><td>lib nativa · —</td><td>—</td><td>Baixa · —</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Autenticação &amp; apps de corrida</h3>
+      <div class="tw"><table>
+        <thead><tr><th>Serviço</th><th>Para quê</th><th>Protocolo · Auth</th><th>Dados</th><th>Criticidade · Fallback</th></tr></thead>
+        <tbody>
+          <tr><td>Google OAuth / OIDC</td><td>Login social</td><td>OAuth2 · client id+secret</td><td>sub, e-mail</td><td>Média · e-mail+senha</td></tr>
+          <tr><td>Apple Sign In</td><td>Login social (obrigatório na App Store)</td><td>OAuth2 + JWT · key p8</td><td>sub, e-mail relay</td><td>Média · —</td></tr>
+          <tr><td>Strava API</td><td>Import de atividades + gear</td><td>REST + webhook · OAuth2</td><td>Atividades, equipamento do usuário</td><td>Média · import de arquivo GPX/FIT</td></tr>
+          <tr><td>Garmin Connect</td><td>Import + running dynamics</td><td>Partner API · OAuth1a</td><td>Atividades, métricas</td><td>Baixa · Health Connect / Apple Health</td></tr>
+          <tr><td>Fitbit / Polar</td><td>Import de atividades e FC</td><td>REST · OAuth2</td><td>Atividades, FC</td><td>Baixa · —</td></tr>
+          <tr><td>Apple HealthKit</td><td>Import no device (iOS)</td><td>SDK on-device · permissão</td><td>Treinos</td><td>Média · —</td></tr>
+          <tr><td>Google Health Connect</td><td>Import no device (Android)</td><td>SDK on-device · permissão</td><td>Treinos</td><td>Média · —</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Pagamentos</h3>
+      <div class="tw"><table>
+        <thead><tr><th>Serviço</th><th>Para quê</th><th>Protocolo · Auth</th><th>Dados</th><th>Criticidade · Fallback</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Asaas</strong></td><td>PIX, cartão (3DS), boleto, split, assinatura, KYC de organizador</td><td>REST + webhook · API key + HMAC · IP allowlist</td><td>Dados de cobrança, split, bancários (no Asaas), 4 últimos dígitos</td><td>Alta (receita) · abstração <code>PaymentProvider</code> para Pagar.me/Stripe BR</td></tr>
+          <tr><td>Emissor NF-e / NFS-e <em>(futuro)</em></td><td>Nota da taxa da plataforma</td><td>REST · key</td><td>Dados fiscais</td><td>Média (futuro) · —</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>IA</h3>
+      <div class="tw"><table>
+        <thead><tr><th>Serviço</th><th>Para quê</th><th>Protocolo · Auth</th><th>Dados</th><th>Criticidade · Fallback</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Anthropic (Claude)</strong></td><td>Coach, resumo, recomendação de rota, moderação assistida, chatbot de suporte</td><td>REST · API key</td><td>Prompt com PII minimizada/mascarada; <strong>sem</strong> dados de terceiros; opt-out de treinamento</td><td>Média · outro provedor via <code>AIProvider</code> ou modo sem IA</td></tr>
+          <tr><td>Modelo de visão (marco na foto) / on-device</td><td>Verificação visual de selo, detecção do par de tênis</td><td>SDK on-device ou serviço gerenciado</td><td>Foto de missão / assinatura de movimento</td><td>Baixa · só aumenta confiança, não bloqueia</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Clima, maré &amp; dados públicos</h3>
+      <div class="tw"><table>
+        <thead><tr><th>Serviço</th><th>Para quê</th><th>Protocolo · Auth</th><th>Dados</th><th>Criticidade · Fallback</th></tr></thead>
+        <tbody>
+          <tr><td>FUNCEME / INMET + provedor de previsão</td><td>Temperatura, sensação térmica, UV, vento, chuva, nascer/pôr do sol, qualidade do ar</td><td>REST · key</td><td>lat/lon</td><td>Baixa · exibir fonte e horário, degradar com aviso</td></tr>
+          <tr><td>Tábua de marés (provedor)</td><td>Maré para corrida na areia</td><td>REST · key</td><td>Ponto da orla</td><td>Baixa · —</td></tr>
+          <tr><td>SEMACE</td><td>Balneabilidade por trecho da orla</td><td>REST / boletim · —</td><td>Trecho</td><td>Baixa · —</td></tr>
+          <tr><td>Prefeitura / AMC <em>(futuro)</em></td><td>Dados abertos: iluminação, obras, ciclofaixas</td><td>REST / arquivo · —</td><td>—</td><td>Baixa (futuro) · —</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Comunicação, segurança &amp; operação</h3>
+      <div class="tw"><table>
+        <thead><tr><th>Serviço</th><th>Para quê</th><th>Protocolo · Auth</th><th>Dados</th><th>Criticidade · Fallback</th></tr></thead>
+        <tbody>
+          <tr><td>FCM / APNs / Expo Push</td><td>Notificações push</td><td>HTTP · server key / key p8</td><td>Token do device, payload</td><td>Média · —</td></tr>
+          <tr><td>E-mail transacional (Postmark / SES / Resend)</td><td>Confirmações, avisos de segurança, recibos</td><td>REST / SMTP · key</td><td>Nome, e-mail</td><td>Média · fila de reenvio</td></tr>
+          <tr><td>Play Integrity / App Attest</td><td>Attestation do app (anti-fraude)</td><td>SDK / API · —</td><td>Token do device</td><td>Média · degradar com sinalização</td></tr>
+          <tr><td>Cloudflare</td><td>CDN, WAF, edge, proteção anti-bot</td><td>DNS / proxy · —</td><td>Tráfego HTTP</td><td>Alta · —</td></tr>
+          <tr><td>hCaptcha / Turnstile</td><td>Anti-bot no cadastro</td><td>widget + verify · key</td><td>Token de desafio</td><td>Baixa · —</td></tr>
+          <tr><td>Sentry</td><td>Monitoramento de erros (mobile, web, backend)</td><td>SDK · DSN</td><td>Logs, id de usuário pseudonimizado</td><td>Baixa · —</td></tr>
+          <tr><td>OpenTelemetry + Prometheus + Grafana</td><td>Métricas, traces, painéis, alertas</td><td>OTLP / scrape · —</td><td>Telemetria (sem PII)</td><td>Baixa · —</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Build &amp; entrega</h3>
+      <div class="tw"><table>
+        <thead><tr><th>Serviço</th><th>Para quê</th></tr></thead>
+        <tbody>
+          <tr><td>GitHub + GitHub Actions</td><td>Repositório, CI (lint, testes, SAST, govulncheck, secret scan, build, migração dry-run), CD</td></tr>
+          <tr><td>Expo EAS Build</td><td>Build e submissão dos apps iOS/Android</td></tr>
+          <tr><td>Container registry + hospedagem (Fly.io / Render / VPS)</td><td>API + worker</td></tr>
+          <tr><td>Ticket Sports / Chronotrack <em>(futuro)</em></td><td>Import de cronometragem oficial de provas</td></tr>
+          <tr><td>Print-on-demand <em>(futuro)</em></td><td>Pôster/camiseta com o mapa, medalha de circuito</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="ambientes">
+      <h2><span class="h2n">17</span>Ambientes &amp; deploy</h2>
+      <ul>
+        <li><strong>dev · staging · prod</strong> totalmente separados — bancos, Redis, buckets, chaves e projetos de terceiros distintos. Dados de prod não descem sem anonimização.</li>
+        <li><strong>Migrações</strong> rodam no deploy, sempre com <code>down</code>; <em>dry-run</em> na CI.</li>
+        <li><strong>Backup:</strong> Postgres com PITR + teste de restauração mensal; buckets versionados.</li>
+        <li><strong>Rollback</strong> rápido para a imagem anterior; feature flags para desligar recurso sem deploy (<code>RISK_ZONE_BLOCKING</code>, camadas de IA, integrações).</li>
+        <li><strong>Custo inicial:</strong> ordem de US$ 50–150/mês (API + worker + Postgres + Redis gerenciados + tiles) + taxas do Asaas por transação + custo de IA por chamada (com teto diário).</li>
+        <li>SDKs de terceiros isolados por <strong>adaptador</strong> — trocar de provedor não toca no domínio.</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer class="pg">
+    FortalRunners · banco de dados &amp; integrações v1.0 · 05 set 2026 · consolida o modelo de dados e o catálogo de serviços do plano de produto.
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var root = document.documentElement, btns = document.querySelectorAll('.themetoggle button');
+    function apply(m) {
+      if (m === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', m);
+      btns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.set === m)); });
+      try { localStorage.setItem('fr-theme', m); } catch (e) {}
+    }
+    var s = 'system'; try { s = localStorage.getItem('fr-theme') || 'system'; } catch (e) {}
+    apply(s);
+    btns.forEach(function (b) { b.addEventListener('click', function () { apply(b.dataset.set); }); });
+
+    var links = {}, tocA = document.querySelectorAll('nav.toc a');
+    tocA.forEach(function (a) { links[a.getAttribute('href').slice(1)] = a; });
+    var obs = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (e.isIntersecting) {
+          tocA.forEach(function (l) { l.style.color = ''; l.style.background = ''; });
+          var a = links[e.target.id];
+          if (a) { a.style.color = 'var(--ink)'; a.style.background = 'var(--surface)'; }
+        }
+      });
+    }, { rootMargin: '-10% 0px -80% 0px' });
+    document.querySelectorAll('main section').forEach(function (sec) { obs.observe(sec); });
+  })();
+</script>

@@ -1,0 +1,150 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Manrope', system-ui, sans-serif; }
+    a { color: #0E7C86; text-decoration: none; } a:hover { color: #0A5A61; }
+    .screen { position: relative; width: 390px; height: 844px; overflow: hidden; background: #E9E3D3; color: #20302E; }
+    .map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    .hdr { position: absolute; top: 0; left: 0; right: 0; padding: 54px 18px 14px; background: linear-gradient(#FBFAF6, #FBFAF6 66%, rgba(251,250,246,0)); }
+    .hdr-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .title { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 19px; letter-spacing: -0.01em; margin: 0; }
+    .seg { display: flex; background: #EDE8DC; border: 1px solid #E1DBCB; border-radius: 999px; padding: 3px; gap: 2px; }
+    .seg span { font-size: 11px; font-weight: 600; padding: 5px 9px; border-radius: 999px; color: #7C7663; }
+    .seg span.on { background: #fff; color: #0E7C86; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+    .fab { position: absolute; top: 106px; right: 14px; width: 44px; height: 44px; border-radius: 13px; background: #fff; border: 1px solid #EDE7D9; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px -6px rgba(20,40,44,0.28); color: #3B4442; }
+    .fab svg { width: 21px; height: 21px; }
+    .card { position: absolute; left: 14px; right: 14px; bottom: 102px; background: #fff; border-radius: 22px; padding: 17px 17px 15px; box-shadow: 0 16px 34px -10px rgba(20,40,44,0.30); }
+    .eyebrow { font-family: 'Archivo', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.16em; color: #0A5A61; margin: 0 0 8px; }
+    .ctitle { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 19px; letter-spacing: -0.015em; margin: 0 0 6px; }
+    .ctext { font-size: 13px; line-height: 1.5; color: #5B6360; margin: 0; }
+    .btn { display: flex; align-items: center; justify-content: center; gap: 9px; height: 50px; border-radius: 14px; background: #E0562F; color: #fff; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 15px; margin-top: 15px; }
+    .btn svg { width: 17px; height: 17px; }
+    .nav { position: absolute; left: 0; right: 0; bottom: 0; height: 88px; background: #fff; border-top: 1px solid #ECE7DA; display: flex; padding: 11px 6px 0; }
+    .nav a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; color: #9AA0A0; }
+    .nav a.on { color: #0E7C86; }
+    .nav svg { width: 23px; height: 23px; }
+  </style>
+</helmet>
+
+<div class="screen">
+  <svg class="map" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#9FCFCD"/><stop offset="1" stop-color="#BFDDDB"/>
+      </linearGradient>
+      <path id="rdAbol" d="M-40,224 L440,224"/>
+      <path id="rdDomLuis" d="M-40,328 L440,328"/>
+      <path id="rdDiag" d="M-30,650 L470,110"/>
+      <path id="rdAracati" d="M130,-40 L130,700"/>
+    </defs>
+
+    <rect x="0" y="0" width="390" height="844" fill="#E9E3D3"/>
+
+    <g transform="rotate(-19 195 470)">
+      <rect x="-260" y="-220" width="900" height="1300" fill="#E9E3D3"/>
+
+      <g fill="#E2DBC7">
+        <rect x="-8" y="120" width="46" height="52"/><rect x="84" y="172" width="46" height="52"/>
+        <rect x="176" y="120" width="46" height="52"/><rect x="268" y="224" width="46" height="52"/>
+        <rect x="38" y="380" width="46" height="52"/><rect x="222" y="432" width="46" height="52"/>
+        <rect x="314" y="328" width="46" height="52"/><rect x="130" y="536" width="46" height="52"/>
+      </g>
+      <g fill="#D9D0BB">
+        <rect x="46" y="128" width="12" height="16"/><rect x="62" y="128" width="14" height="10"/><rect x="46" y="150" width="18" height="14"/>
+        <rect x="92" y="180" width="14" height="18"/><rect x="110" y="182" width="12" height="12"/>
+        <rect x="184" y="128" width="16" height="14"/><rect x="204" y="126" width="10" height="18"/><rect x="186" y="150" width="12" height="12"/>
+        <rect x="230" y="180" width="14" height="14"/><rect x="248" y="182" width="12" height="16"/>
+        <rect x="322" y="234" width="14" height="16"/><rect x="340" y="236" width="12" height="12"/>
+      </g>
+
+      <g stroke="#D3CAB4" fill="none">
+        <path d="M-8,-40 L-8,760" stroke-width="9"/><path d="M38,-40 L38,760" stroke-width="9"/>
+        <path d="M84,-40 L84,760" stroke-width="9"/><path d="M176,-40 L176,760" stroke-width="9"/>
+        <path d="M222,-40 L222,760" stroke-width="9"/><path d="M268,-40 L268,760" stroke-width="9"/>
+        <path d="M314,-40 L314,760" stroke-width="9"/><path d="M360,-40 L360,760" stroke-width="9"/>
+        <path d="M-40,120 L440,120" stroke-width="9"/><path d="M-40,172 L440,172" stroke-width="9"/>
+        <path d="M-40,276 L440,276" stroke-width="9"/><path d="M-40,380 L440,380" stroke-width="9"/>
+        <path d="M-40,432 L440,432" stroke-width="9"/><path d="M-40,484 L440,484" stroke-width="9"/>
+        <path d="M-40,536 L440,536" stroke-width="9"/>
+        <path d="M130,-40 L130,760" stroke-width="16"/>
+        <path d="M-40,224 L440,224" stroke-width="16"/>
+        <path d="M-40,328 L440,328" stroke-width="16"/>
+        <path d="M-30,650 L470,110" stroke-width="17"/>
+      </g>
+      <g stroke="#FBF8F0" fill="none">
+        <path d="M-8,-40 L-8,760" stroke-width="5"/><path d="M38,-40 L38,760" stroke-width="5"/>
+        <path d="M84,-40 L84,760" stroke-width="5"/><path d="M176,-40 L176,760" stroke-width="5"/>
+        <path d="M222,-40 L222,760" stroke-width="5"/><path d="M268,-40 L268,760" stroke-width="5"/>
+        <path d="M314,-40 L314,760" stroke-width="5"/><path d="M360,-40 L360,760" stroke-width="5"/>
+        <path d="M-40,120 L440,120" stroke-width="5"/><path d="M-40,172 L440,172" stroke-width="5"/>
+        <path d="M-40,276 L440,276" stroke-width="5"/><path d="M-40,380 L440,380" stroke-width="5"/>
+        <path d="M-40,432 L440,432" stroke-width="5"/><path d="M-40,484 L440,484" stroke-width="5"/>
+        <path d="M-40,536 L440,536" stroke-width="5"/>
+        <path d="M130,-40 L130,760" stroke-width="10"/>
+        <path d="M-40,224 L440,224" stroke-width="10"/>
+        <path d="M-40,328 L440,328" stroke-width="10"/>
+        <path d="M-30,650 L470,110" stroke-width="11"/>
+      </g>
+
+      <circle cx="176" cy="384" r="14" fill="#0E7C86" fill-opacity="0.14"/>
+      <circle cx="176" cy="384" r="6" fill="#0E7C86" stroke="#fff" stroke-width="2.5"/>
+
+      <g fill="#A79D86" font-family="Archivo, system-ui, sans-serif" font-size="7.5" letter-spacing="1.6">
+        <text><textPath href="#rdAbol" startOffset="20%">AV. DA ABOLIÇÃO</textPath></text>
+        <text><textPath href="#rdDomLuis" startOffset="17%">AV. DESEMBARGADOR MOREIRA</textPath></text>
+        <text><textPath href="#rdDiag" startOffset="30%">AV. SANTOS DUMONT</textPath></text>
+        <text><textPath href="#rdAracati" startOffset="9%">R. BARÃO DE ARACATI</textPath></text>
+      </g>
+
+      <path d="M320,520 C356,492 410,512 412,566 C414,628 372,690 322,680 C292,674 300,614 302,576 C303,548 305,536 320,520 Z" fill="#C9D7BB"/>
+    </g>
+
+    <path d="M0,0 H390 V56 C320,64 288,112 190,112 C122,112 60,128 0,150 Z" fill="url(#sea)"/>
+    <path d="M0,150 C60,128 122,112 190,112 C288,112 320,64 390,56 L390,78 C322,86 296,132 194,132 C126,132 64,148 2,168 Z" fill="#E8D7B4"/>
+    <path d="M2,164 C64,146 126,130 194,130 C296,130 324,82 390,74" fill="none" stroke="#F0E7D2" stroke-width="6" stroke-linecap="round"/>
+
+    <text x="16" y="200" font-family="Archivo, system-ui, sans-serif" font-size="10" fill="#9A917B" letter-spacing="2">PRAIA DE IRACEMA</text>
+    <text x="250" y="212" font-family="Archivo, system-ui, sans-serif" font-size="10" fill="#9A917B" letter-spacing="2">MEIRELES</text>
+    <text x="238" y="432" font-family="Archivo, system-ui, sans-serif" font-size="10" fill="#9A917B" letter-spacing="2">ALDEOTA</text>
+  </svg>
+
+  <div class="hdr">
+    <div class="hdr-row">
+      <p class="title">Meu mapa</p>
+      <div class="seg"><span class="on">Eu</span><span>Amigos</span><span>Cidade</span></div>
+    </div>
+  </div>
+
+  <div class="fab">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5Z"/><path d="M3 13l9 5 9-5"/></svg>
+  </div>
+
+  <div class="card">
+    <p class="eyebrow">COMECE A CONQUISTAR</p>
+    <p class="ctitle">Seu mapa está em branco</p>
+    <p class="ctext">Corra formando um circuito e o quarteirão fica pintado na sua cor. A meta é dominar Fortaleza inteira.</p>
+    <div class="btn">
+      <svg viewBox="0 0 24 24"><path d="M6 4l13 8-13 8V4Z" fill="currentColor"/></svg>
+      Iniciar corrida
+    </div>
+  </div>
+
+  <div class="nav">
+    <a class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10Z"/><circle cx="12" cy="11" r="2.2"/></svg>Mapa</a>
+    <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v3a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M9 20h6M12 15v5"/></svg>Ranking</a>
+    <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3"/></svg>Missões</a>
+    <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="3.2"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/></svg>Perfil</a>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

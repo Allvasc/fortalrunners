@@ -1,0 +1,724 @@
+<title>FortalRunners — Políticas e Compliance</title>
+<meta name="description" content="Pacote de políticas e conformidade do app FortalRunners: privacidade (LGPD), termos de uso, política de eventos, pagamentos, comunidade, fair play e segurança.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100,400;100,500;100,600;100,700;120,600;120,700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --sand: #F5F2EC;
+    --surface: #FCFAF5;
+    --surface-2: #FFFFFF;
+    --ink: #16262A;
+    --ink-soft: #4A5A5D;
+    --line: #E2DCCF;
+    --line-strong: #CDC5B2;
+    --teal: #0E7C86;
+    --teal-deep: #0A5A61;
+    --coral: #E05633;
+    --sun: #C98F2E;
+    --violet: #6E5AA6;
+    --good: #2E8F63;
+    --warn: #B9822B;
+    --crit: #C7402B;
+
+    --f-display: "Archivo", ui-sans-serif, system-ui, sans-serif;
+    --f-body: "Newsreader", Georgia, serif;
+    --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+    --maxw: 72ch;
+    --step--1: clamp(0.83rem, 0.8rem + 0.15vw, 0.9rem);
+    --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.06rem);
+    --step-1: clamp(1.16rem, 1.08rem + 0.4vw, 1.36rem);
+    --step-2: clamp(1.42rem, 1.28rem + 0.7vw, 1.9rem);
+    --step-3: clamp(1.9rem, 1.6rem + 1.5vw, 2.9rem);
+    --step-4: clamp(2.4rem, 1.9rem + 2.6vw, 4rem);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sand: #0E1618; --surface: #152124; --surface-2: #1B292C;
+      --ink: #E9E4D7; --ink-soft: #A4AEAE; --line: #29363A; --line-strong: #3A4A4E;
+      --teal: #3CB4BE; --teal-deep: #2A8C95; --coral: #FF7C50; --sun: #E4BA5D; --violet: #A48CDE;
+      --good: #45B37F; --warn: #E0AC55; --crit: #E4634A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --sand: #0E1618; --surface: #152124; --surface-2: #1B292C;
+    --ink: #E9E4D7; --ink-soft: #A4AEAE; --line: #29363A; --line-strong: #3A4A4E;
+    --teal: #3CB4BE; --teal-deep: #2A8C95; --coral: #FF7C50; --sun: #E4BA5D; --violet: #A48CDE;
+    --good: #45B37F; --warn: #E0AC55; --crit: #E4634A;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0; background: var(--sand); color: var(--ink);
+    font-family: var(--f-body); font-size: var(--step-0); line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { display: grid; grid-template-columns: 1fr; max-width: 1180px; margin: 0 auto; padding: 0 clamp(1.1rem, 4vw, 3rem); }
+  @media (min-width: 1060px) { .wrap { grid-template-columns: 252px minmax(0,1fr); gap: clamp(2rem, 5vw, 4.5rem); } }
+
+  header.hero {
+    grid-column: 1 / -1;
+    padding: clamp(2.4rem, 6vw, 4.4rem) 0 clamp(1.6rem, 4vw, 2.6rem);
+    border-bottom: 1px solid var(--line);
+  }
+  .eyebrow { font-family: var(--f-mono); font-size: var(--step--1); letter-spacing: .18em; text-transform: uppercase; color: var(--teal-deep); margin: 0 0 1rem; }
+  :root[data-theme="dark"] .eyebrow, :root:not([data-theme="light"]) .eyebrow { color: var(--teal); }
+  h1 { font-family: var(--f-display); font-weight: 700; font-stretch: 120%; font-size: var(--step-4); line-height: .98; letter-spacing: -.02em; margin: 0 0 1rem; text-wrap: balance; }
+  .lede { font-size: var(--step-1); max-width: 60ch; color: var(--ink-soft); margin: 0 0 1.6rem; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: .5rem .6rem; font-family: var(--f-mono); font-size: var(--step--1); }
+  .chip { border: 1px solid var(--line-strong); border-radius: 999px; padding: .28rem .7rem; color: var(--ink-soft); background: var(--surface); }
+  .chip strong { color: var(--ink); font-weight: 600; }
+
+  nav.toc { grid-column: 1 / -1; padding: 1.6rem 0; }
+  @media (min-width: 1060px) {
+    nav.toc { grid-column: 1; position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto; padding: clamp(2rem,5vw,3.4rem) 0; border-right: 1px solid var(--line); }
+  }
+  .toc-title { font-family: var(--f-mono); font-size: var(--step--1); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 .9rem; }
+  .toc ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+  .toc li { counter-increment: toc; margin: .08rem 0; }
+  .toc a { display: grid; grid-template-columns: 1.7rem 1fr; gap: .4rem; padding: .3rem .3rem; text-decoration: none; color: var(--ink-soft); font-family: var(--f-display); font-size: .9rem; line-height: 1.25; border-radius: 5px; }
+  .toc a::before { content: counter(toc, decimal-leading-zero); font-family: var(--f-mono); font-size: .74rem; color: var(--teal); padding-top: .12rem; }
+  .toc a:hover { color: var(--ink); background: var(--surface); }
+  .toc a:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+
+  main { grid-column: 1 / -1; padding-bottom: 5rem; min-width: 0; }
+  @media (min-width: 1060px) { main { grid-column: 2; padding-top: clamp(2rem,5vw,3.4rem); } }
+
+  section { margin: 0 0 clamp(2.6rem, 6vw, 4rem); scroll-margin-top: 1.5rem; }
+  section > :is(h2,h3,h4,p,ul,ol,figure,table,.callout,.kv,.table-scroll) { max-width: var(--maxw); }
+
+  h2 { font-family: var(--f-display); font-weight: 700; font-stretch: 115%; font-size: var(--step-3); line-height: 1.05; letter-spacing: -.015em; margin: 0 0 .5rem; text-wrap: balance; }
+  .h2-num { display: block; font-family: var(--f-mono); font-size: var(--step--1); font-weight: 400; letter-spacing: .14em; color: var(--teal); margin-bottom: .5rem; }
+  h2 + .section-sub { color: var(--ink-soft); font-size: var(--step-1); margin: 0 0 1.4rem; }
+  h3 { font-family: var(--f-display); font-weight: 650; font-size: var(--step-2); line-height: 1.12; letter-spacing: -.01em; margin: 2.2rem 0 .5rem; }
+  h4 { font-family: var(--f-display); font-weight: 600; font-size: var(--step-1); margin: 1.6rem 0 .35rem; }
+  p { margin: 0 0 .9rem; }
+  a { color: var(--teal-deep); }
+  :root[data-theme="dark"] a, :root:not([data-theme="light"]) a { color: var(--teal); }
+  strong { font-weight: 650; }
+
+  ul, ol { margin: 0 0 1rem; padding-left: 1.3rem; }
+  li { margin: .3rem 0; }
+  li::marker { color: var(--teal); }
+  ul.tight li { margin: .12rem 0; }
+
+  /* numbered legal clauses */
+  ol.clauses { counter-reset: c1; list-style: none; padding-left: 0; }
+  ol.clauses > li { counter-increment: c1; position: relative; padding-left: 2.6rem; margin: .55rem 0; }
+  ol.clauses > li::before { content: counter(c1); position: absolute; left: 0; top: 0; font-family: var(--f-mono); font-size: .82rem; color: var(--teal-deep); font-weight: 500; }
+  :root[data-theme="dark"] ol.clauses > li::before, :root:not([data-theme="light"]) ol.clauses > li::before { color: var(--teal); }
+  ol.clauses ol { counter-reset: c2; list-style: none; padding-left: 0; margin: .4rem 0 .2rem; }
+  ol.clauses ol > li { counter-increment: c2; position: relative; padding-left: 2.6rem; margin: .35rem 0; }
+  ol.clauses ol > li::before { content: counter(c1) "." counter(c2); position: absolute; left: 0; top: 0; font-family: var(--f-mono); font-size: .78rem; color: var(--ink-soft); }
+
+  code { font-family: var(--f-mono); font-size: .85em; background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: .06em .36em; }
+  mark { background: color-mix(in srgb, var(--sun) 30%, transparent); color: inherit; padding: 0 .12em; border-radius: 2px; }
+
+  .callout { border-left: 3px solid var(--coral); background: color-mix(in srgb, var(--coral) 7%, var(--surface)); padding: 1rem 1.15rem; margin: 1.3rem 0; border-radius: 0 6px 6px 0; }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout .callout-label { font-family: var(--f-mono); font-size: var(--step--1); letter-spacing: .1em; text-transform: uppercase; color: var(--coral); display: block; margin-bottom: .35rem; }
+  .callout.teal { border-left-color: var(--teal); background: color-mix(in srgb, var(--teal) 8%, var(--surface)); }
+  .callout.teal .callout-label { color: var(--teal-deep); }
+  :root[data-theme="dark"] .callout.teal .callout-label, :root:not([data-theme="light"]) .callout.teal .callout-label { color: var(--teal); }
+  .callout.warn { border-left-color: var(--warn); background: color-mix(in srgb, var(--warn) 10%, var(--surface)); }
+  .callout.warn .callout-label { color: var(--warn); }
+
+  .table-scroll { overflow-x: auto; margin: 1.3rem 0; border: 1px solid var(--line); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+  th, td { text-align: left; padding: .6rem .85rem; vertical-align: top; border-bottom: 1px solid var(--line); }
+  thead th { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); background: var(--surface-2); }
+  tbody tr:last-child td { border-bottom: none; }
+  td code { background: transparent; border: none; padding: 0; }
+
+  .kv { margin: 1.2rem 0; border-top: 1px solid var(--line); }
+  .kv > div { display: grid; grid-template-columns: 1fr; gap: .1rem 1rem; padding: .7rem 0; border-bottom: 1px solid var(--line); }
+  @media (min-width: 560px) { .kv > div { grid-template-columns: 190px 1fr; } }
+  .kv dt { font-family: var(--f-mono); font-size: var(--step--1); color: var(--teal-deep); }
+  :root[data-theme="dark"] .kv dt, :root:not([data-theme="light"]) .kv dt { color: var(--teal); }
+  .kv dd { margin: 0; font-size: var(--step--1); color: var(--ink-soft); }
+
+  footer.pg { grid-column: 1 / -1; border-top: 1px solid var(--line); padding: 2rem 0 3rem; font-family: var(--f-mono); font-size: var(--step--1); color: var(--ink-soft); }
+  ::selection { background: color-mix(in srgb, var(--teal) 30%, transparent); }
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <p class="eyebrow">Pacote de compliance · Rascunho v0.1 · 05 set 2026</p>
+    <h1>Políticas &amp; Compliance</h1>
+    <p class="lede">Conjunto de políticas do FortalRunners: privacidade sob a LGPD, termos de uso, e as regras que governam eventos, pagamentos, comunidade, fair play e segurança.</p>
+    <div class="meta-row">
+      <span class="chip"><strong>Lei base</strong> LGPD 13.709/2018</span>
+      <span class="chip"><strong>Consumo</strong> CDC 8.078/1990</span>
+      <span class="chip"><strong>Internet</strong> Marco Civil 12.965/2014</span>
+      <span class="chip"><strong>Foro</strong> Fortaleza / CE</span>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="Índice">
+    <p class="toc-title">Documentos</p>
+    <ol>
+      <li><a href="#nota">Nota de uso e status</a></li>
+      <li><a href="#privacidade">Política de Privacidade (LGPD)</a></li>
+      <li><a href="#cookies">Política de Cookies</a></li>
+      <li><a href="#termos">Termos de Uso</a></li>
+      <li><a href="#eventos">Política de Eventos</a></li>
+      <li><a href="#organizadores">Termos para Organizadores</a></li>
+      <li><a href="#pagamentos">Pagamentos, Reembolso e Estornos</a></li>
+      <li><a href="#comunidade">Diretrizes da Comunidade</a></li>
+      <li><a href="#fairplay">Fair Play e Antifraude</a></li>
+      <li><a href="#moderacao">Moderação e Notificações</a></li>
+      <li><a href="#seguranca">Segurança e Divulgação de Vulnerabilidades</a></li>
+      <li><a href="#retencao">Retenção e Exclusão de Dados</a></li>
+      <li><a href="#subprocessadores">Subprocessadores</a></li>
+      <li><a href="#acessibilidade">Acessibilidade</a></li>
+      <li><a href="#menores">Crianças e Adolescentes</a></li>
+      <li><a href="#ropa">Registro de Tratamento (ROPA)</a></li>
+      <li><a href="#contato">Contato e Encarregado (DPO)</a></li>
+      <li><a href="#versoes">Histórico de versões</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <section id="nota">
+      <h2><span class="h2-num">01</span>Nota de uso e status</h2>
+      <div class="callout warn">
+        <span class="callout-label">Rascunho — não é aconselhamento jurídico</span>
+        <p>Estes textos são minutas de trabalho para orientar o desenvolvimento do produto. <strong>Antes de publicar ou aplicar, precisam de revisão por advogado(a) inscrito(a) na OAB</strong> com atuação em proteção de dados e direito do consumidor, à luz da versão final do produto e do modelo de negócio. Campos entre colchetes <code>[ ]</code> devem ser preenchidos com os dados reais da empresa.</p>
+      </div>
+      <div class="kv">
+        <div><dt>Controlador</dt><dd>[RAZÃO SOCIAL LTDA], CNPJ [00.000.000/0001-00], sede em [endereço], Fortaleza/CE ("FortalRunners", "nós").</dd></div>
+        <div><dt>Encarregado (DPO)</dt><dd>[nome / e-mail dpo@fortalrunners.com.br]</dd></div>
+        <div><dt>Aplicativos</dt><dd>App mobile (iOS/Android), portal web do corredor, portal de organizadores.</dd></div>
+        <div><dt>Vigência</dt><dd>A partir da data de publicação de cada documento; versões anteriores no item 18.</dd></div>
+        <div><dt>Idioma</dt><dd>Português (Brasil). Traduções são de cortesia; a versão em português prevalece.</dd></div>
+        <div><dt>Como aceitar</dt><dd>Ao criar conta e ao continuar usando o serviço após aviso de alteração relevante.</dd></div>
+      </div>
+      <p><strong>Hierarquia dos documentos:</strong> em caso de conflito, prevalece, nesta ordem — normas legais cogentes; contrato específico assinado com organizador ou parceiro; esta Política de Eventos e os Termos para Organizadores (para o que for de evento); os Termos de Uso; as demais políticas.</p>
+    </section>
+
+    <section id="privacidade">
+      <h2><span class="h2-num">02</span>Política de Privacidade (LGPD)</h2>
+      <p class="section-sub">Como coletamos, usamos, compartilhamos e protegemos seus dados pessoais — com atenção especial à localização.</p>
+
+      <h3>2.1 A quem se aplica</h3>
+      <p>A todas as pessoas que usam o FortalRunners como corredores, e — nas partes indicadas — a organizadores de eventos e a visitantes do site. O FortalRunners é o <strong>controlador</strong> desses dados, salvo onde este documento disser que o organizador é controlador dos dados que recebe.</p>
+
+      <h3>2.2 Dados que coletamos</h3>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Categoria</th><th>Exemplos</th><th>Origem</th></tr></thead>
+          <tbody>
+            <tr><td>Cadastro e identidade</td><td>Nome, e-mail, senha (hash), data de nascimento, foto, apelido, cor de corredor, ID FortalRunners</td><td>Você</td></tr>
+            <tr><td>Login social</td><td>Identificador e e-mail do provedor (Google, Apple)</td><td>Provedor, com seu consentimento</td></tr>
+            <tr><td><mark>Localização e percurso</mark></td><td>Coordenadas GPS de alta frequência durante a corrida, traçado, territórios, check-ins em marcos e eventos</td><td>Sensores do dispositivo, durante o uso</td></tr>
+            <tr><td>Sensores e desempenho</td><td>Acelerômetro, giroscópio, barômetro, passos, cadência, frequência cardíaca (se conectada), potência, elevação</td><td>Dispositivo / relógio conectado</td></tr>
+            <tr><td>Equipamento</td><td>Tênis cadastrados, quilometragem, dispositivos pareados</td><td>Você</td></tr>
+            <tr><td>Conteúdo</td><td>Fotos de missão, avaliações de rota, comentários, mensagens</td><td>Você</td></tr>
+            <tr><td>Integrações</td><td>Atividades e métricas importadas de Strava, Garmin, Fitbit, Polar, Apple Health, Google Health Connect</td><td>Serviço de terceiro, com seu consentimento</td></tr>
+            <tr><td>Transações</td><td>Pedidos, valor, método, bandeira e 4 últimos dígitos, IDs de transação e repasse, status; <strong>nunca o número completo do cartão</strong></td><td>Asaas (processador) e você</td></tr>
+            <tr><td>Eventos</td><td>Inscrições, categoria, tamanho de camiseta, contato de emergência, tempos, passagens por checkpoint</td><td>Você e organizador</td></tr>
+            <tr><td>Uso e dispositivo</td><td>Modelo, sistema, versão do app, idioma, identificadores de push, logs técnicos, endereço IP, eventos de uso</td><td>Automática</td></tr>
+            <tr><td>Suporte</td><td>Mensagens, tickets, gravações de contato</td><td>Você</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Não coletamos intencionalmente dados sensíveis além dos de saúde e esforço físico que você opta por conectar. Frequência cardíaca e métricas fisiológicas são <strong>dado pessoal sensível</strong> e só são tratadas mediante seu consentimento específico e destacado.</p>
+
+      <h3>2.3 Bases legais e finalidades</h3>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Finalidade</th><th>Base legal (LGPD art. 7 / 11)</th></tr></thead>
+          <tbody>
+            <tr><td>Criar e manter sua conta, autenticar, prevenir fraude de acesso</td><td>Execução de contrato; legítimo interesse (segurança)</td></tr>
+            <tr><td>Gravar corridas, calcular territórios, ranking, selos e troféus</td><td>Execução de contrato</td></tr>
+            <tr><td>Tratar frequência cardíaca e métricas fisiológicas conectadas</td><td>Consentimento específico (dado sensível)</td></tr>
+            <tr><td>Exibir seu mapa e conquistas para amigos conforme sua configuração</td><td>Execução de contrato; seu consentimento nas opções de visibilidade</td></tr>
+            <tr><td>Processar inscrições, pagamentos e repasses</td><td>Execução de contrato; obrigação legal (fiscal)</td></tr>
+            <tr><td>Compartilhar dados de inscrição com o organizador do evento</td><td>Execução de contrato; legítimo interesse do organizador na realização da prova</td></tr>
+            <tr><td>Antifraude esportivo (detecção de spoofing, transporte, contas múltiplas)</td><td>Legítimo interesse (integridade da competição); execução de contrato</td></tr>
+            <tr><td>Comunicações transacionais (confirmações, avisos de segurança)</td><td>Execução de contrato; obrigação legal</td></tr>
+            <tr><td>Marketing e novidades por e-mail/push</td><td>Consentimento (revogável a qualquer momento)</td></tr>
+            <tr><td>Métricas de produto e melhoria</td><td>Legítimo interesse, com dados minimizados/pseudonimizados</td></tr>
+            <tr><td>Cumprir ordem judicial, autoridade ou defesa em processo</td><td>Obrigação legal; exercício regular de direitos</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Quando a base for <strong>legítimo interesse</strong>, você pode solicitar informações sobre o teste de proporcionalidade e opor-se ao tratamento.</p>
+
+      <h3>2.4 Localização — regras específicas</h3>
+      <ol class="clauses">
+        <li>A coleta de GPS só ocorre durante uma corrida iniciada por você (ou por importação que você autorizar). Em segundo plano, apenas enquanto a corrida estiver ativa.</li>
+        <li><strong>Zona de ocultação:</strong> você define um raio (padrão 200 m) em torno de endereços sensíveis; o traçado dentro dele não é gravado nem exibido a ninguém.</li>
+        <li>A amigos, mostramos território agregado (polígono/célula), não o traçado ponto a ponto nem horários exatos, salvo se você permitir.</li>
+        <li>Você controla, por corrida, se ela é pública, restrita a amigos ou privada, e pode ativar modo fantasma.</li>
+        <li>Não vendemos dados de localização. Não usamos sua localização para publicidade de terceiros.</li>
+      </ol>
+
+      <h3>2.5 Compartilhamento</h3>
+      <p>Compartilhamos dados pessoais com:</p>
+      <ul>
+        <li><strong>Operadores</strong> que tratam dados sob nossas instruções: hospedagem em nuvem, banco de dados, processamento de pagamento (Asaas), envio de e-mail e push, monitoramento de erros, provedor de mapas. Lista no item 13.</li>
+        <li><strong>Organizadores de evento</strong> em que você se inscreve — apenas os dados necessários à prova (nome, idade/categoria, contato, contato de emergência, tempos). O organizador é controlador desses dados a partir do recebimento.</li>
+        <li><strong>Serviços que você conecta</strong> (Strava, Garmin etc.) — na direção e escopo que você autorizar.</li>
+        <li><strong>Outros usuários</strong>, conforme suas configurações de visibilidade (perfil, mapa, ranking, feed).</li>
+        <li><strong>Autoridades</strong>, quando exigido por lei ou ordem judicial, ou para proteger direitos, segurança e integridade.</li>
+        <li><strong>Sucessores</strong>, em caso de reorganização societária, com aviso e mantidas as finalidades.</li>
+      </ul>
+
+      <h3>2.6 Transferência internacional</h3>
+      <p>Alguns operadores processam dados fora do Brasil (ex.: EUA, União Europeia). Nesses casos, adotamos salvaguardas — cláusulas contratuais padrão, verificação de nível de proteção adequado e minimização — conforme os arts. 33 a 36 da LGPD.</p>
+
+      <h3>2.7 Seus direitos</h3>
+      <p>Você pode, a qualquer momento: confirmar a existência de tratamento; acessar seus dados; corrigir dados incompletos ou desatualizados; solicitar anonimização, bloqueio ou eliminação de dados desnecessários ou tratados em desconformidade; solicitar portabilidade; obter informação sobre compartilhamentos; revogar consentimento; opor-se a tratamento baseado em legítimo interesse; e solicitar revisão de decisões automatizadas que o afetem (ex.: sinalização antifraude).</p>
+      <p>Para exercer: <strong>Ajustes → Privacidade → Meus dados</strong> (exportação e exclusão self-service) ou <code>privacidade@fortalrunners.com.br</code>. Respondemos em até 15 dias. Podemos pedir verificação de identidade.</p>
+
+      <h3>2.8 Decisões automatizadas</h3>
+      <p>Usamos regras e modelos para sinalizar corridas ou contas suspeitas de fraude. Uma sinalização pode suspender pontuação de território até revisão. <strong>Você pode contestar</strong> e pedir revisão humana pelo suporte.</p>
+
+      <h3>2.9 Segurança e retenção</h3>
+      <p>Medidas técnicas e organizacionais descritas no item 11. Prazos de retenção no item 12. Após o prazo, os dados são eliminados ou anonimizados de forma irreversível.</p>
+
+      <h3>2.10 Menores</h3>
+      <p>Ver item 15. Idade mínima 16 anos; entre 16 e 18, recomenda-se ciência dos responsáveis; abaixo de 16, apenas com consentimento específico de um dos pais ou responsável.</p>
+
+      <h3>2.11 Alterações</h3>
+      <p>Podemos atualizar esta Política. Mudanças relevantes são avisadas no app e por e-mail com pelo menos 15 dias de antecedência, quando possível.</p>
+    </section>
+
+    <section id="cookies">
+      <h2><span class="h2-num">03</span>Política de Cookies e Tecnologias Similares</h2>
+      <p>No site e no portal web usamos cookies e armazenamento local. No app usamos identificadores de dispositivo e SDKs equivalentes.</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Tipo</th><th>Para quê</th><th>Precisa de consentimento?</th></tr></thead>
+          <tbody>
+            <tr><td>Essenciais</td><td>Sessão, autenticação, segurança, preferências básicas (tema, idioma)</td><td>Não</td></tr>
+            <tr><td>Desempenho / analytics</td><td>Entender uso e corrigir problemas, de forma agregada</td><td>Sim</td></tr>
+            <tr><td>Funcionais</td><td>Lembrar filtros, mapa, estado da interface</td><td>Sim (quando não essenciais)</td></tr>
+            <tr><td>Marketing</td><td>Medir campanhas próprias</td><td>Sim</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Um banner de consentimento permite aceitar, recusar ou escolher por categoria. Você pode mudar a escolha depois em <strong>Ajustes → Privacidade → Cookies</strong> ou nas configurações do navegador. Não usamos cookies de publicidade de terceiros.</p>
+    </section>
+
+    <section id="termos">
+      <h2><span class="h2-num">04</span>Termos de Uso</h2>
+      <p class="section-sub">O contrato entre você e o FortalRunners.</p>
+      <ol class="clauses">
+        <li><strong>Aceitação e elegibilidade.</strong>
+          <ol>
+            <li>Ao criar conta ou usar o serviço, você concorda com estes Termos e com as políticas referidas nele.</li>
+            <li>Você declara ter no mínimo 16 anos e capacidade para contratar, ou estar assistido/representado conforme a lei.</li>
+            <li>Você é responsável por manter seus dados de cadastro corretos e atualizados.</li>
+          </ol>
+        </li>
+        <li><strong>Conta.</strong>
+          <ol>
+            <li>A conta é pessoal e intransferível. Guarde suas credenciais; ative a verificação em duas etapas.</li>
+            <li>Você responde pelas atividades na sua conta, salvo uso indevido comprovadamente alheio à sua culpa.</li>
+            <li>Um ID FortalRunners e um QR pessoal identificam você em eventos e não podem ser cedidos.</li>
+          </ol>
+        </li>
+        <li><strong>Licença de uso.</strong> Concedemos a você uma licença pessoal, limitada, revogável e não exclusiva para usar o app conforme estes Termos. Você não pode copiar, modificar, fazer engenharia reversa, revender ou automatizar o acesso.</li>
+        <li><strong>Condutas proibidas.</strong> É vedado: falsear dados de corrida ou localização; usar transporte, bicicleta, patins ou terceiros para gerar percurso; manipular sensores ou usar apps de mock location; criar contas múltiplas para vantagem; compartilhar conta ou QR; assediar, ameaçar, discriminar ou difamar; publicar conteúdo ilegal, sexual, violento ou que exponha terceiros; sobrecarregar a infraestrutura; violar direitos de terceiros; contornar medidas de segurança.</li>
+        <li><strong>Conteúdo do usuário.</strong>
+          <ol>
+            <li>Você continua titular do conteúdo que envia (fotos, rotas, avaliações, comentários).</li>
+            <li>Você nos concede licença mundial, não exclusiva, gratuita e pelo prazo necessário à operação do serviço para hospedar, exibir, adaptar formato e distribuir esse conteúdo dentro do produto e em divulgação do próprio serviço, respeitadas suas configurações de visibilidade.</li>
+            <li>Você declara ter os direitos necessários e não violar imagem, privacidade ou propriedade intelectual de terceiros.</li>
+            <li>Podemos remover conteúdo que viole estes Termos ou a lei (ver item 10).</li>
+          </ol>
+        </li>
+        <li><strong>Gamificação.</strong>
+          <ol>
+            <li>Territórios, células, selos, troféus, XP, níveis e posições em ranking são elementos lúdicos, <strong>sem valor monetário</strong>, não sacáveis e não transferíveis.</li>
+            <li>Regras de conquista, decaimento, temporadas e premiação podem ser ajustadas para equilíbrio do jogo e combate a fraude, com aviso quando a mudança for relevante.</li>
+            <li>Podemos anular conquistas obtidas com violação destes Termos.</li>
+          </ol>
+        </li>
+        <li><strong>Fair play.</strong> A Política de Fair Play e Antifraude (item 9) integra estes Termos. Violações levam a medidas progressivas até banimento.</li>
+        <li><strong>Propriedade intelectual.</strong> O software, marcas, layout, base de dados de marcos e rotas oficiais e demais elementos são do FortalRunners ou de seus licenciadores. Dados de mapa são de seus provedores e do OpenStreetMap, sob as respectivas licenças.</li>
+        <li><strong>Serviços de terceiros.</strong> Integrações (Strava, Garmin, Asaas etc.) têm termos próprios; não respondemos por eles. Mapas podem conter imprecisões.</li>
+        <li><strong>Riscos da atividade física — leia com atenção.</strong>
+          <ol>
+            <li>Correr envolve riscos à saúde e à integridade física. <strong>Consulte um médico antes de iniciar</strong> um programa de exercícios.</li>
+            <li>Você é o único responsável por sua segurança durante as corridas: respeite as leis de trânsito, a sinalização, as condições da via, o clima e a segurança pública. O app <strong>não</strong> avalia se um trajeto é seguro.</li>
+            <li>As mecânicas de conquista e os desafios <strong>não</strong> devem levar você a correr riscos, invadir propriedade, desrespeitar o trânsito ou frequentar locais perigosos.</li>
+            <li>Métricas (distância, pace, FC, calorias, elevação) são estimativas e não servem para diagnóstico.</li>
+          </ol>
+        </li>
+        <li><strong>Isenções.</strong> O serviço é fornecido "no estado em que se encontra". Não garantimos disponibilidade ininterrupta, ausência de erros, nem que os resultados atenderão a expectativas específicas. Isto não afasta direitos do consumidor previstos no CDC.</li>
+        <li><strong>Limitação de responsabilidade.</strong> Na máxima extensão permitida pela lei, não respondemos por danos indiretos, lucros cessantes, perda de dados ou danos decorrentes de mau uso, de conteúdo de terceiros ou de fatos alheios ao nosso controle. Nada nesta cláusula limita responsabilidade por dolo, fraude, danos à vida ou à integridade física, ou o que a lei declarar não excluível.</li>
+        <li><strong>Indenização.</strong> Você nos indeniza por perdas decorrentes de violação sua destes Termos ou de direitos de terceiros.</li>
+        <li><strong>Suspensão e encerramento.</strong>
+          <ol>
+            <li>Você pode encerrar a conta a qualquer momento nos Ajustes.</li>
+            <li>Podemos suspender ou encerrar contas que violem estes Termos ou a lei, ou que representem risco à segurança, com aviso quando possível.</li>
+            <li>Encerrada a conta, aplica-se a política de retenção (item 12). Pagamentos devidos e inscrições confirmadas não são automaticamente reembolsados — ver itens 5 e 7.</li>
+          </ol>
+        </li>
+        <li><strong>Alterações.</strong> Podemos alterar estes Termos. Mudanças relevantes são avisadas com 15 dias de antecedência; o uso após a vigência implica aceite. Se discordar, encerre a conta.</li>
+        <li><strong>Lei e foro.</strong> Aplica-se a lei brasileira. Fica eleito o foro da Comarca de Fortaleza/CE, sem prejuízo de o consumidor optar pelo foro de seu domicílio. Consumidores podem usar o <a href="https://www.consumidor.gov.br">consumidor.gov.br</a>.</li>
+      </ol>
+    </section>
+
+    <section id="eventos">
+      <h2><span class="h2-num">05</span>Política de Eventos</h2>
+      <p class="section-sub">Regras de inscrição, reembolso, conduta e responsabilidade em corridas, desafios e campanhas.</p>
+
+      <h3>5.1 Papéis</h3>
+      <ol class="clauses">
+        <li>O <strong>organizador</strong> é quem cria e realiza o evento (assessoria, empresa, marca, ONG ou o próprio FortalRunners em eventos próprios).</li>
+        <li>Nos eventos de terceiros, o FortalRunners atua como <strong>plataforma e intermediadora de pagamento</strong>, não como organizadora. A relação sobre a prova em si (percurso, estrutura, kit, premiação, segurança) é entre você e o organizador.</li>
+        <li>Cada evento pode ter um <strong>regulamento próprio</strong>. Em conflito com esta Política, prevalece esta Política nos pontos de proteção do consumidor e de dados; nos demais, o regulamento do evento, se mais específico.</li>
+      </ol>
+
+      <h3>5.2 Inscrição</h3>
+      <ol class="clauses">
+        <li>A inscrição só se confirma após a <strong>confirmação do pagamento</strong>. Em PIX, em minutos; em boleto, em 1 a 2 dias úteis; em cartão, após autorização.</li>
+        <li>Preços podem variar por <strong>lote</strong> (data) e por categoria. O valor exibido no checkout inclui a discriminação da taxa da plataforma.</li>
+        <li>Vagas são limitadas por lote e por evento; a inscrição pode encerrar antes do prazo por esgotamento.</li>
+        <li>Você deve fornecer dados verdadeiros, inclusive <strong>contato de emergência</strong> quando exigido. Dados falsos podem anular a inscrição sem reembolso.</li>
+        <li><strong>Transferência de inscrição</strong> para outra pessoa e <strong>troca de categoria/percurso</strong> só são permitidas se o regulamento do evento autorizar, no prazo e na forma nele previstos.</li>
+        <li>O número de peito e o QR são <strong>pessoais e intransferíveis</strong>. Correr com identificação de outra pessoa leva à desclassificação e pode configurar as sanções do item 9.</li>
+      </ol>
+
+      <h3>5.3 Direito de arrependimento e reembolso</h3>
+      <div class="callout teal">
+        <span class="callout-label">Direito de arrependimento — art. 49 do CDC</span>
+        <p>Compras feitas no app são contratação a distância. Você pode <strong>desistir em até 7 dias corridos</strong> a contar da confirmação da compra e receber a devolução integral dos valores pagos, monetariamente atualizados — <em>salvo</em> se o evento ocorrer dentro desse prazo (caso em que o direito se exerce até a véspera) ou se você já tiver retirado o kit ou usufruído de benefício do evento.</p>
+      </div>
+      <ol class="clauses">
+        <li><strong>Cancelamento pelo participante</strong> após o prazo de arrependimento segue a política do evento, que não pode ser menos favorável que a tabela padrão abaixo:
+          <ol>
+            <li>até 30 dias antes: reembolso de 100% do valor da inscrição (a taxa da plataforma pode ser retida se assim previsto e informado no checkout);</li>
+            <li>de 29 a 7 dias antes: reembolso de 50%;</li>
+            <li>menos de 7 dias antes ou após a retirada do kit: sem reembolso, salvo liberalidade do organizador.</li>
+          </ol>
+        </li>
+        <li><strong>Cancelamento ou adiamento pelo organizador:</strong> você pode escolher entre reembolso integral ou crédito/transferência para a nova data. O reembolso integral inclui a taxa da plataforma.</li>
+        <li><strong>Força maior</strong> (evento climático extremo, determinação de autoridade, calamidade): o organizador deve oferecer nova data, crédito ou reembolso conforme o regulamento e a legislação aplicável; custos já incorridos e comprovados podem ser descontados quando a lei permitir.</li>
+        <li><strong>Prazos e forma:</strong> reembolsos são processados pelo mesmo método de pagamento sempre que possível (PIX em até [X] dias úteis; cartão como estorno na fatura, sujeito ao prazo da administradora; boleto mediante dados bancários). Ver item 7.</li>
+        <li>Reembolsos de doações e de campanhas sociais seguem regras próprias informadas na campanha.</li>
+      </ol>
+
+      <h3>5.4 Código de conduta em provas</h3>
+      <ul>
+        <li>Siga o percurso oficial e as orientações da organização e dos fiscais; não use atalhos, transporte ou auxílio externo não permitido.</li>
+        <li>Respeite os demais participantes, a equipe, o público e o meio ambiente; não descarte lixo fora dos pontos.</li>
+        <li>Não é permitido comportamento agressivo, discriminatório ou que coloque terceiros em risco.</li>
+        <li>Quando houver controle antidopagem, submeta-se às regras do evento e da entidade competente.</li>
+        <li>Brindes, kits e premiações seguem as regras do evento e a disponibilidade informada.</li>
+      </ul>
+
+      <h3>5.5 Cronometragem, resultados e leituras de QR</h3>
+      <ol class="clauses">
+        <li>Passagens por checkpoint e chegada são registradas por leitura de QR e/ou cronometragem do organizador. Toda leitura é gravada na sua conta e visível no seu histórico.</li>
+        <li>Contestação de tempo ou de resultado deve ser feita ao organizador no prazo do regulamento (em regra, até [72 h] após a divulgação).</li>
+        <li>Falha técnica pontual de leitura pode ser corrigida por prova alternativa (outros checkpoints, GPS da corrida, imagens).</li>
+      </ol>
+
+      <h3>5.6 Uso de imagem</h3>
+      <p>Ao participar de um evento presencial, você pode ser fotografado ou filmado em local público pela organização e por parceiros de mídia. O uso dessas imagens para divulgação do evento segue o regulamento do organizador e a legislação. Você pode solicitar a não utilização de imagem em que seja o foco principal, quando técnica e razoavelmente possível.</p>
+
+      <h3>5.7 Saúde, segurança e seguro</h3>
+      <ol class="clauses">
+        <li>Você declara estar em condições de saúde para a prova. O evento pode exigir <strong>atestado médico</strong>; a responsabilidade pela veracidade é sua.</li>
+        <li>Participação em prova é por sua conta e risco, observado o dever de segurança do organizador quanto à estrutura, sinalização, apoio e socorro.</li>
+        <li>Verifique no regulamento se há cobertura de <strong>seguro</strong> para participantes e qual sua abrangência.</li>
+      </ol>
+
+      <h3>5.8 Dados compartilhados com o organizador</h3>
+      <p>Ao se inscrever, autorizamos o organizador a receber os dados necessários à realização e à prestação de contas do evento: nome, data de nascimento/categoria, sexo (quando exigido para baterias/premiação), e-mail e telefone, contato de emergência, informações de saúde que você declarar, tamanho de camiseta, tempos e passagens. O organizador é <strong>controlador</strong> desses dados a partir do recebimento e deve tratá-los apenas para o evento, respeitando a LGPD e o item 6.</p>
+
+      <h3>5.9 Menores em eventos</h3>
+      <p>A inscrição de menor de 18 anos exige um responsável legal identificado, que aceita o regulamento e o termo de responsabilidade em nome do menor. Categorias infantis seguem as regras do organizador.</p>
+
+      <h3>5.10 Reclamações</h3>
+      <p>Reclamações sobre a prova devem ser dirigidas ao organizador. O FortalRunners intermedeia a comunicação, pode reter repasses em disputa (item 6) e atua nas questões de pagamento e de plataforma. Persistindo o impasse, aplicam-se os canais do item 17.</p>
+    </section>
+
+    <section id="organizadores">
+      <h2><span class="h2-num">06</span>Termos para Organizadores</h2>
+      <p class="section-sub">Condições para criar e vender eventos na plataforma (modelo marketplace com split de pagamento).</p>
+      <ol class="clauses">
+        <li><strong>Cadastro e verificação.</strong> O organizador fornece dados cadastrais e bancários e passa por verificação de identidade/KYC junto ao Asaas. Contas não verificadas não recebem repasse.</li>
+        <li><strong>Elegibilidade.</strong> Pessoa jurídica regular ou pessoa física maior e capaz, com autorização para promover o evento.</li>
+        <li><strong>Responsabilidades do organizador.</strong>
+          <ol>
+            <li>Realizar o evento nas condições anunciadas (data, percurso, distância, kit, premiação, estrutura, apoio, segurança e socorro).</li>
+            <li>Obter <strong>alvarás, licenças e autorizações</strong> (uso de via, órgão de trânsito, ambiental, sanitária), contratar seguro quando exigido e cumprir a legislação esportiva aplicável.</li>
+            <li>Publicar regulamento claro, com política de reembolso não menos favorável que a do item 5.3, canais de atendimento e prazo de resposta.</li>
+            <li>Atender participantes, processar cancelamentos e resultados, e resolver reclamações.</li>
+            <li>Emitir os documentos fiscais devidos da inscrição (ver 6.7).</li>
+          </ol>
+        </li>
+        <li><strong>Repasse (split).</strong>
+          <ol>
+            <li>O valor pago pelo participante é dividido na liquidação: o organizador recebe o líquido, deduzidas a taxa do Asaas e a <strong>taxa da plataforma</strong> FortalRunners informada no cadastro do evento.</li>
+            <li>Prazos de liquidação seguem as regras do Asaas para cada método (PIX, cartão, boleto).</li>
+            <li>Podemos <strong>reter valores</strong> proporcionalmente a disputas, pedidos de reembolso, chargebacks, indícios de fraude ou descumprimento destes Termos, até a resolução.</li>
+            <li>Chargebacks e reembolsos confirmados são debitados do organizador; saldo negativo é compensado em repasses futuros ou cobrado.</li>
+          </ol>
+        </li>
+        <li><strong>Proibições.</strong> Eventos ilegais, sem autorização, enganosos, discriminatórios, com informações falsas de estrutura ou premiação, ou que usem a plataforma para captação com finalidade diversa da anunciada.</li>
+        <li><strong>Proteção de dados.</strong>
+          <ol>
+            <li>Sobre os dados de participantes recebidos, o organizador é <strong>controlador</strong> e o FortalRunners é operador na etapa de coleta e transmissão.</li>
+            <li>O organizador só pode usar esses dados para o evento e para obrigações legais; não pode vender, enriquecer com terceiros ou usar para marketing sem base legal própria.</li>
+            <li>Aplica-se o <strong>Adendo de Proteção de Dados (DPA)</strong> [anexo], incluindo medidas de segurança, prazo de eliminação após o evento e notificação de incidente em até [24 h] ao FortalRunners.</li>
+          </ol>
+        </li>
+        <li><strong>Fiscal.</strong> O organizador é responsável pela emissão de nota fiscal da inscrição ao participante e pelos tributos incidentes sobre a receita do evento. O FortalRunners emite documento fiscal apenas da sua taxa de intermediação.</li>
+        <li><strong>Marca e conteúdo.</strong> O organizador autoriza o uso de nome e logo do evento na plataforma para fins de divulgação da inscrição. Responde pelo conteúdo, imagens e direitos que publicar.</li>
+        <li><strong>Suspensão e remoção.</strong> Podemos suspender vendas, despublicar o evento ou encerrar a conta do organizador em caso de risco ao participante, denúncia grave, ordem de autoridade ou descumprimento. Kill switch de vendas pode ser acionado imediatamente.</li>
+        <li><strong>Indenização.</strong> O organizador indeniza o FortalRunners e os participantes por perdas decorrentes de não realização, realização em desacordo, falta de autorização, incidente de dados sob sua responsabilidade ou violação destes Termos.</li>
+        <li><strong>Vigência.</strong> Vale enquanto houver conta ativa ou evento em aberto; obrigações de dados, fiscais e de atendimento sobrevivem ao encerramento.</li>
+      </ol>
+    </section>
+
+    <section id="pagamentos">
+      <h2><span class="h2-num">07</span>Política de Pagamentos, Reembolso e Estornos</h2>
+      <ol class="clauses">
+        <li><strong>Processador.</strong> Pagamentos são processados pelo <strong>Asaas</strong> (operador). Não armazenamos número completo, CVV ou senha de cartão. Métodos: PIX, cartão de crédito (à vista ou parcelado, com 3DS) e boleto. Moeda: real (BRL).</li>
+        <li><strong>Preços e taxas.</strong> O checkout mostra o valor do item, descontos, a taxa da plataforma e o total. Taxas de parcelamento, quando houver, são exibidas antes da confirmação.</li>
+        <li><strong>Confirmação.</strong> O pedido só gera direito (inscrição, assinatura, item) após confirmação do pagamento pelo Asaas. Pagamentos não confirmados no prazo são cancelados.</li>
+        <li><strong>Falha e cobrança duplicada.</strong> Cobranças em duplicidade por erro técnico são estornadas mediante solicitação e verificação.</li>
+        <li><strong>Reembolsos.</strong>
+          <ol>
+            <li>Origem: arrependimento (item 5.3), cancelamento conforme política do evento, cancelamento pelo organizador, falha do serviço, ou determinação legal.</li>
+            <li>Forma: preferencialmente pelo mesmo método. PIX em até [X] dias úteis após a aprovação; cartão como estorno, sujeito ao ciclo da administradora (pode aparecer na fatura seguinte); boleto por transferência aos dados bancários informados pelo titular.</li>
+            <li>Valor: conforme a regra aplicável; quando a taxa da plataforma for retida, isso é informado no checkout e no comprovante.</li>
+          </ol>
+        </li>
+        <li><strong>Contestação e chargeback.</strong> Se você não reconhece uma cobrança, fale conosco antes de abrir contestação no banco — costuma ser mais rápido. Chargeback fraudulento (contestar cobrança legítima) pode levar a suspensão da conta e cobrança dos custos.</li>
+        <li><strong>Assinatura premium.</strong>
+          <ol>
+            <li>Renova automaticamente ao fim de cada ciclo (mensal ou anual) pelo preço vigente, até você cancelar.</li>
+            <li>Cancelamento a qualquer momento; o acesso segue até o fim do ciclo já pago. Dentro de 7 dias da primeira contratação, aplica-se o arrependimento com devolução integral.</li>
+            <li>Falha de cobrança dispara novas tentativas (dunning) e aviso; persistindo, o plano é rebaixado para gratuito sem perda de dados.</li>
+            <li>Aumento de preço é avisado com pelo menos 30 dias e vale só no próximo ciclo; você pode cancelar antes.</li>
+          </ol>
+        </li>
+        <li><strong>Impostos.</strong> Preços incluem tributos quando aplicável. Documentos fiscais da inscrição são de responsabilidade do organizador (item 6.7); da assinatura e das taxas, do FortalRunners.</li>
+        <li><strong>Antifraude de pagamento.</strong> Pedidos podem ser analisados e recusados por risco. Podemos solicitar verificação adicional.</li>
+      </ol>
+    </section>
+
+    <section id="comunidade">
+      <h2><span class="h2-num">08</span>Diretrizes da Comunidade</h2>
+      <p class="section-sub">O que pode e o que não pode no conteúdo e nas interações.</p>
+      <h4>Vale para: fotos de missão, avaliações de rota, comentários, nomes de usuário e de clube, mensagens.</h4>
+      <ul>
+        <li><strong>Respeito.</strong> Sem assédio, ameaça, discurso de ódio, discriminação (raça, etnia, gênero, orientação, religião, deficiência, origem), bullying ou incitação à violência.</li>
+        <li><strong>Sem exposição de terceiros.</strong> Não publique dados, rosto identificável ou localização de outra pessoa sem consentimento. Não faça doxxing.</li>
+        <li><strong>Fotos de missão.</strong> Foco no marco; evite terceiros identificáveis, não fotografe menores, áreas privadas, interiores de residências, nem conteúdo sexual, nudez ou violência. Rostos de passantes podem ser borrados automaticamente.</li>
+        <li><strong>Avaliações de rota.</strong> Sejam honestas e baseadas em experiência real. Sem difamação, sem acusação sem base, sem informação que ajude a praticar crime contra alguém.</li>
+        <li><strong>Sem spam e sem golpe.</strong> Nada de propaganda não autorizada, esquemas, links maliciosos, venda de contas ou de vantagens de jogo.</li>
+        <li><strong>Integridade.</strong> Não incentive nem ensine burla das mecânicas (item 9).</li>
+        <li><strong>Propriedade intelectual.</strong> Publique só o que é seu ou que você tem direito de publicar.</li>
+      </ul>
+      <p><strong>Consequências:</strong> remoção do conteúdo, limitação de recursos, perda de selo/território obtido de forma irregular, suspensão temporária ou banimento, conforme a gravidade e a reincidência. Você pode recorrer (item 10).</p>
+    </section>
+
+    <section id="fairplay">
+      <h2><span class="h2-num">09</span>Política de Fair Play e Antifraude</h2>
+      <h3>9.1 Proibições</h3>
+      <ul class="tight">
+        <li>Falsificar localização (GPS spoofing, mock location, emuladores).</li>
+        <li>Gerar percurso por carro, moto, bicicleta, patins, esteira mal calibrada ou por terceiros.</li>
+        <li>Editar arquivos de atividade para inflar distância, ritmo, elevação ou área.</li>
+        <li>Manter contas múltiplas para vantagem, farmar território entre contas próprias ou combinar resultados.</li>
+        <li>Compartilhar conta, QR ou número de peito; check-in de missão por outra pessoa.</li>
+        <li>Automação, bots ou acesso por cliente não oficial.</li>
+        <li>Explorar bug conhecido sem reportar.</li>
+      </ul>
+      <h3>9.2 Como detectamos</h3>
+      <p>Análise de física do movimento (velocidade, aceleração, elevação), cruzamento de sensores (passos × distância, acelerômetro × GPS), atestação de integridade do dispositivo, detecção de mock location e root/jailbreak, padrões estatísticos (traçados repetidos, ganho de área por minuto fora da curva, teleporte) e denúncias da comunidade.</p>
+      <h3>9.3 Consequências (progressivas)</h3>
+      <ol class="clauses">
+        <li>Aviso e orientação, para casos leves ou dúvidas de boa-fé.</li>
+        <li>Anulação da corrida, do tempo, do território ou do selo obtido irregularmente.</li>
+        <li><strong>Shadow-ban:</strong> a conta joga isolada — vê o próprio progresso, mas não pontua para os outros.</li>
+        <li>Suspensão temporária.</li>
+        <li>Banimento permanente e bloqueio de novos cadastros, para fraude deliberada ou reincidência.</li>
+      </ol>
+      <h3>9.4 Contestação</h3>
+      <p>Toda medida automatizada pode ser contestada pelo suporte, com direito a revisão humana e a apresentar evidências (dados do relógio, fotos, testemunhas). Enquanto pendente, a conquista fica suspensa, não perdida.</p>
+    </section>
+
+    <section id="moderacao">
+      <h2><span class="h2-num">10</span>Política de Moderação e Notificações</h2>
+      <ol class="clauses">
+        <li><strong>Como denunciar.</strong> Botão "Denunciar" em corridas, territórios, rotas, avaliações, comentários, perfis e eventos, ou <code>abuso@fortalrunners.com.br</code>. Informe o item e o motivo.</li>
+        <li><strong>Análise.</strong> Confirmamos o recebimento e analisamos em até [7 dias] (mais rápido para conteúdo grave: ameaça, sexualização de menor, dado pessoal exposto).</li>
+        <li><strong>Decisão.</strong> Podemos manter, ocultar ou remover o conteúdo, limitar recursos ou sancionar a conta. Comunicamos a decisão e a razão a quem denunciou e a quem foi denunciado, quando cabível.</li>
+        <li><strong>Contra-notificação.</strong> Quem teve conteúdo removido pode pedir reavaliação apresentando esclarecimentos; conteúdo removido por engano é restaurado.</li>
+        <li><strong>Conteúdo ilegal e ordem judicial.</strong> Removemos conteúdo mediante ordem judicial específica (art. 19 do Marco Civil) e, independentemente de ordem, conteúdo de exploração sexual de menor, ameaça grave ou violação de dados pessoais de terceiros, nos termos da lei.</li>
+        <li><strong>Reincidência.</strong> Contas com violações repetidas podem ser suspensas ou encerradas.</li>
+        <li><strong>Transparência.</strong> Pretendemos publicar periodicamente um relatório agregado de denúncias e ações.</li>
+      </ol>
+    </section>
+
+    <section id="seguranca">
+      <h2><span class="h2-num">11</span>Segurança da Informação e Divulgação de Vulnerabilidades</h2>
+      <h3>11.1 Como protegemos</h3>
+      <ul class="tight">
+        <li>Criptografia em trânsito (TLS) e de dados sensíveis em repouso; senhas com Argon2id.</li>
+        <li>Controle de acesso por papel e por posse; verificação em duas etapas obrigatória para equipe e organizadores.</li>
+        <li>Segregação de ambientes; segredos em cofre; princípio do menor privilégio.</li>
+        <li>Registro de auditoria imutável de acessos administrativos e a dados de localização.</li>
+        <li>Backups criptografados e testados; monitoramento de anomalias; revisão de segurança no desenvolvimento; testes de intrusão antes de marcos públicos.</li>
+      </ul>
+      <h3>11.2 Notificação de incidente</h3>
+      <p>Em incidente de segurança que possa acarretar risco relevante aos titulares, comunicamos a <strong>ANPD</strong> e os titulares afetados em prazo razoável, com a natureza dos dados, os envolvidos, as medidas tomadas e as recomendações. Organizadores devem nos notificar de incidentes sob sua responsabilidade em até [24 h].</p>
+      <h3>11.3 Divulgação responsável</h3>
+      <ol class="clauses">
+        <li>Envie achados para <code>security@fortalrunners.com.br</code> (chave PGP em [link]). Descreva o passo a passo e o impacto.</li>
+        <li><strong>Safe harbor:</strong> não acionaremos judicialmente pesquisa de boa-fé que respeite este processo, não acesse dados de terceiros além do necessário para demonstrar a falha, não degrade o serviço e não divulgue publicamente antes da correção.</li>
+        <li>Fora de escopo: ataques de negação de serviço, engenharia social contra funcionários, spam, e testes em contas que não sejam de teste.</li>
+        <li>Reconhecimento em hall of fame; programa de recompensa pago poderá ser adotado depois.</li>
+      </ol>
+    </section>
+
+    <section id="retencao">
+      <h2><span class="h2-num">12</span>Política de Retenção e Exclusão de Dados</h2>
+      <p>Guardamos dados apenas pelo tempo necessário às finalidades ou por prazo legal. Referências entre colchetes serão fixadas na revisão jurídica.</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Dado</th><th>Retenção</th><th>Depois</th></tr></thead>
+          <tbody>
+            <tr><td>Conta e perfil</td><td>Enquanto a conta existir</td><td>Eliminação ou anonimização em até [30 dias] do encerramento</td></tr>
+            <tr><td>Corridas e traçados</td><td>Enquanto a conta existir ou até você excluir a corrida</td><td>Exclusão; agregados anônimos de cobertura podem ser mantidos</td></tr>
+            <tr><td>Dados de frequência cardíaca / fisiológicos</td><td>Enquanto o consentimento durar</td><td>Exclusão imediata na revogação</td></tr>
+            <tr><td>Territórios e ranking</td><td>Vigência da temporada + histórico do perfil</td><td>Anonimização de recordes históricos</td></tr>
+            <tr><td>Registros de transação e fiscais</td><td>[5 anos] (prazos fiscais/prescricionais)</td><td>Eliminação</td></tr>
+            <tr><td>Dados de inscrição em evento (no FortalRunners)</td><td>Até [12 meses] após o evento + prazos de disputa</td><td>Eliminação; o organizador tem política própria</td></tr>
+            <tr><td>Logs de segurança e antifraude</td><td>[6 a 12 meses]</td><td>Eliminação</td></tr>
+            <tr><td>Registros de acesso a aplicação (Marco Civil)</td><td>Mínimo de 6 meses</td><td>Eliminação após o prazo legal</td></tr>
+            <tr><td>Denúncias e decisões de moderação</td><td>[24 meses] para controle de reincidência</td><td>Eliminação</td></tr>
+            <tr><td>Comunicações de suporte</td><td>[24 meses]</td><td>Eliminação</td></tr>
+            <tr><td>Backups</td><td>Ciclo de retenção de [35 dias]</td><td>Sobrescrita; exclusões propagadas no ciclo seguinte</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Podemos reter dados além do prazo quando necessário para cumprir obrigação legal, exercer direitos em processo, ou atender a determinação de autoridade — restritos a essa finalidade.</p>
+    </section>
+
+    <section id="subprocessadores">
+      <h2><span class="h2-num">13</span>Lista de Subprocessadores</h2>
+      <p>Operadores que tratam dados pessoais sob nossas instruções. Atualizada periodicamente; mudanças relevantes são avisadas.</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Fornecedor</th><th>Finalidade</th><th>Dados</th><th>Local</th></tr></thead>
+          <tbody>
+            <tr><td>[Provedor de nuvem]</td><td>Hospedagem de aplicação e banco de dados</td><td>Todos</td><td>[Brasil / EUA]</td></tr>
+            <tr><td>[Banco de dados gerenciado]</td><td>Armazenamento primário</td><td>Todos</td><td>[região]</td></tr>
+            <tr><td>Asaas</td><td>Processamento de pagamento, split, KYC de organizador</td><td>Dados de cobrança, identificação, bancários</td><td>Brasil</td></tr>
+            <tr><td>[E-mail transacional]</td><td>Confirmações, avisos de segurança</td><td>Nome, e-mail</td><td>[EUA]</td></tr>
+            <tr><td>[Push — Expo/FCM/APNs]</td><td>Notificações</td><td>Token de dispositivo</td><td>[EUA]</td></tr>
+            <tr><td>Sentry</td><td>Monitoramento de erros</td><td>Logs técnicos, ID de usuário pseudonimizado</td><td>[EUA/UE]</td></tr>
+            <tr><td>[Provedor de mapas / tiles]</td><td>Base cartográfica</td><td>Requisições de área do mapa</td><td>[UE/EUA]</td></tr>
+            <tr><td>[Analytics de produto]</td><td>Métricas de uso agregadas</td><td>Eventos de uso pseudonimizados</td><td>[EUA/UE]</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Integrações que <strong>você</strong> ativa (Strava, Garmin, Fitbit, Polar, Apple, Google) atuam como controladores independentes sob os próprios termos; não são subprocessadores nossos.</p>
+    </section>
+
+    <section id="acessibilidade">
+      <h2><span class="h2-num">14</span>Política de Acessibilidade</h2>
+      <p>Buscamos conformidade com as <strong>WCAG 2.2 nível AA</strong> e com a Lei Brasileira de Inclusão (13.146/2015) nas interfaces web e mobile: contraste adequado, navegação por teclado e por leitor de tela, alvos de toque amplos, respeito a "reduzir movimento", legendas em vídeos e alternativa textual em imagens informativas. Para os territórios, oferecemos padrões de textura além da cor e um modo para daltonismo. Barreiras podem ser reportadas em <code>acessibilidade@fortalrunners.com.br</code>; respondemos com prazo de correção.</p>
+    </section>
+
+    <section id="menores">
+      <h2><span class="h2-num">15</span>Crianças e Adolescentes</h2>
+      <ol class="clauses">
+        <li>Idade mínima para conta própria: <strong>16 anos</strong>.</li>
+        <li>Entre 16 e 18: uso recomendado com ciência dos responsáveis; contratações pagas podem exigir assistência do responsável.</li>
+        <li>Menores de 16 só com <strong>consentimento específico e destacado de um dos pais ou responsável</strong>, tratado no melhor interesse da criança (LGPD art. 14).</li>
+        <li>Não exibimos publicamente a localização em tempo real nem o traçado detalhado de menores; perfis de menores têm visibilidade restrita por padrão.</li>
+        <li>Não direcionamos publicidade a menores.</li>
+        <li>Responsáveis podem solicitar acesso, correção e exclusão dos dados do menor pelos canais do item 17.</li>
+        <li>Em eventos, a inscrição de menor exige responsável legal identificado que aceita o regulamento (item 5.9).</li>
+      </ol>
+    </section>
+
+    <section id="ropa">
+      <h2><span class="h2-num">16</span>Registro de Operações de Tratamento (ROPA) — resumo</h2>
+      <p>Mantemos registro interno detalhado, nos termos do art. 37 da LGPD. Resumo das principais operações:</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Operação</th><th>Finalidade</th><th>Categorias de titulares</th><th>Base legal</th><th>Retenção</th></tr></thead>
+          <tbody>
+            <tr><td>Gestão de contas</td><td>Prestar o serviço</td><td>Corredores</td><td>Contrato</td><td>Vida da conta + 30 dias</td></tr>
+            <tr><td>Registro de corridas e territórios</td><td>Funcionalidade central</td><td>Corredores</td><td>Contrato</td><td>Vida da conta / até exclusão</td></tr>
+            <tr><td>Métricas fisiológicas</td><td>Análise de treino</td><td>Corredores que conectam</td><td>Consentimento (sensível)</td><td>Até revogação</td></tr>
+            <tr><td>Pagamentos e repasses</td><td>Inscrições e assinaturas</td><td>Corredores, organizadores</td><td>Contrato / obrigação legal</td><td>5 anos</td></tr>
+            <tr><td>Intermediação de inscrição</td><td>Realização de eventos</td><td>Corredores, organizadores</td><td>Contrato / legítimo interesse</td><td>12 meses pós-evento</td></tr>
+            <tr><td>Antifraude esportivo</td><td>Integridade da competição</td><td>Corredores</td><td>Legítimo interesse</td><td>6–12 meses</td></tr>
+            <tr><td>Moderação</td><td>Segurança da comunidade</td><td>Corredores</td><td>Legítimo interesse / obrigação legal</td><td>24 meses</td></tr>
+            <tr><td>Marketing direto</td><td>Divulgar novidades</td><td>Corredores que optam</td><td>Consentimento</td><td>Até revogação</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="contato">
+      <h2><span class="h2-num">17</span>Contato e Encarregado (DPO)</h2>
+      <div class="kv">
+        <div><dt>Assuntos de privacidade</dt><dd><code>privacidade@fortalrunners.com.br</code> — acesso, correção, exclusão, portabilidade, oposição, revisão.</dd></div>
+        <div><dt>Encarregado (DPO)</dt><dd>[nome] — <code>dpo@fortalrunners.com.br</code></dd></div>
+        <div><dt>Denúncias de conteúdo</dt><dd><code>abuso@fortalrunners.com.br</code></dd></div>
+        <div><dt>Segurança</dt><dd><code>security@fortalrunners.com.br</code></dd></div>
+        <div><dt>Suporte geral e pagamentos</dt><dd><code>suporte@fortalrunners.com.br</code></dd></div>
+        <div><dt>Organizadores</dt><dd><code>organizadores@fortalrunners.com.br</code></dd></div>
+        <div><dt>Endereço</dt><dd>[endereço completo], Fortaleza/CE</dd></div>
+        <div><dt>Autoridade</dt><dd>Você pode reclamar à ANPD — <a href="https://www.gov.br/anpd">gov.br/anpd</a> — e a órgãos de defesa do consumidor (Procon-CE, <a href="https://www.consumidor.gov.br">consumidor.gov.br</a>).</dd></div>
+      </div>
+    </section>
+
+    <section id="versoes">
+      <h2><span class="h2-num">18</span>Histórico de versões</h2>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Versão</th><th>Data</th><th>Mudança</th></tr></thead>
+          <tbody>
+            <tr><td>Rascunho v0.1</td><td>05 set 2026</td><td>Primeira redação de todo o pacote de políticas, para revisão jurídica.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="section-sub" style="margin-top:1.2rem">Cada documento passará a ter data de "última atualização" própria quando publicado. Versões anteriores ficarão disponíveis para consulta.</p>
+    </section>
+
+  </main>
+
+  <footer class="pg">
+    FortalRunners · pacote de políticas · rascunho v0.1 · 05 set 2026 · requer revisão jurídica antes de publicar
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll("nav.toc a"));
+    var map = {};
+    links.forEach(function (a) { map[a.getAttribute("href").slice(1)] = a; });
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          links.forEach(function (l) { l.style.color = ""; l.style.background = ""; });
+          var a = map[e.target.id];
+          if (a) { a.style.color = "var(--ink)"; a.style.background = "var(--surface)"; }
+        }
+      });
+    }, { rootMargin: "-8% 0px -82% 0px" });
+    document.querySelectorAll("main section").forEach(function (s) { obs.observe(s); });
+  })();
+</script>

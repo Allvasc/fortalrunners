@@ -1,0 +1,191 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Manrope', system-ui, sans-serif; }
+    a { color: #0E7C86; text-decoration: none; } a:hover { color: #0A5A61; }
+    .screen { position: relative; width: 390px; height: 844px; overflow: hidden; background: #E9E3D3; color: #20302E; }
+    .map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    .dim { position: absolute; inset: 0; background: rgba(22,32,30,0.30); }
+    .hdr { position: absolute; top: 0; left: 0; right: 0; padding: 54px 18px 14px; background: linear-gradient(#FBFAF6, #FBFAF6 66%, rgba(251,250,246,0)); }
+    .title { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 19px; letter-spacing: -0.01em; margin: 0; }
+    .fab { position: absolute; top: 106px; right: 14px; width: 44px; height: 44px; border-radius: 13px; background: #0E7C86; border: 1px solid #0E7C86; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px -6px rgba(20,40,44,0.28); color: #fff; }
+    .fab svg { width: 21px; height: 21px; }
+
+    .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #FBFAF6; border-radius: 24px 24px 0 0; padding: 10px 18px calc(18px + env(safe-area-inset-bottom)); box-shadow: 0 -16px 40px -12px rgba(20,40,44,0.32); }
+    .grab { width: 38px; height: 4px; border-radius: 999px; background: #DAD3C2; margin: 0 auto 14px; }
+    .sh-title { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 17px; margin: 0 0 12px; }
+    .sec { font-family: 'Archivo', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.14em; color: #8A8570; margin: 16px 0 9px; }
+    .styles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+    .st { text-align: center; }
+    .st .thumb { position: relative; border-radius: 11px; overflow: hidden; border: 2px solid transparent; aspect-ratio: 1 / 0.78; }
+    .st.on .thumb { border-color: #0E7C86; }
+    .st .thumb svg { display: block; width: 100%; height: 100%; }
+    .st .lb { font-size: 10.5px; font-weight: 600; margin-top: 5px; color: #6B726F; }
+    .st.on .lb { color: #0E7C86; }
+    .st .chk { position: absolute; right: 4px; bottom: 4px; width: 16px; height: 16px; border-radius: 50%; background: #0E7C86; display: flex; align-items: center; justify-content: center; }
+    .st .chk svg { width: 10px; height: 10px; color: #fff; }
+
+    .ov { display: flex; flex-direction: column; }
+    .ov .row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid #EEE9DB; }
+    .ov .row:last-child { border-bottom: none; }
+    .ov .ic { width: 32px; height: 32px; border-radius: 9px; background: #EFEADA; display: flex; align-items: center; justify-content: center; flex: none; color: #4A524F; }
+    .ov .ic svg { width: 17px; height: 17px; }
+    .ov .nm { flex: 1; font-size: 13.5px; font-weight: 600; }
+    .sw { width: 42px; height: 25px; border-radius: 999px; background: #DDD7C6; position: relative; flex: none; }
+    .sw i { position: absolute; top: 3px; left: 3px; width: 19px; height: 19px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    .sw.on { background: #0E7C86; }
+    .sw.on i { left: 20px; }
+
+    .apply { display: flex; align-items: center; justify-content: center; height: 50px; border-radius: 14px; background: #E0562F; color: #fff; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 15px; margin-top: 18px; }
+  </style>
+</helmet>
+
+<div class="screen">
+  <svg class="map" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#9FCFCD"/><stop offset="1" stop-color="#BFDDDB"/>
+      </linearGradient>
+      <path id="rdAbol" d="M-40,224 L440,224"/>
+      <path id="rdAracati" d="M130,-40 L130,700"/>
+    </defs>
+    <rect x="0" y="0" width="390" height="844" fill="#E9E3D3"/>
+    <g transform="rotate(-19 195 470)">
+      <rect x="-260" y="-220" width="900" height="1300" fill="#E9E3D3"/>
+      <g fill="#E2DBC7">
+        <rect x="-8" y="120" width="46" height="52"/><rect x="84" y="172" width="46" height="52"/>
+        <rect x="176" y="120" width="46" height="52"/><rect x="268" y="224" width="46" height="52"/>
+        <rect x="38" y="380" width="46" height="52"/><rect x="222" y="432" width="46" height="52"/>
+        <rect x="314" y="328" width="46" height="52"/>
+      </g>
+      <g stroke="#D3CAB4" fill="none">
+        <path d="M-8,-40 L-8,760" stroke-width="9"/><path d="M38,-40 L38,760" stroke-width="9"/>
+        <path d="M84,-40 L84,760" stroke-width="9"/><path d="M176,-40 L176,760" stroke-width="9"/>
+        <path d="M222,-40 L222,760" stroke-width="9"/><path d="M268,-40 L268,760" stroke-width="9"/>
+        <path d="M314,-40 L314,760" stroke-width="9"/>
+        <path d="M-40,120 L440,120" stroke-width="9"/><path d="M-40,172 L440,172" stroke-width="9"/>
+        <path d="M-40,276 L440,276" stroke-width="9"/><path d="M-40,380 L440,380" stroke-width="9"/>
+        <path d="M-40,432 L440,432" stroke-width="9"/>
+        <path d="M130,-40 L130,760" stroke-width="16"/>
+        <path d="M-40,224 L440,224" stroke-width="16"/>
+        <path d="M-40,328 L440,328" stroke-width="16"/>
+        <path d="M-30,650 L470,110" stroke-width="17"/>
+      </g>
+      <g stroke="#FBF8F0" fill="none">
+        <path d="M-8,-40 L-8,760" stroke-width="5"/><path d="M38,-40 L38,760" stroke-width="5"/>
+        <path d="M84,-40 L84,760" stroke-width="5"/><path d="M176,-40 L176,760" stroke-width="5"/>
+        <path d="M222,-40 L222,760" stroke-width="5"/><path d="M268,-40 L268,760" stroke-width="5"/>
+        <path d="M314,-40 L314,760" stroke-width="5"/>
+        <path d="M-40,120 L440,120" stroke-width="5"/><path d="M-40,172 L440,172" stroke-width="5"/>
+        <path d="M-40,276 L440,276" stroke-width="5"/><path d="M-40,380 L440,380" stroke-width="5"/>
+        <path d="M-40,432 L440,432" stroke-width="5"/>
+        <path d="M130,-40 L130,760" stroke-width="10"/>
+        <path d="M-40,224 L440,224" stroke-width="10"/>
+        <path d="M-40,328 L440,328" stroke-width="10"/>
+        <path d="M-30,650 L470,110" stroke-width="11"/>
+      </g>
+      <g stroke="#0E7C86" stroke-width="3" stroke-linejoin="round" fill="#0E7C86" fill-opacity="0.24">
+        <path d="M84,224 L176,224 L176,276 L222,276 L222,328 L268,328 L268,432 L176,432 L176,484 L130,484 L130,380 L84,380 L84,328 L38,328 L38,276 L84,276 Z"/>
+      </g>
+      <circle cx="176" cy="328" r="6" fill="#0E7C86" stroke="#fff" stroke-width="2.5"/>
+      <g fill="#A79D86" font-family="Archivo, system-ui, sans-serif" font-size="7.5" letter-spacing="1.6">
+        <text><textPath href="#rdAbol" startOffset="20%">AV. DA ABOLIÇÃO</textPath></text>
+        <text><textPath href="#rdAracati" startOffset="9%">R. BARÃO DE ARACATI</textPath></text>
+      </g>
+    </g>
+    <path d="M0,0 H390 V56 C320,64 288,112 190,112 C122,112 60,128 0,150 Z" fill="url(#sea)"/>
+    <path d="M0,150 C60,128 122,112 190,112 C288,112 320,64 390,56 L390,78 C322,86 296,132 194,132 C126,132 64,148 2,168 Z" fill="#E8D7B4"/>
+    <text x="16" y="200" font-family="Archivo, system-ui, sans-serif" font-size="10" fill="#9A917B" letter-spacing="2">PRAIA DE IRACEMA</text>
+  </svg>
+
+  <div class="dim"></div>
+
+  <div class="hdr">
+    <p class="title">Meu mapa</p>
+  </div>
+  <div class="fab">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5Z"/><path d="M3 13l9 5 9-5"/></svg>
+  </div>
+
+  <div class="sheet">
+    <div class="grab"></div>
+    <p class="sh-title">Camadas do mapa</p>
+
+    <p class="sec">ESTILO</p>
+    <div class="styles">
+      <div class="st on">
+        <div class="thumb">
+          <svg viewBox="0 0 60 47"><rect width="60" height="47" fill="#EBE5D5"/><path d="M12 0V47M32 0V47M48 0V47M0 16H60M0 34H60" stroke="#FBF8F0" stroke-width="3"/></svg>
+          <span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l6 6L20 6"/></svg></span>
+        </div>
+        <div class="lb">Ruas</div>
+      </div>
+      <div class="st">
+        <div class="thumb">
+          <svg viewBox="0 0 60 47"><rect width="60" height="47" fill="#3B4A3A"/><rect x="6" y="6" width="16" height="12" fill="#5A6B48"/><rect x="30" y="10" width="20" height="16" fill="#556347"/><rect x="10" y="26" width="24" height="14" fill="#6A7A52"/><rect x="40" y="30" width="14" height="12" fill="#4E5C3E"/></svg>
+        </div>
+        <div class="lb">Satélite</div>
+      </div>
+      <div class="st">
+        <div class="thumb">
+          <svg viewBox="0 0 60 47"><rect width="60" height="47" fill="#EAE3D0"/><path d="M0 32Q20 18 34 26T60 20" fill="none" stroke="#CFC3A2" stroke-width="3"/><path d="M0 40Q22 28 38 34T60 30" fill="none" stroke="#DDD3B6" stroke-width="3"/></svg>
+        </div>
+        <div class="lb">Relevo</div>
+      </div>
+      <div class="st">
+        <div class="thumb">
+          <svg viewBox="0 0 60 47"><rect width="60" height="47" fill="#1B2430"/><path d="M12 0V47M34 0V47M0 18H60M0 34H60" stroke="#3A4657" stroke-width="2.5"/></svg>
+        </div>
+        <div class="lb">Noturno</div>
+      </div>
+    </div>
+
+    <p class="sec">SOBREPOR</p>
+    <div class="ov">
+      <div class="row">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3Z"/></svg></span>
+        <span class="nm">Meu território</span>
+        <span class="sw on"><i></i></span>
+      </div>
+      <div class="row">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6.5a3 3 0 0 1 0 5.5M20.5 19a5 5 0 0 0-3.5-4.8"/></svg></span>
+        <span class="nm">Amigos</span>
+        <span class="sw"><i></i></span>
+      </div>
+      <div class="row">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 5 6.5 5 9.5A5 5 0 0 1 7 12c0-1 .3-2 .8-3C7 10 6 11 6 13a6 6 0 0 0 12 0c0-4-3-7-6-11Z"/></svg></span>
+        <span class="nm">Mapa de calor</span>
+        <span class="sw on"><i></i></span>
+      </div>
+      <div class="row">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4l7 2.5L19 4v11l-7 2.5L5 15"/></svg></span>
+        <span class="nm">Missões e marcos</span>
+        <span class="sw on"><i></i></span>
+      </div>
+      <div class="row">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3L12 4Z"/><path d="M12 10v5M12 18h.01"/></svg></span>
+        <span class="nm">Alertas na via</span>
+        <span class="sw"><i></i></span>
+      </div>
+      <div class="row">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3.5 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 1.5-5 5-9Z"/></svg></span>
+        <span class="nm">Sombra &amp; água</span>
+        <span class="sw"><i></i></span>
+      </div>
+    </div>
+
+    <div class="apply">Aplicar</div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

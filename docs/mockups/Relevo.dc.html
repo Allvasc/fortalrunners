@@ -1,0 +1,173 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Manrope', system-ui, sans-serif; }
+    a { color: #0E7C86; text-decoration: none; } a:hover { color: #0A5A61; }
+    .screen { position: relative; width: 390px; height: 844px; overflow: hidden; background: #E4DCC4; color: #20302E; }
+    .map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    .hdr { position: absolute; top: 0; left: 0; right: 0; padding: 54px 18px 14px; background: linear-gradient(#FBFAF6, #FBFAF6 66%, rgba(251,250,246,0)); }
+    .hdr-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .title { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 19px; letter-spacing: -0.01em; margin: 0; }
+    .seg { display: flex; background: #EDE8DC; border: 1px solid #E1DBCB; border-radius: 999px; padding: 3px; gap: 2px; }
+    .seg span { font-size: 11px; font-weight: 600; padding: 5px 9px; border-radius: 999px; color: #7C7663; }
+    .seg span.on { background: #fff; color: #0E7C86; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+    .fab { position: absolute; top: 106px; right: 14px; width: 44px; height: 44px; border-radius: 13px; background: #fff; border: 1px solid #EDE7D9; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px -6px rgba(20,40,44,0.28); color: #3B4442; }
+    .fab svg { width: 21px; height: 21px; }
+    .stylechip { position: absolute; left: 14px; bottom: 264px; display: flex; align-items: center; gap: 7px; background: rgba(60,50,32,0.72); color: #F0EAD8; border-radius: 999px; padding: 6px 12px; font-size: 11px; font-weight: 700; font-family: 'Archivo', sans-serif; letter-spacing: 0.04em; }
+    .stylechip svg { width: 13px; height: 13px; }
+    .card { position: absolute; left: 14px; right: 14px; bottom: 102px; background: #fff; border-radius: 22px; padding: 16px 16px 15px; box-shadow: 0 16px 34px -10px rgba(20,40,44,0.30); }
+    .eyebrow { font-family: 'Archivo', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.16em; color: #0A5A61; margin: 0 0 9px; }
+    .statrow { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; }
+    .big { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 30px; line-height: 1; letter-spacing: -0.025em; }
+    .big small { font-size: 15px; font-weight: 600; color: #6B726F; margin-left: 3px; }
+    .mstack { text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1.5; color: #4A524F; }
+    .mstack b { color: #20302E; }
+    .bairro { display: flex; align-items: center; gap: 10px; margin-top: 13px; font-size: 12px; }
+    .bairro .nm { font-weight: 600; }
+    .bar { flex: 1; height: 7px; border-radius: 999px; background: #ECE7D9; overflow: hidden; }
+    .bar > i { display: block; height: 100%; width: 12%; background: #0E7C86; border-radius: 999px; }
+    .pct { font-family: 'IBM Plex Mono', monospace; font-weight: 500; color: #0A5A61; }
+    .btn { display: flex; align-items: center; justify-content: center; gap: 9px; height: 50px; border-radius: 14px; background: #E0562F; color: #fff; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 15px; margin-top: 14px; }
+    .btn svg { width: 17px; height: 17px; }
+    .nav { position: absolute; left: 0; right: 0; bottom: 0; height: 88px; background: #fff; border-top: 1px solid #ECE7DA; display: flex; padding: 11px 6px 0; }
+    .nav a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; color: #9AA0A0; }
+    .nav a.on { color: #0E7C86; }
+    .nav svg { width: 23px; height: 23px; }
+  </style>
+</helmet>
+
+<div class="screen">
+  <svg class="map" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#9FCFCD"/><stop offset="1" stop-color="#BFDDDB"/>
+      </linearGradient>
+      <radialGradient id="hi" cx="50%" cy="50%" r="50%">
+        <stop offset="0" stop-color="#F1EBD3"/><stop offset="1" stop-color="#F1EBD3" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="lo" cx="50%" cy="50%" r="50%">
+        <stop offset="0" stop-color="#C9BB93"/><stop offset="1" stop-color="#C9BB93" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+
+    <rect x="0" y="0" width="390" height="844" fill="#E4DCC4"/>
+
+    <ellipse cx="120" cy="330" rx="150" ry="120" fill="url(#hi)"/>
+    <ellipse cx="300" cy="470" rx="150" ry="130" fill="url(#lo)"/>
+    <ellipse cx="70" cy="560" rx="120" ry="110" fill="url(#lo)"/>
+
+    <g stroke="#CFC098" stroke-width="1.3" fill="none" stroke-opacity="0.7">
+      <path d="M-20,360 Q90,300 180,340 T400,320"/>
+      <path d="M-20,400 Q100,345 190,382 T400,360"/>
+      <path d="M-20,470 Q120,420 220,455 T400,440"/>
+      <path d="M-20,540 Q140,495 240,528 T400,516"/>
+    </g>
+
+    <g transform="rotate(-19 195 470)">
+      <g fill="#DAD0B2">
+        <rect x="-8" y="120" width="46" height="52"/><rect x="84" y="172" width="46" height="52"/>
+        <rect x="176" y="120" width="46" height="52"/><rect x="268" y="224" width="46" height="52"/>
+        <rect x="38" y="380" width="46" height="52"/><rect x="222" y="432" width="46" height="52"/>
+        <rect x="314" y="328" width="46" height="52"/><rect x="130" y="536" width="46" height="52"/>
+      </g>
+
+      <g stroke="#CDBF9A" fill="none">
+        <path d="M-8,-40 L-8,760" stroke-width="7"/><path d="M38,-40 L38,760" stroke-width="7"/>
+        <path d="M84,-40 L84,760" stroke-width="7"/><path d="M176,-40 L176,760" stroke-width="7"/>
+        <path d="M222,-40 L222,760" stroke-width="7"/><path d="M268,-40 L268,760" stroke-width="7"/>
+        <path d="M314,-40 L314,760" stroke-width="7"/><path d="M360,-40 L360,760" stroke-width="7"/>
+        <path d="M-40,120 L440,120" stroke-width="7"/><path d="M-40,172 L440,172" stroke-width="7"/>
+        <path d="M-40,276 L440,276" stroke-width="7"/><path d="M-40,380 L440,380" stroke-width="7"/>
+        <path d="M-40,432 L440,432" stroke-width="7"/><path d="M-40,484 L440,484" stroke-width="7"/>
+        <path d="M-40,536 L440,536" stroke-width="7"/>
+        <path d="M130,-40 L130,760" stroke-width="13"/>
+        <path d="M-40,224 L440,224" stroke-width="13"/>
+        <path d="M-40,328 L440,328" stroke-width="13"/>
+        <path d="M-30,650 L470,110" stroke-width="14"/>
+      </g>
+      <g stroke="#FBF6E8" fill="none">
+        <path d="M-8,-40 L-8,760" stroke-width="4"/><path d="M38,-40 L38,760" stroke-width="4"/>
+        <path d="M84,-40 L84,760" stroke-width="4"/><path d="M176,-40 L176,760" stroke-width="4"/>
+        <path d="M222,-40 L222,760" stroke-width="4"/><path d="M268,-40 L268,760" stroke-width="4"/>
+        <path d="M314,-40 L314,760" stroke-width="4"/><path d="M360,-40 L360,760" stroke-width="4"/>
+        <path d="M-40,120 L440,120" stroke-width="4"/><path d="M-40,172 L440,172" stroke-width="4"/>
+        <path d="M-40,276 L440,276" stroke-width="4"/><path d="M-40,380 L440,380" stroke-width="4"/>
+        <path d="M-40,432 L440,432" stroke-width="4"/><path d="M-40,484 L440,484" stroke-width="4"/>
+        <path d="M-40,536 L440,536" stroke-width="4"/>
+        <path d="M130,-40 L130,760" stroke-width="8"/>
+        <path d="M-40,224 L440,224" stroke-width="8"/>
+        <path d="M-40,328 L440,328" stroke-width="8"/>
+        <path d="M-30,650 L470,110" stroke-width="9"/>
+      </g>
+
+      <g stroke="#0E7C86" stroke-width="3" stroke-linejoin="round" fill="#0E7C86" fill-opacity="0.24">
+        <path d="M84,224 L176,224 L176,276 L222,276 L222,328 L268,328 L268,432 L176,432 L176,484 L130,484 L130,380 L84,380 L84,328 L38,328 L38,276 L84,276 Z"/>
+        <path d="M314,328 L360,328 L360,380 L314,380 Z"/>
+        <path d="M38,432 L84,432 L84,484 L38,484 Z"/>
+      </g>
+      <circle cx="176" cy="328" r="13" fill="#0E7C86" fill-opacity="0.16"/>
+      <circle cx="176" cy="328" r="6" fill="#0E7C86" stroke="#fff" stroke-width="2.5"/>
+
+      <path d="M320,520 C356,492 410,512 412,566 C414,628 372,690 322,680 C292,674 300,614 302,576 C303,548 305,536 320,520 Z" fill="#BFD09E"/>
+    </g>
+
+    <path d="M0,0 H390 V56 C320,64 288,112 190,112 C122,112 60,128 0,150 Z" fill="url(#sea)"/>
+    <path d="M0,150 C60,128 122,112 190,112 C288,112 320,64 390,56 L390,78 C322,86 296,132 194,132 C126,132 64,148 2,168 Z" fill="#E4D2AE"/>
+
+    <text x="16" y="200" font-family="Archivo, system-ui, sans-serif" font-size="10" fill="#8F836A" letter-spacing="2">PRAIA DE IRACEMA</text>
+    <text x="250" y="212" font-family="Archivo, system-ui, sans-serif" font-size="10" fill="#8F836A" letter-spacing="2">MEIRELES</text>
+    <text x="238" y="432" font-family="Archivo, system-ui, sans-serif" font-size="10" fill="#8F836A" letter-spacing="2">ALDEOTA</text>
+  </svg>
+
+  <div class="hdr">
+    <div class="hdr-row">
+      <p class="title">Meu mapa</p>
+      <div class="seg"><span class="on">Eu</span><span>Amigos</span><span>Cidade</span></div>
+    </div>
+  </div>
+
+  <div class="fab">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5Z"/><path d="M3 13l9 5 9-5"/></svg>
+  </div>
+
+  <div class="stylechip">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l6-11 4 7 3-5 5 9H3Z"/></svg>
+    RELEVO
+  </div>
+
+  <div class="card">
+    <p class="eyebrow">SEU TERRITÓRIO</p>
+    <div class="statrow">
+      <div class="big">0,42<small>km²</small></div>
+      <div class="mstack"><b>9</b> quarteirões<br><b>3,1%</b> de Fortaleza</div>
+    </div>
+    <div class="bairro">
+      <span class="nm">Aldeota</span>
+      <span class="bar"><i></i></span>
+      <span class="pct">12%</span>
+    </div>
+    <div class="btn">
+      <svg viewBox="0 0 24 24"><path d="M6 4l13 8-13 8V4Z" fill="currentColor"/></svg>
+      Iniciar corrida
+    </div>
+  </div>
+
+  <div class="nav">
+    <a class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10Z"/><circle cx="12" cy="11" r="2.2"/></svg>Mapa</a>
+    <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v3a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M9 20h6M12 15v5"/></svg>Ranking</a>
+    <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3"/></svg>Missões</a>
+    <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="3.2"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/></svg>Perfil</a>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

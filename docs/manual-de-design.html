@@ -1,0 +1,1138 @@
+<title>FortalRunners — Manual de Design</title>
+<meta name="description" content="Sistema de design do FortalRunners: cor, tipografia, ícones, movimento, componentes, selos, troféus e especificação de imagens, em modo claro e escuro.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Archivo+Expanded:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:ital,opsz@0,6..72;1,6..72&display=swap">
+<style>
+  /* ============ TOKENS ============ */
+  :root {
+    /* neutrals — warm, slight teal bias */
+    --bg: #F4F1E8;
+    --surface: #FBFAF4;
+    --surface-2: #FFFFFF;
+    --sunken: #ECE6D9;
+    --ink: #16262A;
+    --ink-2: #46565A;
+    --ink-3: #7B8688;
+    --line: #E4DED0;
+    --line-2: #CFC7B4;
+
+    /* brand */
+    --teal: #0C7F86;
+    --teal-strong: #0A5A61;
+    --teal-weak: #E0EEEC;
+    --coral: #E0562F;
+    --coral-strong: #B23F1E;
+    --gold: #BC8A22;
+    --violet: #6E5AA6;
+
+    /* semantic */
+    --good: #2E8F63;
+    --warn: #B9822B;
+    --crit: #C7402B;
+    --good-weak: #E1EFE7;
+    --warn-weak: #F4EBDA;
+    --crit-weak: #F5E4DF;
+
+    /* runner / territory categorical (validated — see §2) */
+    --r1: #08A6A0; --r2: #E0562F; --r3: #6E5AA6; --r4: #BC8A22;
+    --r5: #B84A8E; --r6: #4C8C3A; --r7: #2F6FB0; --r-other: #8C8674;
+
+    /* medals */
+    --bronze-a: #C68A4E; --bronze-b: #8A5A2E;
+    --silver-a: #D6DBE1; --silver-b: #8F96A0;
+    --goldm-a: #EBC968; --goldm-b: #B07E1E;
+
+    /* elevation */
+    --e1: 0 1px 2px rgba(20,40,44,.05), 0 1px 3px rgba(20,40,44,.09);
+    --e2: 0 4px 14px -3px rgba(20,40,44,.13);
+    --e3: 0 18px 38px -12px rgba(20,40,44,.26);
+
+    /* radii */
+    --r-xs: 4px; --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 22px; --r-full: 999px;
+
+    /* motion */
+    --dur-1: 120ms; --dur-2: 200ms; --dur-3: 300ms; --dur-4: 450ms; --dur-5: 900ms;
+    --ease-standard: cubic-bezier(.2,0,0,1);
+    --ease-out: cubic-bezier(0,0,0,1);
+    --ease-in: cubic-bezier(.3,0,1,1);
+    --ease-spring: cubic-bezier(.2,.9,.2,1.12);
+
+    /* type */
+    --f-display: "Archivo Expanded", "Archivo", ui-sans-serif, system-ui, sans-serif;
+    --f-head: "Archivo", ui-sans-serif, system-ui, sans-serif;
+    --f-ui: "Manrope", ui-sans-serif, system-ui, sans-serif;
+    --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --f-editorial: "Newsreader", Georgia, serif;
+
+    --step--1: clamp(.8rem, .78rem + .1vw, .86rem);
+    --step-0: clamp(.94rem, .9rem + .16vw, 1rem);
+    --step-1: clamp(1.1rem, 1.03rem + .3vw, 1.28rem);
+    --step-2: clamp(1.35rem, 1.24rem + .5vw, 1.7rem);
+    --step-3: clamp(1.8rem, 1.55rem + 1.1vw, 2.6rem);
+    --step-4: clamp(2.4rem, 1.9rem + 2.3vw, 3.8rem);
+
+    --maxw: 70ch;
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0E1618; --surface: #152124; --surface-2: #1B292C; --sunken: #0A1214;
+      --ink: #E9E4D7; --ink-2: #A8B1B1; --ink-3: #7C8888;
+      --line: #29363A; --line-2: #3A4A4E;
+      --teal: #3CB4BE; --teal-strong: #6FD0D8; --teal-weak: #17332F;
+      --coral: #FF7C50; --coral-strong: #FF9A76; --gold: #E3B657; --violet: #A48CDE;
+      --good: #45B37F; --warn: #E0AC55; --crit: #E4634A;
+      --good-weak: #12281F; --warn-weak: #2A2213; --crit-weak: #2E1712;
+      --r1: #1C9B95; --r2: #E45B33; --r3: #8A72C8; --r4: #B98D33;
+      --r5: #CB62A0; --r6: #47A150; --r7: #5892D6; --r-other: #7C7768;
+      --bronze-a: #D89A5E; --bronze-b: #A06A3C;
+      --silver-a: #E1E5EA; --silver-b: #A2A9B2;
+      --goldm-a: #F2D585; --goldm-b: #C79338;
+      --e1: 0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.5);
+      --e2: 0 6px 18px -4px rgba(0,0,0,.55);
+      --e3: 0 20px 44px -14px rgba(0,0,0,.65);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0E1618; --surface: #152124; --surface-2: #1B292C; --sunken: #0A1214;
+    --ink: #E9E4D7; --ink-2: #A8B1B1; --ink-3: #7C8888;
+    --line: #29363A; --line-2: #3A4A4E;
+    --teal: #3CB4BE; --teal-strong: #6FD0D8; --teal-weak: #17332F;
+    --coral: #FF7C50; --coral-strong: #FF9A76; --gold: #E3B657; --violet: #A48CDE;
+    --good: #45B37F; --warn: #E0AC55; --crit: #E4634A;
+    --good-weak: #12281F; --warn-weak: #2A2213; --crit-weak: #2E1712;
+    --r1: #1C9B95; --r2: #E45B33; --r3: #8A72C8; --r4: #B98D33;
+    --r5: #CB62A0; --r6: #47A150; --r7: #5892D6; --r-other: #7C7768;
+    --bronze-a: #D89A5E; --bronze-b: #A06A3C;
+    --silver-a: #E1E5EA; --silver-b: #A2A9B2;
+    --goldm-a: #F2D585; --goldm-b: #C79338;
+    --e1: 0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.5);
+    --e2: 0 6px 18px -4px rgba(0,0,0,.55);
+    --e3: 0 20px 44px -14px rgba(0,0,0,.65);
+    color-scheme: dark;
+  }
+
+  /* ============ BASE ============ */
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--f-ui); font-size: var(--step-0); line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,h2,h3,h4 { font-family: var(--f-head); }
+  a { color: var(--teal-strong); }
+  :root[data-theme="dark"] a, :root:not([data-theme="light"]) a { }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) a { color: var(--teal-strong); } }
+  code, .mono { font-family: var(--f-mono); font-size: .88em; }
+  code { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-xs); padding: .06em .38em; }
+
+  .wrap { display: grid; grid-template-columns: 1fr; max-width: 1240px; margin: 0 auto; padding: 0 clamp(1rem,4vw,3rem); }
+  @media (min-width: 1040px) { .wrap { grid-template-columns: 236px minmax(0,1fr); gap: clamp(2rem,5vw,4rem); } }
+
+  /* header */
+  header.hero { grid-column: 1/-1; padding: clamp(2.4rem,6vw,4.4rem) 0 2rem; border-bottom: 1px solid var(--line); }
+  .eyebrow { font-family: var(--f-mono); font-size: var(--step--1); letter-spacing: .18em; text-transform: uppercase; color: var(--teal-strong); margin: 0 0 1rem; }
+  h1 { font-family: var(--f-display); font-weight: 800; font-size: var(--step-4); line-height: .98; letter-spacing: -.02em; margin: 0 0 1rem; text-wrap: balance; }
+  .lede { font-size: var(--step-1); color: var(--ink-2); max-width: 58ch; margin: 0; }
+
+  /* theme toggle */
+  .themetoggle { position: fixed; top: 14px; right: 14px; z-index: 50; display: flex; gap: 2px; background: var(--surface-2); border: 1px solid var(--line-2); border-radius: var(--r-full); padding: 3px; box-shadow: var(--e2); }
+  .themetoggle button { font: inherit; font-size: 12px; font-weight: 600; border: 0; background: transparent; color: var(--ink-3); padding: 5px 11px; border-radius: var(--r-full); cursor: pointer; font-family: var(--f-head); }
+  .themetoggle button[aria-pressed="true"] { background: var(--teal); color: #fff; }
+  :root[data-theme="dark"] .themetoggle button[aria-pressed="true"] { color: #06181A; }
+
+  /* nav */
+  nav.toc { grid-column: 1/-1; padding: 1.4rem 0; }
+  @media (min-width: 1040px) { nav.toc { grid-column: 1; position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto; padding: clamp(2rem,5vw,3.2rem) 0; border-right: 1px solid var(--line); } }
+  .toc-t { font-family: var(--f-mono); font-size: var(--step--1); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 .8rem; }
+  .toc ol { list-style: none; margin: 0; padding: 0; counter-reset: t; }
+  .toc li { counter-increment: t; }
+  .toc a { display: grid; grid-template-columns: 1.6rem 1fr; gap: .35rem; padding: .3rem .3rem; text-decoration: none; color: var(--ink-2); font-family: var(--f-head); font-size: .88rem; line-height: 1.25; border-radius: var(--r-xs); }
+  .toc a::before { content: counter(t,decimal-leading-zero); font-family: var(--f-mono); font-size: .72rem; color: var(--teal); }
+  .toc a:hover { background: var(--surface); color: var(--ink); }
+  .toc a:focus-visible, a:focus-visible, button:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+  /* main */
+  main { grid-column: 1/-1; padding-bottom: 6rem; min-width: 0; }
+  @media (min-width: 1040px) { main { grid-column: 2; padding-top: clamp(2rem,5vw,3.2rem); } }
+  section { margin: 0 0 clamp(3rem,7vw,5rem); scroll-margin-top: 1.5rem; }
+  section > :is(p, ul, ol, .note, .kv) { max-width: var(--maxw); }
+  h2 { font-family: var(--f-display); font-weight: 800; font-size: var(--step-3); line-height: 1.04; letter-spacing: -.015em; margin: 0 0 .4rem; text-wrap: balance; }
+  .h2n { display: block; font-family: var(--f-mono); font-size: var(--step--1); font-weight: 400; letter-spacing: .14em; color: var(--teal); margin-bottom: .5rem; }
+  h2 + .sub { color: var(--ink-2); font-size: var(--step-1); margin: 0 0 1.8rem; max-width: var(--maxw); }
+  h3 { font-family: var(--f-head); font-weight: 700; font-size: var(--step-2); letter-spacing: -.01em; margin: 2.6rem 0 .5rem; }
+  h4 { font-family: var(--f-head); font-weight: 600; font-size: var(--step-1); margin: 1.8rem 0 .4rem; }
+  p { margin: 0 0 1rem; }
+  ul, ol { margin: 0 0 1rem; padding-left: 1.25rem; }
+  li { margin: .3rem 0; }
+  li::marker { color: var(--teal); }
+  strong { font-weight: 700; }
+
+  .note { border-left: 3px solid var(--teal); background: var(--teal-weak); padding: .9rem 1.1rem; border-radius: 0 var(--r-sm) var(--r-sm) 0; margin: 1.4rem 0; font-size: var(--step--1); }
+  .note b { font-family: var(--f-mono); font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; color: var(--teal-strong); display: block; margin-bottom: .3rem; }
+  .note.warn { border-color: var(--warn); background: var(--warn-weak); }
+  .note.warn b { color: var(--warn); }
+
+  /* specimen frame */
+  .spec { border: 1px solid var(--line); border-radius: var(--r-lg); background:
+      var(--surface);
+      background-image: linear-gradient(45deg, color-mix(in srgb, var(--line) 45%, transparent) 25%, transparent 25%, transparent 75%, color-mix(in srgb, var(--line) 45%, transparent) 75%),
+      linear-gradient(45deg, color-mix(in srgb, var(--line) 45%, transparent) 25%, transparent 25%, transparent 75%, color-mix(in srgb, var(--line) 45%, transparent) 75%);
+      background-size: 16px 16px; background-position: 0 0, 8px 8px;
+      padding: clamp(1.2rem, 3vw, 2rem); margin: 1.2rem 0;
+      display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .spec.col { flex-direction: column; align-items: stretch; }
+  .spec.dark-force { color-scheme: dark; }
+  .spec + .caption, figure > figcaption { font-size: var(--step--1); color: var(--ink-3); margin: -.6rem 0 1.4rem; font-family: var(--f-head); }
+
+  /* tables */
+  .tw { overflow-x: auto; margin: 1.3rem 0; border: 1px solid var(--line); border-radius: var(--r-lg); }
+  table { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+  th, td { text-align: left; padding: .58rem .85rem; vertical-align: top; border-bottom: 1px solid var(--line); }
+  thead th { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); background: var(--surface-2); position: sticky; top: 0; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.mono, th.mono { font-family: var(--f-mono); white-space: nowrap; }
+  .sw { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 6px; border: 1px solid rgba(128,128,128,.25); }
+
+  /* token grid */
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; margin: 1.2rem 0; }
+  .swatch { border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; background: var(--surface-2); }
+  .swatch .chip { height: 62px; }
+  .swatch .meta { padding: 8px 10px; font-family: var(--f-mono); font-size: 11px; line-height: 1.45; }
+  .swatch .meta .nm { color: var(--ink); font-weight: 500; }
+  .swatch .meta .hx { color: var(--ink-3); }
+
+  /* ---- component specimens ---- */
+  .btn { font-family: var(--f-head); font-weight: 700; font-size: 14px; border-radius: var(--r-sm); padding: 0 18px; height: 44px; display: inline-flex; align-items: center; gap: 8px; border: 0; cursor: pointer; transition: transform var(--dur-1) var(--ease-standard), background var(--dur-2); }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--coral); color: #fff; }
+  .btn-primary:hover { background: var(--coral-strong); }
+  .btn-secondary { background: var(--teal); color: #fff; }
+  .btn-ghost { background: var(--surface-2); color: var(--ink); border: 1.5px solid var(--line-2); }
+  .btn-quiet { background: transparent; color: var(--teal-strong); padding: 0 8px; }
+  .btn-sm { height: 34px; font-size: 12.5px; padding: 0 12px; }
+  .btn[disabled] { opacity: .45; pointer-events: none; }
+  .btn svg { width: 16px; height: 16px; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; min-width: 220px; }
+  .field label { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+  .field input { font: inherit; font-size: 14px; height: 44px; padding: 0 12px; border-radius: var(--r-sm); border: 1.5px solid var(--line-2); background: var(--surface-2); color: var(--ink); }
+  .field input:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; border-color: var(--teal); }
+  .field.err input { border-color: var(--crit); }
+  .field .hint { font-size: 11.5px; color: var(--ink-3); }
+  .field.err .hint { color: var(--crit); }
+
+  .chip-c { font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: var(--r-full); background: var(--sunken); color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
+  .chip-c.teal { background: var(--teal-weak); color: var(--teal-strong); }
+  .chip-c.on { background: var(--teal); color: #fff; }
+  .chip-c.gold { background: var(--warn-weak); color: var(--gold); }
+
+  .sw-toggle { width: 44px; height: 26px; border-radius: var(--r-full); background: var(--line-2); position: relative; border: 0; cursor: pointer; transition: background var(--dur-2); flex: none; }
+  .sw-toggle i { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.28); transition: left var(--dur-2) var(--ease-standard); }
+  .sw-toggle[aria-checked="true"] { background: var(--teal); }
+  .sw-toggle[aria-checked="true"] i { left: 21px; }
+
+  .segmented { display: inline-flex; background: var(--sunken); border-radius: var(--r-full); padding: 3px; gap: 2px; }
+  .segmented button { font: inherit; font-family: var(--f-head); font-size: 12px; font-weight: 600; border: 0; background: transparent; color: var(--ink-3); padding: 6px 12px; border-radius: var(--r-full); cursor: pointer; }
+  .segmented button[aria-pressed="true"] { background: var(--surface-2); color: var(--teal-strong); box-shadow: var(--e1); }
+
+  .card-c { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-xl); padding: 16px; box-shadow: var(--e2); width: 260px; }
+  .card-c .k { font-family: var(--f-mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--teal-strong); margin: 0 0 8px; }
+  .card-c .big { font-family: var(--f-display); font-weight: 800; font-size: 28px; letter-spacing: -.02em; }
+
+  .stat-tile { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 12px 14px; min-width: 120px; }
+  .stat-tile .v { font-family: var(--f-display); font-weight: 800; font-size: 22px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .stat-tile .l { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); margin-top: 2px; }
+
+  .progress { height: 8px; border-radius: var(--r-full); background: var(--sunken); overflow: hidden; width: 220px; }
+  .progress > i { display: block; height: 100%; background: var(--teal); border-radius: var(--r-full); }
+
+  .toast { background: var(--ink); color: var(--bg); border-radius: var(--r-md); padding: 12px 16px; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 10px; box-shadow: var(--e3); }
+  .toast svg { width: 16px; height: 16px; color: var(--good); }
+
+  /* icons grid */
+  .icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px,1fr)); gap: 8px; margin: 1.2rem 0; }
+  .icons figure { margin: 0; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface-2); padding: 14px 6px 8px; text-align: center; }
+  .icons svg { width: 24px; height: 24px; color: var(--ink); }
+  .icons figcaption { font-family: var(--f-mono); font-size: 9.5px; color: var(--ink-3); margin-top: 8px; }
+
+  /* selos */
+  .selo { width: 64px; height: 64px; flex: none; position: relative; display: grid; place-items: center; }
+  .selo svg.shape { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .selo .ic { position: relative; width: 26px; height: 26px; }
+  .selo.locked { filter: grayscale(1); opacity: .42; }
+  .selo .lock { position: absolute; right: -2px; bottom: -2px; width: 20px; height: 20px; background: var(--ink-3); border: 2px solid var(--surface); border-radius: 50%; display: grid; place-items: center; }
+  .selo .lock svg { width: 10px; height: 10px; color: var(--surface); }
+  .selo-row { display: flex; gap: 22px; flex-wrap: wrap; align-items: flex-start; }
+  .selo-row figure { margin: 0; text-align: center; width: 96px; }
+  .selo-row figcaption { font-size: 10.5px; color: var(--ink-3); margin-top: 8px; }
+
+  /* medalha */
+  .medal { width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; flex: none; box-shadow: inset 0 2px 6px rgba(255,255,255,.35), inset 0 -6px 12px rgba(0,0,0,.28), var(--e2); }
+  .medal.bronze { background: radial-gradient(circle at 35% 28%, var(--bronze-a), var(--bronze-b)); }
+  .medal.silver { background: radial-gradient(circle at 35% 28%, var(--silver-a), var(--silver-b)); }
+  .medal.gold { background: radial-gradient(circle at 35% 28%, var(--goldm-a), var(--goldm-b)); }
+  .medal svg { width: 30px; height: 30px; color: rgba(0,0,0,.4); }
+  .medal.silver svg { color: rgba(20,30,40,.42); }
+
+  .trophy-card { width: 250px; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-xl); padding: 16px; box-shadow: var(--e2); text-align: center; }
+  .trophy-card h5 { font-family: var(--f-head); font-weight: 700; font-size: 15px; margin: 12px 0 2px; }
+  .trophy-card .wk { font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-3); }
+  .trophy-card .mv { font-family: var(--f-display); font-weight: 800; font-size: 19px; margin-top: 8px; letter-spacing: -.02em; }
+
+  /* leaderboard */
+  .lb { width: 320px; border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; background: var(--surface-2); }
+  .lb .row { display: grid; grid-template-columns: 24px 30px 1fr auto; gap: 10px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  .lb .row:last-child { border-bottom: 0; }
+  .lb .row.you { background: var(--teal-weak); box-shadow: inset 3px 0 0 var(--teal); }
+  .lb .rk { font-family: var(--f-mono); font-weight: 500; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .lb .av { width: 30px; height: 30px; border-radius: 50%; background: var(--sunken); }
+  .lb .nm { font-weight: 600; font-size: 13px; }
+  .lb .mv { font-family: var(--f-mono); font-size: 12px; }
+  .lb .d { font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 3px; }
+  .lb .d.up { color: var(--good); } .lb .d.dn { color: var(--crit); } .lb .d.eq { color: var(--ink-3); }
+
+  /* territory legend */
+  .terr-legend { display: flex; flex-wrap: wrap; gap: 14px; }
+  .terr-legend .it { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .terr-legend .box { width: 26px; height: 18px; border-radius: 3px; }
+
+  /* loaders */
+  .skel { background: var(--sunken); border-radius: var(--r-sm); position: relative; overflow: hidden; }
+  .skel::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--surface-2) 70%, transparent), transparent); transform: translateX(-100%); animation: shimmer 1.4s linear infinite; }
+  @keyframes shimmer { to { transform: translateX(100%); } }
+  .spinner { width: 24px; height: 24px; border-radius: 50%; border: 2.5px solid var(--line-2); border-top-color: var(--teal); animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .rec-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--coral); animation: recpulse 1.2s var(--ease-standard) infinite; }
+  @keyframes recpulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+
+  /* animation demos */
+  .anim-demo { width: 130px; height: 90px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface-2); display: grid; place-items: center; overflow: hidden; position: relative; }
+  .terr-paint { width: 64px; height: 44px; border: 2px solid var(--r1); border-radius: 3px; position: relative; overflow: hidden; }
+  .terr-paint::after { content: ""; position: absolute; inset: 0; background: var(--r1); opacity: .26; transform-origin: left; animation: paint var(--dur-5) var(--ease-out) infinite alternate; }
+  @keyframes paint { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  .tick { font-family: var(--f-display); font-weight: 800; font-size: 26px; font-variant-numeric: tabular-nums; }
+  .flame { width: 22px; height: 28px; background: radial-gradient(circle at 50% 70%, var(--coral), var(--gold) 70%); border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; animation: flick 1.8s ease-in-out infinite; }
+  @keyframes flick { 0%,100% { transform: scale(1) rotate(-2deg); } 50% { transform: scale(1.08) rotate(2deg); } }
+  .confetti { position: absolute; width: 6px; height: 6px; border-radius: 1px; top: 50%; left: 50%; }
+  .badge-pop { width: 40px; height: 40px; border-radius: 50%; background: var(--teal); animation: pop var(--dur-5) var(--ease-spring) infinite; }
+  @keyframes pop { 0% { transform: scale(0); } 60% { transform: scale(1); } 100% { transform: scale(1); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skel::after, .spinner, .rec-dot, .terr-paint::after, .flame, .badge-pop, .confetti { animation: none !important; }
+    .spinner { border-top-color: var(--teal); }
+    .terr-paint::after { transform: scaleX(1); }
+  }
+
+  .grid2 { display: grid; gap: 1.4rem; }
+  @media (min-width: 620px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+
+  footer.pg { grid-column: 1/-1; border-top: 1px solid var(--line); padding: 2rem 0 3rem; font-family: var(--f-mono); font-size: var(--step--1); color: var(--ink-3); }
+  ::selection { background: color-mix(in srgb, var(--teal) 30%, transparent); }
+</style>
+
+<div class="themetoggle" role="group" aria-label="Tema">
+  <button data-set="light" aria-pressed="false">Claro</button>
+  <button data-set="dark" aria-pressed="false">Escuro</button>
+  <button data-set="system" aria-pressed="true">Sistema</button>
+</div>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Sistema de design · v1.0 · 05 set 2026</p>
+    <h1>Manual de Design</h1>
+    <p class="lede">A linguagem visual do FortalRunners — cor, tipografia, ícones, movimento, componentes, selos, troféus e imagens. Tudo definido para modo claro e escuro, do jeito que deve chegar na tela.</p>
+  </header>
+
+  <nav class="toc" aria-label="Índice">
+    <p class="toc-t">Seções</p>
+    <ol>
+      <li><a href="#principios">Princípios</a></li>
+      <li><a href="#cor">Cor</a></li>
+      <li><a href="#tipografia">Tipografia</a></li>
+      <li><a href="#espaco">Espaçamento &amp; grid</a></li>
+      <li><a href="#forma">Raio &amp; elevação</a></li>
+      <li><a href="#icones">Ícones</a></li>
+      <li><a href="#movimento">Movimento &amp; animação</a></li>
+      <li><a href="#loading">Loading &amp; estados</a></li>
+      <li><a href="#componentes">Componentes</a></li>
+      <li><a href="#selos">Selos</a></li>
+      <li><a href="#trofeus">Troféus</a></li>
+      <li><a href="#ranking">Ranking</a></li>
+      <li><a href="#territorio">Território &amp; mapa</a></li>
+      <li><a href="#imagens">Imagens</a></li>
+      <li><a href="#temas">Claro &amp; escuro</a></li>
+      <li><a href="#acessibilidade">Acessibilidade</a></li>
+      <li><a href="#voz">Voz &amp; tom</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- 1 -->
+    <section id="principios">
+      <h2><span class="h2n">01</span>Princípios</h2>
+      <p class="sub">Cinco decisões que resolvem a maioria das dúvidas de design antes delas aparecerem.</p>
+      <ol>
+        <li><strong>O mapa é o produto.</strong> A tela cheia é do mapa; interface flutua por cima em painéis opacos. Nada de cromo que rouba o mapa.</li>
+        <li><strong>O dado tem cara de dado.</strong> Distância, pace, área, coordenada — tudo em <span class="mono">IBM&nbsp;Plex&nbsp;Mono</span>, com <span class="mono">tabular-nums</span>, para alinhar e nunca "pular".</li>
+        <li><strong>Fortaleza no material.</strong> A paleta vem da orla (teal da Beira-Mar), do amanhecer (coral) e da areia. Não é decoração — é de onde as cores saem.</li>
+        <li><strong>Celebrar sem exagerar.</strong> Conquista de território e selo têm um momento de brilho curto e uma animação; não uma festa que atrapalha a próxima corrida.</li>
+        <li><strong>Claro e escuro com o mesmo cuidado.</strong> O escuro não é o claro invertido — é redesenhado token a token e testado no fundo escuro real.</li>
+      </ol>
+      <div class="note">
+        <b>Como ler este manual</b>
+        Use o botão <em>Claro / Escuro / Sistema</em> no canto para ver cada exemplo nos dois temas. Todos os <code>--tokens</code> citados existem no CSS desta página.
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section id="cor">
+      <h2><span class="h2n">02</span>Cor</h2>
+      <p class="sub">Neutros quentes com viés de teal, uma marca em três cores, semânticas reservadas e uma paleta categórica de corredores validada para daltonismo.</p>
+
+      <h3>Neutros</h3>
+      <div class="swatches">
+        <div class="swatch"><div class="chip" style="background:var(--bg)"></div><div class="meta"><span class="nm">--bg</span><br><span class="hx">fundo da tela</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--surface)"></div><div class="meta"><span class="nm">--surface</span><br><span class="hx">painel</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--surface-2)"></div><div class="meta"><span class="nm">--surface-2</span><br><span class="hx">card / campo</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--sunken)"></div><div class="meta"><span class="nm">--sunken</span><br><span class="hx">trilho / skeleton</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--ink)"></div><div class="meta"><span class="nm">--ink</span><br><span class="hx">texto principal</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--ink-2)"></div><div class="meta"><span class="nm">--ink-2</span><br><span class="hx">texto secundário</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--ink-3)"></div><div class="meta"><span class="nm">--ink-3</span><br><span class="hx">texto discreto</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--line)"></div><div class="meta"><span class="nm">--line</span><br><span class="hx">divisória</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--line-2)"></div><div class="meta"><span class="nm">--line-2</span><br><span class="hx">borda de controle</span></div></div>
+      </div>
+
+      <h3>Marca</h3>
+      <div class="swatches">
+        <div class="swatch"><div class="chip" style="background:var(--teal)"></div><div class="meta"><span class="nm">--teal</span><br><span class="hx">primária · ação, links, ativo</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--teal-strong)"></div><div class="meta"><span class="nm">--teal-strong</span><br><span class="hx">texto sobre claro</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--coral)"></div><div class="meta"><span class="nm">--coral</span><br><span class="hx">acento · "Iniciar corrida"</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--gold)"></div><div class="meta"><span class="nm">--gold</span><br><span class="hx">troféu, destaque</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--violet)"></div><div class="meta"><span class="nm">--violet</span><br><span class="hx">selos, seasons</span></div></div>
+      </div>
+      <p><strong>Uma ação primária por tela.</strong> Coral é o "vá correr" e aparece só uma vez. Teal é o resto da ação (salvar, confirmar, alternar). Nunca coral e teal disputando o mesmo espaço.</p>
+
+      <h3>Semânticas — reservadas</h3>
+      <div class="swatches">
+        <div class="swatch"><div class="chip" style="background:var(--good)"></div><div class="meta"><span class="nm">--good</span><br><span class="hx">sucesso, ▲ subiu</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--warn)"></div><div class="meta"><span class="nm">--warn</span><br><span class="hx">atenção, sinal fraco</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--crit)"></div><div class="meta"><span class="nm">--crit</span><br><span class="hx">erro, ▼ caiu, fraude</span></div></div>
+      </div>
+      <p>Semântica nunca vira "cor da série 4" e nunca aparece sozinha — sempre com ícone e rótulo (<span class="chip-c" style="color:var(--good)">▲ +2</span> <span class="chip-c" style="color:var(--crit)">▼ −1</span>).</p>
+
+      <h3>Cores de corredor / território</h3>
+      <p>Paleta <strong>categórica</strong> — identidade de cada corredor no mapa. Validada com <code>validate_palette.js</code>: banda de luminosidade, piso de croma, separação para protanopia/deuteranopia ≥ ΔE&nbsp;8 nos pares adjacentes, e contraste com a superfície. Atribuição em <strong>ordem fixa</strong>, nunca ciclada.</p>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Slot</th><th>Quem</th><th class="mono">Claro</th><th class="mono">Escuro</th></tr></thead>
+          <tbody>
+            <tr><td><span class="sw" style="background:var(--r1)"></span>1</td><td><strong>Você</strong> — sempre</td><td class="mono">#08A6A0</td><td class="mono">#1C9B95</td></tr>
+            <tr><td><span class="sw" style="background:var(--r2)"></span>2</td><td>Amigo (ordem de entrada)</td><td class="mono">#E0562F</td><td class="mono">#E45B33</td></tr>
+            <tr><td><span class="sw" style="background:var(--r3)"></span>3</td><td>Amigo</td><td class="mono">#6E5AA6</td><td class="mono">#8A72C8</td></tr>
+            <tr><td><span class="sw" style="background:var(--r4)"></span>4</td><td>Amigo</td><td class="mono">#BC8A22</td><td class="mono">#B98D33</td></tr>
+            <tr><td><span class="sw" style="background:var(--r5)"></span>5</td><td>Amigo</td><td class="mono">#B84A8E</td><td class="mono">#CB62A0</td></tr>
+            <tr><td><span class="sw" style="background:var(--r6)"></span>6</td><td>Amigo</td><td class="mono">#4C8C3A</td><td class="mono">#47A150</td></tr>
+            <tr><td><span class="sw" style="background:var(--r7)"></span>7</td><td>Amigo / clube</td><td class="mono">#2F6FB0</td><td class="mono">#5892D6</td></tr>
+            <tr><td><span class="sw" style="background:var(--r-other)"></span>8+</td><td>"Outros corredores" — colapsam neste cinza com rótulo de nome; nunca gera-se uma 8ª cor</td><td class="mono">#8C8674</td><td class="mono">#7C7768</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note"><b>Regra</b>A cor segue o corredor, não a posição no ranking. Um filtro que muda quem aparece <em>não</em> repinta quem ficou.</div>
+
+      <h3>Rampa de densidade (mapa de calor)</h3>
+      <p>O único lugar com rampa multi-tom. Perceptualmente crescente, legenda sempre discreta.</p>
+      <div class="spec"><div style="height:16px;width:100%;max-width:420px;border-radius:var(--r-full);background:linear-gradient(90deg,#2E8F63,#BCA33A,#E0562F,#B23F1E)"></div></div>
+    </section>
+
+    <!-- 3 -->
+    <section id="tipografia">
+      <h2><span class="h2n">03</span>Tipografia</h2>
+      <p class="sub">Três famílias, três papéis. Uma quarta só para peças editoriais fora do app.</p>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Papel</th><th>Família</th><th>Onde</th><th>Pesos</th></tr></thead>
+          <tbody>
+            <tr><td>Display</td><td style="font-family:var(--f-display);font-weight:800">Archivo Expanded</td><td>Títulos grandes, números-herói, botões</td><td>600 · 700 · 800</td></tr>
+            <tr><td>Cabeçalho / UI forte</td><td style="font-family:var(--f-head);font-weight:700">Archivo</td><td>h3–h4, rótulos, chips, nomes</td><td>500 · 600 · 700</td></tr>
+            <tr><td>Texto / UI</td><td style="font-family:var(--f-ui)">Manrope</td><td>Corpo, listas, descrições, formulários</td><td>400 · 500 · 600 · 700</td></tr>
+            <tr><td>Dados</td><td style="font-family:var(--f-mono)">IBM Plex Mono</td><td>km, pace, %, área, coordenada, ID, código</td><td>400 · 500</td></tr>
+            <tr><td>Editorial <em>(fora do app)</em></td><td style="font-family:var(--f-editorial)">Newsreader</td><td>Landing, blog, imprensa — nunca na UI do app</td><td>400 · italic</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Escala</h3>
+      <div class="spec col">
+        <div style="font-family:var(--f-display);font-weight:800;font-size:var(--step-4);line-height:1;letter-spacing:-.02em">Aa — display / step-4</div>
+        <div style="font-family:var(--f-display);font-weight:800;font-size:var(--step-3);letter-spacing:-.015em">Aa — h2 / step-3</div>
+        <div style="font-family:var(--f-head);font-weight:700;font-size:var(--step-2)">Aa — h3 / step-2</div>
+        <div style="font-family:var(--f-head);font-weight:600;font-size:var(--step-1)">Aa — h4 / step-1</div>
+        <div style="font-size:var(--step-0)">Aa — corpo / step-0 · Manrope 400, linha 1.6, medida ~65ch</div>
+        <div style="font-size:var(--step--1);color:var(--ink-3)">Aa — legenda / step--1 · Archivo 500</div>
+        <div class="mono" style="font-size:15px">8,20 km · 5'41"/km · 0,42 km² · −3.7319, −38.5267</div>
+      </div>
+      <ul>
+        <li>Títulos recebem <span class="mono">text-wrap: balance</span>; corpo <span class="mono">text-wrap: pretty</span>.</li>
+        <li>Rótulos em caixa alta ganham <span class="mono">letter-spacing: .04–.16em</span>.</li>
+        <li>Nunca centralizar blocos de texto longos. Números em coluna: <span class="mono">tabular-nums</span> obrigatório.</li>
+      </ul>
+    </section>
+
+    <!-- 4 -->
+    <section id="espaco">
+      <h2><span class="h2n">04</span>Espaçamento &amp; grid</h2>
+      <p class="sub">Base 4. Layout com <span class="mono">flex</span>/<span class="mono">grid</span> + <span class="mono">gap</span> — nunca margem por elemento.</p>
+      <div class="spec">
+        <div style="display:flex;align-items:flex-end;gap:8px">
+          <div style="width:4px;height:16px;background:var(--teal)"></div>
+          <div style="width:8px;height:24px;background:var(--teal)"></div>
+          <div style="width:12px;height:32px;background:var(--teal)"></div>
+          <div style="width:16px;height:44px;background:var(--teal)"></div>
+          <div style="width:20px;height:56px;background:var(--teal)"></div>
+          <div style="width:24px;height:68px;background:var(--teal)"></div>
+          <div style="width:32px;height:84px;background:var(--teal)"></div>
+          <div style="width:40px;height:100px;background:var(--teal)"></div>
+        </div>
+      </div>
+      <p class="caption">4 · 8 · 12 · 16 · 20 · 24 · 32 · 40 · 48 · 64</p>
+      <ul>
+        <li><strong>Padding interno padrão:</strong> card 16, sheet 18, tela 18 nas laterais.</li>
+        <li><strong>Entre seções de conteúdo:</strong> 24–32. <strong>Entre grupos irmãos:</strong> 12–16.</li>
+        <li><strong>Nav inferior:</strong> 88 de altura (inclui área do indicador de home — não desenhar barra falsa de status nem teclado falso).</li>
+        <li>Conteúdo de leitura no máximo ~65ch de largura.</li>
+      </ul>
+    </section>
+
+    <!-- 5 -->
+    <section id="forma">
+      <h2><span class="h2n">05</span>Raio &amp; elevação</h2>
+      <p class="sub">O raio cresce com o tamanho do objeto. A elevação tem três níveis e é diferente em cada tema.</p>
+      <div class="spec">
+        <div style="width:64px;height:48px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-xs)"></div>
+        <div style="width:64px;height:48px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm)"></div>
+        <div style="width:64px;height:48px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-md)"></div>
+        <div style="width:64px;height:48px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-lg)"></div>
+        <div style="width:64px;height:48px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-xl)"></div>
+        <div style="width:64px;height:48px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-full)"></div>
+      </div>
+      <p class="caption">--r-xs 4 (chip, campo) · --r-sm 8 (botão) · --r-md 12 (FAB, ícone-botão) · --r-lg 16 (card) · --r-xl 22 (sheet, card grande) · --r-full (pill, avatar)</p>
+      <div class="spec">
+        <div style="width:110px;height:70px;background:var(--surface-2);border-radius:var(--r-lg);box-shadow:var(--e1)"></div>
+        <div style="width:110px;height:70px;background:var(--surface-2);border-radius:var(--r-lg);box-shadow:var(--e2)"></div>
+        <div style="width:110px;height:70px;background:var(--surface-2);border-radius:var(--r-lg);box-shadow:var(--e3)"></div>
+      </div>
+      <p class="caption">--e1 apoio (card em lista) · --e2 flutuante (card destacado, FAB) · --e3 overlay (sheet, modal, toast)</p>
+      <div class="note"><b>Não é tudo card</b>Borda, preenchimento, raio e sombra dizem "objeto separado". Gaste por papel — levante <em>a</em> coisa que precisa de destaque, não todas.</div>
+    </section>
+
+    <!-- 6 -->
+    <section id="icones">
+      <h2><span class="h2n">06</span>Ícones</h2>
+      <p class="sub">Traço, nunca preenchido (salvo play/pause/stop). Grade de 24, traço 1.75, pontas e junções arredondadas. Nunca emoji.</p>
+      <div class="icons">
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10Z"/><circle cx="12" cy="11" r="2.2"/></svg><figcaption>map-pin</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v3a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M9 20h6M12 15v5"/></svg><figcaption>trophy</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg><figcaption>missão</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4l7 2.5L19 4v11l-7 2.5L5 15"/></svg><figcaption>flag</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="3.2"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/></svg><figcaption>user</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4l13 8-13 8V4Z"/></svg><figcaption>play</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg><figcaption>pause</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg><figcaption>stop</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5Z"/><path d="M3 13l9 5 9-5"/></svg><figcaption>layers</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/></svg><figcaption>heart</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v13M8 7l4-4 4 4"/></svg><figcaption>share</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M4 21h16"/></svg><figcaption>download</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.3-4.3"/></svg><figcaption>search</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg><figcaption>filter</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3.5 14H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 3.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/></svg><figcaption>settings</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg><figcaption>bell</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 16h13l4-2 3 1v3H2zM2 16l3-5 4 1 3-3 3 4h4"/></svg><figcaption>shoe</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 5 6.5 5 9.5A5 5 0 0 1 7 12c0-1 .3-2 .8-3"/></svg><figcaption>flame</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3Z"/><path d="M9 3v15M15 6v15"/></svg><figcaption>route</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3Z"/></svg><figcaption>hex / cobertura</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 5 5.5.8-4 3.9 1 5.5L12 21l-5 2.6 1-5.5-4-3.9 5.5-.8L12 3Z"/></svg><figcaption>selo / star</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><path d="M14 14h2v2h-2zM18 14h2M14 18h2M18 18h2"/></svg><figcaption>qr</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg><figcaption>calendar</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg><figcaption>clock</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3L12 4Z"/><path d="M12 10v5M12 18h.01"/></svg><figcaption>alerta</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3.5 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 1.5-5 5-9Z"/></svg><figcaption>água</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg><figcaption>sol / UV</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l3 3 3 1-2 3 2 3-3 1-3 3-3-3-3-1 2-3-2-3 3-1 3-3ZM12 21v-8"/></svg><figcaption>sombra / árvore</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="12" rx="2"/><path d="M12 7V4M9 11h6M9 15h6"/></svg><figcaption>SOS</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M8 9V7a4 4 0 0 1 8 0v2"/></svg><figcaption>lock</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l6 6L20 6"/></svg><figcaption>check</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg><figcaption>close</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><figcaption>plus</figcaption></figure>
+        <figure><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg><figcaption>chevron</figcaption></figure>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Tamanho</th><th class="mono">px</th><th class="mono">traço</th><th>Uso</th></tr></thead>
+          <tbody>
+            <tr><td>xs</td><td class="mono">16</td><td class="mono">1.5</td><td>dentro de chip, inline no texto</td></tr>
+            <tr><td>sm</td><td class="mono">20</td><td class="mono">1.75</td><td>botão, list row, campo</td></tr>
+            <tr><td>md</td><td class="mono">24</td><td class="mono">1.75</td><td>nav inferior, FAB, cabeçalho</td></tr>
+            <tr><td>lg</td><td class="mono">32</td><td class="mono">2</td><td>estado vazio, destaque</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li><strong>Alvo de toque ≥ 44&nbsp;px</strong> mesmo com ícone de 20 — o botão cresce, o ícone não.</li>
+        <li>Ícone herda <span class="mono">currentColor</span>. Cor só quando carrega significado (SOS em <span style="color:var(--crit)">crit</span>, troféu em <span style="color:var(--gold)">gold</span>).</li>
+        <li>Marcadores de mapa são desenhados à parte (pin com sombra projetada, base cravada no ponto) — não são ícones de UI redimensionados.</li>
+      </ul>
+    </section>
+
+    <!-- 7 -->
+    <section id="movimento">
+      <h2><span class="h2n">07</span>Movimento &amp; animação</h2>
+      <p class="sub">O movimento explica o que mudou e para onde. Curto na UI, um pouco mais generoso na celebração. Tudo respeita <span class="mono">prefers-reduced-motion</span>.</p>
+
+      <h3>Durações &amp; curvas</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Token</th><th class="mono">valor</th><th>Uso</th></tr></thead>
+          <tbody>
+            <tr><td>--dur-1</td><td class="mono">120ms</td><td>feedback de toque, switch, chip</td></tr>
+            <tr><td>--dur-2</td><td class="mono">200ms</td><td>padrão — botão, fade, hover, toast</td></tr>
+            <tr><td>--dur-3</td><td class="mono">300ms</td><td>sheet, card, troca de aba</td></tr>
+            <tr><td>--dur-4</td><td class="mono">450ms</td><td>transição de tela, mapa reenquadrando</td></tr>
+            <tr><td>--dur-5</td><td class="mono">900ms</td><td>pintura de território, celebração</td></tr>
+            <tr><td>--ease-standard</td><td class="mono">cubic-bezier(.2,0,0,1)</td><td>movimento na tela</td></tr>
+            <tr><td>--ease-out</td><td class="mono">cubic-bezier(0,0,0,1)</td><td>entradas (desacelera)</td></tr>
+            <tr><td>--ease-in</td><td class="mono">cubic-bezier(.3,0,1,1)</td><td>saídas (acelera)</td></tr>
+            <tr><td>--ease-spring</td><td class="mono">cubic-bezier(.2,.9,.2,1.12)</td><td>só desbloqueio de selo/troféu (overshoot)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Catálogo</h3>
+      <div class="spec">
+        <div style="text-align:center"><div class="anim-demo"><div class="terr-paint"></div></div><div class="caption" style="margin:.5rem 0 0">Pintura de território · --dur-5 --ease-out</div></div>
+        <div style="text-align:center"><div class="anim-demo"><span class="tick" id="tickdemo">0,00</span></div><div class="caption" style="margin:.5rem 0 0">Contagem de número · ~800ms</div></div>
+        <div style="text-align:center"><div class="anim-demo"><span class="flame"></span></div><div class="caption" style="margin:.5rem 0 0">Chama do streak · loop 1.8s</div></div>
+        <div style="text-align:center"><div class="anim-demo" id="popdemo"><span class="badge-pop"></span></div><div class="caption" style="margin:.5rem 0 0">Desbloqueio de selo · --ease-spring + confete</div></div>
+        <div style="text-align:center"><div class="anim-demo"><span class="rec-dot"></span></div><div class="caption" style="margin:.5rem 0 0">Ponto REC (gravando) · loop 1.2s</div></div>
+      </div>
+      <ul>
+        <li><strong>Toque:</strong> <span class="mono">scale(.97)</span> em --dur-1. <strong>Sheet:</strong> sobe em --dur-3 --ease-out, backdrop em --dur-2; fecha em --dur-2 --ease-in.</li>
+        <li><strong>Mapa:</strong> ao salvar corrida, o traçado se desenha (<span class="mono">stroke-dashoffset</span> ~1.2s), o polígono pinta, o mapa reenquadra em --dur-4.</li>
+        <li><strong>Pull-to-refresh:</strong> uma pequena rota/bússola que se desenha conforme puxa.</li>
+        <li><strong>Celebração:</strong> um único momento — selo com overshoot + anel varrendo + jato curto de confete. Nunca bloqueia a tela.</li>
+      </ul>
+      <div class="note warn">
+        <b>Movimento reduzido</b>
+        Com <span class="mono">prefers-reduced-motion: reduce</span>: sem overshoot, sem confete, sem parallax, sem contagem. Trocas viram <em>fade</em> simples ou corte seco. O estado final é idêntico.
+      </div>
+    </section>
+
+    <!-- 8 -->
+    <section id="loading">
+      <h2><span class="h2n">08</span>Loading &amp; estados</h2>
+      <p class="sub">Skeleton que imita o layout final, spinner só para esperas curtas, e um estado para cada jeito de dar errado.</p>
+
+      <h3>Skeleton</h3>
+      <div class="spec col">
+        <div style="display:flex;gap:12px;align-items:center">
+          <div class="skel" style="width:66px;height:66px;border-radius:var(--r-md)"></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+            <div class="skel" style="width:60%;height:14px"></div>
+            <div class="skel" style="width:40%;height:12px"></div>
+            <div class="skel" style="width:75%;height:12px"></div>
+          </div>
+        </div>
+      </div>
+      <p class="caption">Base <code>--sunken</code>, brilho varrendo 1.4s, cantos do tamanho do elemento real. Some assim que o conteúdo chega — sem "piscar".</p>
+
+      <h3>Spinner &amp; progresso</h3>
+      <div class="spec">
+        <div class="spinner"></div>
+        <div class="progress"><i style="width:64%"></i></div>
+        <div style="display:flex;align-items:center;gap:10px"><span class="rec-dot"></span><span class="mono" style="font-size:13px">processando território…</span></div>
+      </div>
+      <ul>
+        <li><strong>Spinner:</strong> espera &lt; 1&nbsp;s e indeterminada (login, salvar). Tamanhos 16 / 20 / 24 / 32.</li>
+        <li><strong>Barra determinada:</strong> upload de corrida, processamento de território, geração de card.</li>
+        <li><strong>Mapa carregando:</strong> mapa esmaecido + spinner central + "carregando mapa". Nunca tela branca.</li>
+        <li><strong>UI otimista:</strong> a corrida aparece na hora como "processando" com borda pulsando; consolida quando o worker responde.</li>
+      </ul>
+
+      <h3>Vazio, erro, offline</h3>
+      <div class="grid2">
+        <div class="spec col" style="text-align:center">
+          <svg viewBox="0 0 120 90" style="width:120px;margin:0 auto" fill="none" stroke="var(--ink-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 70h80M30 70V40l30-20 30 20v30"/><path d="M52 70V54h16v16"/></svg>
+          <strong style="font-family:var(--f-head)">Seu mapa está em branco</strong>
+          <span style="font-size:13px;color:var(--ink-2)">Corra formando um circuito para pintar seu primeiro quarteirão.</span>
+          <span class="btn btn-primary btn-sm" style="align-self:center;margin-top:4px">Iniciar corrida</span>
+        </div>
+        <div class="spec col" style="text-align:center">
+          <svg viewBox="0 0 120 90" style="width:110px;margin:0 auto" fill="none" stroke="var(--crit)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M60 20l40 60H20L60 20Z"/><path d="M60 44v16M60 68h.01"/></svg>
+          <strong style="font-family:var(--f-head)">Não deu para carregar suas corridas</strong>
+          <span style="font-size:13px;color:var(--ink-2)">Verifique a conexão e tente de novo.</span>
+          <span class="btn btn-ghost btn-sm" style="align-self:center;margin-top:4px">Tentar de novo</span>
+        </div>
+      </div>
+      <div class="spec" style="justify-content:center">
+        <div style="background:var(--warn-weak);color:var(--warn);font-size:12px;font-weight:600;padding:8px 14px;border-radius:var(--r-full);display:inline-flex;gap:8px;align-items:center">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12l8-8 8 8M12 4v16"/></svg>
+          Sem conexão — a corrida será enviada quando você voltar
+        </div>
+      </div>
+      <ul>
+        <li><strong>Erro fala o que houve e como sair</strong> — sem "Ops!", sem culpa, com ação de retomar.</li>
+        <li><strong>Vazio é oportunidade:</strong> ilustração de linha simples + título + uma frase + a ação que preenche.</li>
+        <li><strong>Offline é persistente</strong> (barra fina), não um toast que some.</li>
+      </ul>
+    </section>
+
+    <!-- 9 -->
+    <section id="componentes">
+      <h2><span class="h2n">09</span>Componentes</h2>
+      <p class="sub">Cada peça com seus estados. Espécimes renderizados — alterne o tema para ver os dois.</p>
+
+      <h3>Botões</h3>
+      <div class="spec">
+        <button class="btn btn-primary"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4l13 8-13 8V4Z"/></svg>Iniciar corrida</button>
+        <button class="btn btn-secondary">Salvar</button>
+        <button class="btn btn-ghost">Cancelar</button>
+        <button class="btn btn-quiet">Ver tudo</button>
+        <button class="btn btn-primary btn-sm">Pequeno</button>
+        <button class="btn btn-primary" disabled>Desabilitado</button>
+      </div>
+      <p class="caption">Altura 44 (34 no <code>sm</code>). Primária = coral, uma por tela. Secundária = teal. <em>Ghost</em> para ação alternativa. <em>Quiet</em> para navegação leve.</p>
+
+      <h3>Campos</h3>
+      <div class="spec">
+        <div class="field"><label for="e">E-mail</label><input id="e" type="email" value="ah.vasconcelos@gmail.com"><span class="hint">Usamos para confirmações e avisos de segurança.</span></div>
+        <div class="field err"><label for="p">Senha</label><input id="p" type="password" value="123"><span class="hint">Mínimo 8 caracteres.</span></div>
+      </div>
+
+      <h3>Chips, switch, segmentado</h3>
+      <div class="spec">
+        <span class="chip-c teal">+3 quarteirões</span>
+        <span class="chip-c gold">Recorde 5 km</span>
+        <span class="chip-c on">Ativo</span>
+        <span class="chip-c">Neutro</span>
+        <button class="sw-toggle" aria-checked="true"><i></i></button>
+        <button class="sw-toggle" aria-checked="false"><i></i></button>
+        <div class="segmented"><button aria-pressed="true">Eu</button><button aria-pressed="false">Amigos</button><button aria-pressed="false">Cidade</button></div>
+      </div>
+
+      <h3>Cards, stat tiles, progresso</h3>
+      <div class="spec">
+        <div class="card-c">
+          <p class="k">SEU TERRITÓRIO</p>
+          <div class="big">0,42<span style="font-size:15px;color:var(--ink-3)"> km²</span></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px"><span style="font-weight:600">Aldeota</span><span class="progress" style="flex:1"><i style="width:12%"></i></span><span class="mono" style="color:var(--teal-strong)">12%</span></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div class="stat-tile"><div class="v">8,20</div><div class="l">km</div></div>
+          <div class="stat-tile"><div class="v">5'41"</div><div class="l">pace</div></div>
+          <div class="stat-tile"><div class="v">+3</div><div class="l">quarteirões</div></div>
+        </div>
+      </div>
+      <p class="caption">Números-herói em Archivo Expanded 800, <code>tabular-nums</code>. Só use tile grande quando o número é o assunto da tela.</p>
+
+      <h3>Toast &amp; nav inferior</h3>
+      <div class="spec col">
+        <div class="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l6 6L20 6"/></svg>Corrida salva · +3 quarteirões</div>
+        <div style="display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-lg);padding:10px 6px 0;max-width:360px">
+          <div style="flex:1;text-align:center;color:var(--teal-strong)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10Z"/><circle cx="12" cy="11" r="2.2"/></svg><div style="font-size:10px;font-weight:600;margin-top:2px">Mapa</div></div>
+          <div style="flex:1;text-align:center;color:var(--ink-3)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v3a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M9 20h6M12 15v5"/></svg><div style="font-size:10px;font-weight:600;margin-top:2px">Ranking</div></div>
+          <div style="flex:1;text-align:center;color:var(--ink-3)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg><div style="font-size:10px;font-weight:600;margin-top:2px">Missões</div></div>
+          <div style="flex:1;text-align:center;color:var(--ink-3)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="3.2"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/></svg><div style="font-size:10px;font-weight:600;margin-top:2px">Perfil</div></div>
+        </div>
+      </div>
+      <p class="caption">4 destinos fixos. Ícone de traço; ativo em teal (cor + peso, não só cor). Toast: fundo <code>--ink</code>, some em 4&nbsp;s, ação opcional "Desfazer".</p>
+    </section>
+
+    <!-- 10 -->
+    <section id="selos">
+      <h2><span class="h2n">10</span>Selos</h2>
+      <p class="sub">Três formas, quatro tipos, três estados, quatro tamanhos. A forma diz a categoria antes de você ler o nome.</p>
+
+      <h3>Formas</h3>
+      <div class="selo-row">
+        <figure>
+          <div class="selo">
+            <svg class="shape" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="var(--teal-weak)" stroke="var(--teal)" stroke-width="2.5"/><circle cx="32" cy="32" r="24" fill="none" stroke="var(--teal)" stroke-width="1" stroke-opacity=".4"/></svg>
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="var(--teal-strong)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 5 6.5 5 9.5A5 5 0 0 1 7 12c0-1 .3-2 .8-3"/></svg>
+          </div>
+          <figcaption><strong>Círculo</strong><br>atividade, volume, streak</figcaption>
+        </figure>
+        <figure>
+          <div class="selo">
+            <svg class="shape" viewBox="0 0 64 64"><path d="M32 4l24 13.8v27.4L32 60 8 45.2V17.8L32 4Z" fill="var(--teal-weak)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/></svg>
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="var(--teal-strong)" stroke-width="2" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3Z"/></svg>
+          </div>
+          <figcaption><strong>Hexágono</strong><br>cobertura, território, cidade</figcaption>
+        </figure>
+        <figure>
+          <div class="selo">
+            <svg class="shape" viewBox="0 0 64 64"><path d="M32 4l22 6v22c0 15-11 24-22 28C21 56 10 47 10 32V10l22-6Z" fill="var(--teal-weak)" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/></svg>
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="var(--teal-strong)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10Z"/><circle cx="12" cy="11" r="2.2"/></svg>
+          </div>
+          <figcaption><strong>Escudo</strong><br>selo de marco histórico</figcaption>
+        </figure>
+      </div>
+
+      <h3>Estados</h3>
+      <div class="selo-row">
+        <figure>
+          <div class="selo locked">
+            <svg class="shape" viewBox="0 0 64 64"><path d="M32 4l22 6v22c0 15-11 24-22 28C21 56 10 47 10 32V10l22-6Z" fill="var(--sunken)" stroke="var(--ink-3)" stroke-width="2.5" stroke-linejoin="round"/></svg>
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2"><circle cx="12" cy="11" r="2.2"/><path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10Z"/></svg>
+          </div>
+          <figcaption><strong>Bloqueado</strong><br>cinza, 42%, cadeado</figcaption>
+        </figure>
+        <figure>
+          <div class="selo">
+            <svg class="shape" viewBox="0 0 64 64"><path d="M32 4l22 6v22c0 15-11 24-22 28C21 56 10 47 10 32V10l22-6Z" fill="none" stroke="var(--teal)" stroke-width="2.5" stroke-dasharray="4 4" stroke-linejoin="round"/></svg>
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10Z"/><circle cx="12" cy="11" r="2.2"/></svg>
+          </div>
+          <figcaption><strong>Disponível</strong><br>contorno tracejado, pulsa</figcaption>
+        </figure>
+        <figure>
+          <div class="selo">
+            <svg class="shape" viewBox="0 0 64 64"><path d="M32 4l22 6v22c0 15-11 24-22 28C21 56 10 47 10 32V10l22-6Z" fill="var(--violet)" stroke="var(--violet)" stroke-width="2.5" stroke-linejoin="round"/></svg>
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10Z"/><circle cx="12" cy="11" r="2.2"/></svg>
+          </div>
+          <figcaption><strong>Conquistado</strong><br>cor cheia + data</figcaption>
+        </figure>
+        <figure>
+          <div class="selo">
+            <svg class="shape" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="none" stroke="var(--gold)" stroke-width="2" stroke-dasharray="1 4"/><path d="M32 8l18 5v16c0 12-9 19-18 22C23 48 14 41 14 29V13l18-5Z" fill="var(--gold)" stroke="var(--gold)" stroke-width="2" stroke-linejoin="round"/></svg>
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#3a2a05" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 5 5 .8-3.6 3.5.9 5L12 15l-4.8 2.3.9-5L4.5 8.8l5-.8L12 3Z"/></svg>
+          </div>
+          <figcaption><strong>Pioneiro</strong><br>anel dourado cintilante</figcaption>
+        </figure>
+      </div>
+
+      <h3>Tipos</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Tipo</th><th>Forma</th><th>Cor conquistado</th><th>Exemplo</th></tr></thead>
+          <tbody>
+            <tr><td>Marco histórico</td><td>Escudo</td><td><span class="sw" style="background:var(--violet)"></span>violet</td><td>"Iracema Guerreira", "Onde tudo começou"</td></tr>
+            <tr><td>Coleção / circuito</td><td>Escudo + fita</td><td><span class="sw" style="background:var(--violet)"></span>violet + fita gold</td><td>"Circuito Praia de Iracema"</td></tr>
+            <tr><td>Cobertura / território</td><td>Hexágono</td><td><span class="sw" style="background:var(--r1)"></span>teal</td><td>"Barão da Aldeota", "Cartógrafo 5%"</td></tr>
+            <tr><td>Atividade / volume</td><td>Círculo</td><td><span class="sw" style="background:var(--coral)"></span>coral</td><td>"100 km", "Madrugador", "Orla completa"</td></tr>
+            <tr><td>Sazonal</td><td>a do tipo + micro-selo de estação</td><td>cor da estação</td><td>"São João 2026"</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Tamanhos &amp; anatomia</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Nome</th><th class="mono">px (tela)</th><th class="mono">fonte @2x</th><th>Onde</th></tr></thead>
+          <tbody>
+            <tr><td>inline</td><td class="mono">28</td><td class="mono">—</td><td>chip, linha de lista, resumo pós-corrida</td></tr>
+            <tr><td>grade</td><td class="mono">64</td><td class="mono">—</td><td>perfil, sala de troféus</td></tr>
+            <tr><td>destaque</td><td class="mono">128</td><td class="mono">—</td><td>tela de celebração, detalhe do selo</td></tr>
+            <tr><td>compartilhar</td><td class="mono">320</td><td class="mono">640×640</td><td>card para Instagram / WhatsApp</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li><strong>Ícone dentro de 60%</strong> da forma (área segura). Keyline interno de 1&nbsp;px a 40% do raio.</li>
+        <li><strong>Nunca só cor:</strong> forma + ícone + nome. Um daltônico distingue escudo de hexágono de círculo.</li>
+        <li>Selo de marco pode ter <strong>verso com a foto</strong> que você enviou, em duotone teal, mascarada pela forma do escudo.</li>
+      </ul>
+    </section>
+
+    <!-- 11 -->
+    <section id="trofeus">
+      <h2><span class="h2n">11</span>Troféus</h2>
+      <p class="sub">Semanais, por bairro e de season. Tratamento metálico em bronze, prata e ouro — ajustado para o escuro.</p>
+
+      <h3>Medalhas</h3>
+      <div class="spec">
+        <div style="text-align:center"><div class="medal bronze"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v3a5 5 0 0 1-10 0V4ZM9 20h6M12 15v5"/></svg></div><div class="caption" style="margin:.5rem 0 0">Bronze · 3º</div></div>
+        <div style="text-align:center"><div class="medal silver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v3a5 5 0 0 1-10 0V4ZM9 20h6M12 15v5"/></svg></div><div class="caption" style="margin:.5rem 0 0">Prata · 2º</div></div>
+        <div style="text-align:center"><div class="medal gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v3a5 5 0 0 1-10 0V4ZM9 20h6M12 15v5"/></svg></div><div class="caption" style="margin:.5rem 0 0">Ouro · 1º</div></div>
+      </div>
+      <p class="caption">Gradiente radial (luz a 35%/28%), brilho interno no topo, sombra interna na base, ícone gravado a 40% de preto. No escuro os metais clareiam ~10% e reduzem contraste interno.</p>
+
+      <h3>Card de troféu semanal</h3>
+      <div class="spec">
+        <div class="trophy-card">
+          <div class="medal gold" style="margin:0 auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v3a5 5 0 0 1-10 0V4ZM9 20h6M12 15v5"/></svg></div>
+          <h5>Conquistador da semana</h5>
+          <div class="wk">Semana 36 · 2026</div>
+          <div class="mv">+0,58 km²</div>
+          <span class="chip-c teal" style="margin-top:10px">1º de 214 em Fortaleza</span>
+        </div>
+        <div class="trophy-card">
+          <div class="medal silver" style="margin:0 auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V6l8-3 8 3v14M4 13h16"/></svg></div>
+          <h5>Barão da Aldeota</h5>
+          <div class="wk">Semana 36 · 2026</div>
+          <div class="mv">0,42 km² no bairro</div>
+          <span class="chip-c" style="margin-top:10px">2º na Aldeota</span>
+        </div>
+      </div>
+
+      <h3>Sala de troféus &amp; season</h3>
+      <ul>
+        <li><strong>Grade</strong> de medalhas com uma linha-prateleira sutil sob cada fileira, agrupada por season (colapsável).</li>
+        <li><strong>Troféu de season</strong> — maior, com uma forma de louro/estrela, cor da season, e o número da temporada gravado. Só um por trimestre.</li>
+        <li>Troféu já conquistado nunca muda de forma nem de nome entre versões do app.</li>
+        <li>Toque abre o detalhe: critério, valor, data, e a posição de todos que ganharam aquele troféu naquele ciclo.</li>
+      </ul>
+    </section>
+
+    <!-- 12 -->
+    <section id="ranking">
+      <h2><span class="h2n">12</span>Ranking</h2>
+      <p class="sub">Linha de leaderboard escaneável, com a sua linha destacada e movimento em ícone + texto (nunca só cor).</p>
+      <div class="spec">
+        <div class="lb">
+          <div class="row"><span class="rk">1</span><span class="av"></span><span class="nm">Marina L.</span><span class="mv">0,58<span class="d eq"> –</span></span></div>
+          <div class="row you"><span class="rk">2</span><span class="av"></span><span class="nm">Você</span><span class="mv">0,42 <span class="d up"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M12 5l7 10H5z"/></svg>3</span></span></div>
+          <div class="row"><span class="rk">3</span><span class="av"></span><span class="nm">Clube do Cocó</span><span class="mv">0,39 <span class="d dn"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M12 19L5 9h14z"/></svg>1</span></span></div>
+          <div class="row"><span class="rk">4</span><span class="av"></span><span class="nm">Diego P.</span><span class="mv">0,22<span class="d eq"> –</span></span></div>
+        </div>
+      </div>
+      <ul>
+        <li>Posição em <span class="mono">IBM Plex Mono</span> tabular. Métrica principal alinhada à direita.</li>
+        <li>Sua linha: fundo <code>--teal-weak</code> + faixa <code>--teal</code> de 3&nbsp;px à esquerda.</li>
+        <li>Delta: <span style="color:var(--good)">▲</span> subiu / <span style="color:var(--crit)">▼</span> caiu / – manteve, sempre com o triângulo <em>e</em> o número.</li>
+        <li>Pódio (top 3): versão visual com alturas diferentes e as três medalhas.</li>
+      </ul>
+    </section>
+
+    <!-- 13 -->
+    <section id="territorio">
+      <h2><span class="h2n">13</span>Território &amp; mapa</h2>
+      <p class="sub">A cor de corredor pinta o mapa. Regras de preenchimento, contorno, disputa e decaimento — e os quatro estilos de base.</p>
+
+      <div class="spec">
+        <svg viewBox="0 0 320 150" style="width:100%;max-width:360px;background:var(--sunken);border-radius:var(--r-md)">
+          <g stroke="var(--surface-2)" stroke-width="4"><path d="M40 0V150M120 0V150M200 0V150M280 0V150M0 45H320M0 105H320"/></g>
+          <rect x="40" y="45" width="80" height="60" fill="var(--r1)" fill-opacity=".24" stroke="var(--r1)" stroke-width="2.5"/>
+          <rect x="120" y="45" width="80" height="60" fill="var(--r2)" fill-opacity=".24" stroke="var(--r2)" stroke-width="2.5"/>
+          <rect x="120" y="45" width="40" height="60" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="1" stroke-dasharray="3 3"/>
+          <rect x="200" y="45" width="80" height="60" fill="var(--r3)" fill-opacity=".08"/>
+        </svg>
+      </div>
+      <p class="caption">Da esquerda: território seu · território de outro · faixa de disputa (hachura das duas cores + tracejado neutro, 24&nbsp;h) · borda decaída (8%, sem contorno).</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>Elemento</th><th>Preenchimento</th><th>Contorno</th></tr></thead>
+          <tbody>
+            <tr><td>Território ativo</td><td>cor do corredor · 22% (claro) / 26% (escuro)</td><td>cor sólida · 2.5px · <span class="mono">linejoin round</span></td></tr>
+            <tr><td>Zona de disputa</td><td>hachura 45° combinando as duas cores</td><td>tracejado <code>--ink-3</code> · 1px</td></tr>
+            <tr><td>Borda em decaimento</td><td>cor · 8%</td><td>nenhum</td></tr>
+            <tr><td>Célula H3 (contagem)</td><td>quase invisível — só em barras de progresso de bairro</td><td>—</td></tr>
+            <tr><td>Zona de risco</td><td>hachura <code>--crit</code> · 10% + rótulo "conquista indisponível"</td><td>tracejado <code>--crit</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Estilos de base do mapa</h3>
+      <div class="terr-legend">
+        <div class="it"><span class="box" style="background:#EDE8DA;border:1px solid var(--line-2)"></span> Ruas <em style="color:var(--ink-3)">(padrão claro)</em></div>
+        <div class="it"><span class="box" style="background:#2E3524"></span> Satélite</div>
+        <div class="it"><span class="box" style="background:#E4DCC4"></span> Relevo</div>
+        <div class="it"><span class="box" style="background:#1B2430"></span> Noturno <em style="color:var(--ink-3)">(auto no tema escuro + à noite)</em></div>
+      </div>
+      <ul>
+        <li><strong>Não construímos o mapa</strong> — dados OpenStreetMap, tiles MapTiler/Protomaps, render MapLibre GL. Nós fazemos o <em>style JSON</em> e as camadas por cima.</li>
+        <li>A camada de território, o mapa de calor, missões e alertas são <strong>sobreposições</strong> ligáveis no seletor de camadas.</li>
+        <li>Legenda sempre disponível: cor + nome do corredor. Em satélite/noturno, o contorno do território sobe para 3&nbsp;px e ganha leve brilho.</li>
+      </ul>
+    </section>
+
+    <!-- 14 -->
+    <section id="imagens">
+      <h2><span class="h2n">14</span>Imagens</h2>
+      <p class="sub">Proporção, tamanho de exibição, resolução de origem, recorte e formato — para cada tipo de imagem do produto.</p>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Uso</th><th class="mono">proporção</th><th class="mono">exibição</th><th class="mono">origem</th><th>recorte / formato</th></tr></thead>
+          <tbody>
+            <tr><td>Avatar — xs / sm / md / lg</td><td class="mono">1:1</td><td class="mono">24 / 32 / 40 / 56</td><td class="mono">192</td><td>máscara circular · WebP, fallback JPEG</td></tr>
+            <tr><td>Avatar — perfil</td><td class="mono">1:1</td><td class="mono">112</td><td class="mono">336</td><td>circular</td></tr>
+            <tr><td>Foto de tênis — card</td><td class="mono">1:1</td><td class="mono">56</td><td class="mono">168</td><td>cover, centro · PNG transparente ideal</td></tr>
+            <tr><td>Foto de tênis — detalhe</td><td class="mono">1:1</td><td class="mono">200</td><td class="mono">600</td><td>cover, centro</td></tr>
+            <tr><td>Foto de missão — captura</td><td class="mono">4:3</td><td class="mono">—</td><td class="mono">≤ 1600 (lado maior)</td><td>câmera nativa · JPEG q80 · EXIF removido</td></tr>
+            <tr><td>Foto de missão — thumb</td><td class="mono">1:1</td><td class="mono">88</td><td class="mono">264</td><td>recorte central</td></tr>
+            <tr><td>Selo com foto (verso)</td><td class="mono">1:1</td><td class="mono">128 / 320</td><td class="mono">640</td><td>máscara de escudo + duotone teal</td></tr>
+            <tr><td>Thumb de mapa (run card)</td><td class="mono">1:1</td><td class="mono">66</td><td class="mono">vetor</td><td>render vetorial; sem raster</td></tr>
+            <tr><td>Mapa estático — compartilhar</td><td class="mono">3:2</td><td class="mono">—</td><td class="mono">1080×720</td><td>PNG</td></tr>
+            <tr><td>Card de compartilhar — story</td><td class="mono">4:5</td><td class="mono">—</td><td class="mono">1080×1350</td><td>área segura central 936×1170</td></tr>
+            <tr><td>Card de compartilhar — quadrado</td><td class="mono">1:1</td><td class="mono">—</td><td class="mono">1080×1080</td><td>PNG</td></tr>
+            <tr><td>Preview de link (OG)</td><td class="mono">1.91:1</td><td class="mono">—</td><td class="mono">1200×630</td><td>texto dentro de 1000×520</td></tr>
+            <tr><td>Hero de evento</td><td class="mono">5:2</td><td class="mono">—</td><td class="mono">1200×480</td><td>área segura central 1000×400</td></tr>
+            <tr><td>Banner de campanha (in-app)</td><td class="mono">16:6</td><td class="mono">—</td><td class="mono">1080×405</td><td>—</td></tr>
+            <tr><td>Foto de referência de marco</td><td class="mono">4:3</td><td class="mono">—</td><td class="mono">1200×900</td><td>curadoria (admin)</td></tr>
+            <tr><td>Imagem de push (Android)</td><td class="mono">2:1</td><td class="mono">—</td><td class="mono">1440×720</td><td>big picture</td></tr>
+            <tr><td>Ícone do app</td><td class="mono">1:1</td><td class="mono">—</td><td class="mono">1024×1024</td><td>+ adaptive 432×432 (safe 264)</td></tr>
+            <tr><td>Ilustração de estado vazio</td><td class="mono">~5:4</td><td class="mono">~200×160</td><td class="mono">SVG</td><td>traço 2px, <code>--ink-3</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li><strong>Toda foto de usuário:</strong> EXIF removido (exceto o mínimo para o selo), rosto de terceiros borrado antes de qualquer exibição pública, varredura de malware.</li>
+        <li><strong>@2x sempre</strong> na origem (o dobro da exibição), servido por URL assinada com expiração, de domínio isolado.</li>
+        <li><strong>Placeholder:</strong> <code>--sunken</code> com o ícone do tipo (avatar → user, tênis → shoe) em <code>--ink-3</code>, enquanto carrega.</li>
+      </ul>
+    </section>
+
+    <!-- 15 -->
+    <section id="temas">
+      <h2><span class="h2n">15</span>Claro &amp; escuro</h2>
+      <p class="sub">O tema muda só os tokens. O escuro é redesenhado, não invertido, e testado contra o fundo escuro real.</p>
+      <div class="note">
+        <b>Como está montado</b>
+        <code>:root</code> puro define a paleta clara completa. <code>@media (prefers-color-scheme: dark)</code> guardado por <code>:root:not([data-theme="light"])</code> redefine só os tokens. <code>:root[data-theme="dark"]</code> redefine de novo para o toggle vencer nos dois sentidos. Nenhuma cor nasce dentro de um bloco de tema.
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Token</th><th class="mono">Claro</th><th class="mono">Escuro</th></tr></thead>
+          <tbody>
+            <tr><td>--bg</td><td class="mono">#F4F1E8</td><td class="mono">#0E1618</td></tr>
+            <tr><td>--surface</td><td class="mono">#FBFAF4</td><td class="mono">#152124</td></tr>
+            <tr><td>--surface-2</td><td class="mono">#FFFFFF</td><td class="mono">#1B292C</td></tr>
+            <tr><td>--sunken</td><td class="mono">#ECE6D9</td><td class="mono">#0A1214</td></tr>
+            <tr><td>--ink</td><td class="mono">#16262A</td><td class="mono">#E9E4D7</td></tr>
+            <tr><td>--ink-2</td><td class="mono">#46565A</td><td class="mono">#A8B1B1</td></tr>
+            <tr><td>--ink-3</td><td class="mono">#7B8688</td><td class="mono">#7C8888</td></tr>
+            <tr><td>--line</td><td class="mono">#E4DED0</td><td class="mono">#29363A</td></tr>
+            <tr><td>--teal</td><td class="mono">#0C7F86</td><td class="mono">#3CB4BE</td></tr>
+            <tr><td>--teal-strong</td><td class="mono">#0A5A61</td><td class="mono">#6FD0D8</td></tr>
+            <tr><td>--coral</td><td class="mono">#E0562F</td><td class="mono">#FF7C50</td></tr>
+            <tr><td>--gold</td><td class="mono">#BC8A22</td><td class="mono">#E3B657</td></tr>
+            <tr><td>--violet</td><td class="mono">#6E5AA6</td><td class="mono">#A48CDE</td></tr>
+            <tr><td>--good</td><td class="mono">#2E8F63</td><td class="mono">#45B37F</td></tr>
+            <tr><td>--warn</td><td class="mono">#B9822B</td><td class="mono">#E0AC55</td></tr>
+            <tr><td>--crit</td><td class="mono">#C7402B</td><td class="mono">#E4634A</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li><strong>Elevação:</strong> no escuro a sombra é mais funda e mais opaca; superfícies mais altas ficam mais claras (<code>--surface-2</code> &gt; <code>--surface</code> &gt; <code>--bg</code>).</li>
+        <li><strong>Cores de acento clareiam</strong> no escuro para manter contraste ≥ 3:1 com o fundo.</li>
+        <li><strong>Mapa:</strong> tema escuro puxa o estilo Noturno por padrão; o usuário pode forçar outro.</li>
+        <li><code>body</code> sempre pinta <code>background</code> de um token — nunca transparente.</li>
+      </ul>
+    </section>
+
+    <!-- 16 -->
+    <section id="acessibilidade">
+      <h2><span class="h2n">16</span>Acessibilidade</h2>
+      <p class="sub">Meta: WCAG 2.2 AA nas duas plataformas, e a Lei Brasileira de Inclusão.</p>
+      <ul>
+        <li><strong>Contraste:</strong> texto ≥ 4.5:1, texto grande e ícones de UI ≥ 3:1. A paleta de corredores passa no validador de daltonismo (§2).</li>
+        <li><strong>Alvo de toque ≥ 44&nbsp;px.</strong> Foco visível: anel <code>--teal</code> de 2&nbsp;px, offset 2.</li>
+        <li><strong>Cor nunca é o único sinal:</strong> selos têm forma + ícone + nome; troféus têm o rank em texto; ranking tem triângulo + número; território tem contorno + nome; semânticas têm ícone + rótulo.</li>
+        <li><strong>Territórios:</strong> além da cor, um padrão de textura opcional por corredor e um modo para daltonismo.</li>
+        <li><strong>Movimento:</strong> tudo respeita <code>prefers-reduced-motion</code>. <strong>Tipografia:</strong> suporta o tamanho de fonte do sistema (Dynamic Type).</li>
+        <li><strong>Leitor de tela:</strong> rótulo em todo controle; o mapa expõe um resumo textual ("seu território: 9 quarteirões na Aldeota"); imagens informativas têm alternativa.</li>
+        <li>Canal em <code>acessibilidade@fortalrunners.com.br</code> com prazo de correção.</li>
+      </ul>
+    </section>
+
+    <!-- 17 -->
+    <section id="voz">
+      <h2><span class="h2n">17</span>Voz &amp; tom</h2>
+      <p class="sub">Direto, encorajador, português do Brasil. O app fala como um parceiro de treino, não como um locutor.</p>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Situação</th><th>Assim</th><th>Não assim</th></tr></thead>
+          <tbody>
+            <tr><td>Botão de ação</td><td>"Iniciar corrida" · depois: toast "Corrida salva"</td><td>"Vamos nessa?!" · "Sucesso!!!"</td></tr>
+            <tr><td>Conquista</td><td>"Você dominou mais 3 quarteirões na Aldeota."</td><td>"UAU! Você é IMPARÁVEL! 🔥🔥"</td></tr>
+            <tr><td>Erro</td><td>"Não deu para enviar a corrida. Verifique a conexão e toque em Tentar de novo."</td><td>"Ops! Algo deu errado."</td></tr>
+            <tr><td>Recusa por zona de risco</td><td>"Essa área está marcada como de risco — a conquista fica de fora por enquanto."</td><td>"Você não pode fazer isso."</td></tr>
+            <tr><td>Vazio</td><td>"Seu mapa está em branco. Corra em circuito para pintar o primeiro quarteirão."</td><td>"Nenhum dado encontrado."</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li>O controle diz exatamente o que faz; o resultado confirma no mesmo verbo ("Publicar" → "Publicado").</li>
+        <li>Número com unidade e vírgula decimal: <span class="mono">8,20 km</span>, <span class="mono">5'41"/km</span>, <span class="mono">0,42 km²</span>.</li>
+        <li>Sem hype vazio, sem emoji na UI (a não ser que a marca de uma campanha peça), sem exclamação dupla.</li>
+        <li>Celebra o feito, não a pessoa: "conquistou 3 quarteirões", não "você é o melhor".</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer class="pg">
+    FortalRunners · manual de design v1.0 · 05 set 2026 · documento vivo — a fonte de verdade dos componentes passa a ser a biblioteca de código quando o app começar.
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var btns = document.querySelectorAll('.themetoggle button');
+    function apply(mode) {
+      if (mode === 'system') root.removeAttribute('data-theme');
+      else root.setAttribute('data-theme', mode);
+      btns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.set === mode)); });
+      try { localStorage.setItem('fr-theme', mode); } catch (e) {}
+    }
+    var saved = 'system';
+    try { saved = localStorage.getItem('fr-theme') || 'system'; } catch (e) {}
+    apply(saved);
+    btns.forEach(function (b) { b.addEventListener('click', function () { apply(b.dataset.set); }); });
+
+    // demo: number tick + confetti, respect reduced motion
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var tick = document.getElementById('tickdemo');
+    if (tick && !reduce) {
+      setInterval(function () {
+        var t0 = performance.now();
+        function step(now) {
+          var p = Math.min((now - t0) / 800, 1);
+          tick.textContent = (0.42 * (1 - Math.pow(1 - p, 3))).toFixed(2).replace('.', ',');
+          if (p < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      }, 2600);
+    } else if (tick) { tick.textContent = '0,42'; }
+
+    var pop = document.getElementById('popdemo');
+    if (pop && !reduce) {
+      var cols = ['var(--r1)', 'var(--coral)', 'var(--gold)', 'var(--violet)', 'var(--r7)'];
+      setInterval(function () {
+        for (var i = 0; i < 10; i++) {
+          var c = document.createElement('span');
+          c.className = 'confetti';
+          c.style.background = cols[i % cols.length];
+          var ang = Math.random() * Math.PI * 2, dist = 26 + Math.random() * 26;
+          c.animate([
+            { transform: 'translate(-50%,-50%) rotate(0deg)', opacity: 1 },
+            { transform: 'translate(calc(-50% + ' + Math.cos(ang) * dist + 'px), calc(-50% + ' + Math.sin(ang) * dist + 'px)) rotate(220deg)', opacity: 0 }
+          ], { duration: 700, easing: 'cubic-bezier(0,0,0,1)' });
+          pop.appendChild(c);
+          setTimeout(function (el) { return function () { el.remove(); }; }(c), 720);
+        }
+      }, 900);
+    }
+
+    // toc active
+    var links = {}, tocA = document.querySelectorAll('nav.toc a');
+    tocA.forEach(function (a) { links[a.getAttribute('href').slice(1)] = a; });
+    var obs = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (e.isIntersecting) {
+          tocA.forEach(function (l) { l.style.color = ''; l.style.background = ''; });
+          var a = links[e.target.id];
+          if (a) { a.style.color = 'var(--ink)'; a.style.background = 'var(--surface)'; }
+        }
+      });
+    }, { rootMargin: '-10% 0px -80% 0px' });
+    document.querySelectorAll('main section').forEach(function (s) { obs.observe(s); });
+  })();
+</script>

@@ -1,0 +1,1945 @@
+<title>FortalRunners — Plano do Produto</title>
+<meta name="description" content="Plano de produto e arquitetura do app gamificado de conquista de territórios para corredores de Fortaleza.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100,400;100,500;100,600;100,700;120,600;120,700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --sand: #F5F2EC;
+    --surface: #FCFAF5;
+    --surface-2: #FFFFFF;
+    --ink: #16262A;
+    --ink-soft: #4A5A5D;
+    --line: #E2DCCF;
+    --line-strong: #CDC5B2;
+    --teal: #0E7C86;
+    --teal-deep: #0A5A61;
+    --coral: #E05633;
+    --sun: #C98F2E;
+    --violet: #6E5AA6;
+    --good: #2E8F63;
+    --warn: #B9822B;
+    --crit: #C7402B;
+    --shadow: 20 40 44;
+
+    --f-display: "Archivo", ui-sans-serif, system-ui, sans-serif;
+    --f-body: "Newsreader", Georgia, serif;
+    --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+    --maxw: 74ch;
+    --step--1: clamp(0.83rem, 0.8rem + 0.15vw, 0.9rem);
+    --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.08rem);
+    --step-1: clamp(1.18rem, 1.1rem + 0.4vw, 1.4rem);
+    --step-2: clamp(1.5rem, 1.35rem + 0.8vw, 2rem);
+    --step-3: clamp(2rem, 1.7rem + 1.6vw, 3.2rem);
+    --step-4: clamp(2.6rem, 2rem + 3vw, 4.6rem);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sand: #0E1618;
+      --surface: #152124;
+      --surface-2: #1B292C;
+      --ink: #E9E4D7;
+      --ink-soft: #A4AEAE;
+      --line: #29363A;
+      --line-strong: #3A4A4E;
+      --teal: #3CB4BE;
+      --teal-deep: #2A8C95;
+      --coral: #FF7C50;
+      --sun: #E4BA5D;
+      --violet: #A48CDE;
+      --good: #45B37F;
+      --warn: #E0AC55;
+      --crit: #E4634A;
+      --shadow: 0 0 0;
+    }
+  }
+  :root[data-theme="dark"] {
+    --sand: #0E1618;
+    --surface: #152124;
+    --surface-2: #1B292C;
+    --ink: #E9E4D7;
+    --ink-soft: #A4AEAE;
+    --line: #29363A;
+    --line-strong: #3A4A4E;
+    --teal: #3CB4BE;
+    --teal-deep: #2A8C95;
+    --coral: #FF7C50;
+    --sun: #E4BA5D;
+    --violet: #A48CDE;
+    --good: #45B37F;
+    --warn: #E0AC55;
+    --crit: #E4634A;
+    --shadow: 0 0 0;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background: var(--sand);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: var(--step-0);
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    display: grid;
+    grid-template-columns: 1fr;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 clamp(1.1rem, 4vw, 3rem);
+  }
+  @media (min-width: 1040px) {
+    .wrap { grid-template-columns: 232px minmax(0, 1fr); gap: clamp(2rem, 5vw, 4.5rem); }
+  }
+
+  /* ---------- Hero ---------- */
+  header.hero {
+    grid-column: 1 / -1;
+    padding: clamp(2.4rem, 6vw, 4.6rem) 0 clamp(1.8rem, 4vw, 3rem);
+    border-bottom: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.5;
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 82%);
+    mask-image: linear-gradient(180deg, #000 0%, transparent 82%);
+  }
+  .hero > * { position: relative; z-index: 1; }
+  .eyebrow {
+    font-family: var(--f-mono);
+    font-size: var(--step--1);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--teal-deep);
+    margin: 0 0 1rem;
+  }
+  :root[data-theme="dark"] .eyebrow,
+  :root:not([data-theme="light"]) .eyebrow { color: var(--teal); }
+  h1 {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-stretch: 120%;
+    font-size: var(--step-4);
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+    margin: 0 0 1rem;
+    text-wrap: balance;
+  }
+  .lede {
+    font-size: var(--step-1);
+    max-width: 60ch;
+    color: var(--ink-soft);
+    margin: 0 0 1.8rem;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.6rem;
+    font-family: var(--f-mono);
+    font-size: var(--step--1);
+  }
+  .chip {
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    padding: 0.28rem 0.7rem;
+    color: var(--ink-soft);
+    background: var(--surface);
+  }
+  .chip strong { color: var(--ink); font-weight: 600; }
+  .doclinks {
+    margin: 1.4rem 0 0;
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+  .doclinks strong { color: var(--ink); font-family: var(--f-mono); font-size: 0.82rem; letter-spacing: 0.06em; text-transform: uppercase; margin-right: 0.4rem; }
+  .doclinks a { color: var(--teal-deep); font-weight: 600; }
+  :root[data-theme="dark"] .doclinks a, :root:not([data-theme="light"]) .doclinks a { color: var(--teal); }
+
+  /* ---------- TOC ---------- */
+  nav.toc {
+    grid-column: 1 / -1;
+    padding: 1.6rem 0;
+  }
+  @media (min-width: 1040px) {
+    nav.toc {
+      grid-column: 1;
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: 100vh;
+      overflow-y: auto;
+      padding: clamp(2rem, 5vw, 3.5rem) 0;
+      border-right: 1px solid var(--line);
+    }
+  }
+  .toc-title {
+    font-family: var(--f-mono);
+    font-size: var(--step--1);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 0.9rem;
+  }
+  .toc ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+  .toc li { counter-increment: toc; margin: 0.1rem 0; }
+  .toc a {
+    display: grid;
+    grid-template-columns: 1.7rem 1fr;
+    gap: 0.4rem;
+    padding: 0.32rem 0.3rem;
+    text-decoration: none;
+    color: var(--ink-soft);
+    font-family: var(--f-display);
+    font-size: 0.92rem;
+    line-height: 1.28;
+    border-radius: 5px;
+  }
+  .toc a::before {
+    content: counter(toc, decimal-leading-zero);
+    font-family: var(--f-mono);
+    font-size: 0.76rem;
+    color: var(--teal);
+    padding-top: 0.12rem;
+  }
+  .toc a:hover { color: var(--ink); background: var(--surface); }
+  .toc a:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+
+  /* ---------- Main content ---------- */
+  main { grid-column: 1 / -1; padding-bottom: 5rem; min-width: 0; }
+  @media (min-width: 1040px) { main { grid-column: 2; padding-top: clamp(2rem, 5vw, 3.5rem); } }
+
+  section { margin: 0 0 clamp(2.8rem, 6vw, 4.5rem); scroll-margin-top: 1.5rem; }
+  section > :is(h2, h3, h4, p, ul, ol, figure, table, .callout, .grid-2, .phase, .kv) { max-width: var(--maxw); }
+  section > figure { max-width: 100%; }
+
+  h2 {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-stretch: 115%;
+    font-size: var(--step-3);
+    line-height: 1.04;
+    letter-spacing: -0.015em;
+    margin: 0 0 0.5rem;
+    text-wrap: balance;
+  }
+  .h2-num {
+    display: block;
+    font-family: var(--f-mono);
+    font-size: var(--step--1);
+    font-weight: 400;
+    letter-spacing: 0.14em;
+    color: var(--teal);
+    margin-bottom: 0.5rem;
+  }
+  h2 + .section-sub {
+    color: var(--ink-soft);
+    font-size: var(--step-1);
+    margin: 0 0 1.6rem;
+  }
+  h3 {
+    font-family: var(--f-display);
+    font-weight: 650;
+    font-size: var(--step-2);
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    margin: 2.4rem 0 0.6rem;
+  }
+  h4 {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: var(--step-1);
+    margin: 1.8rem 0 0.4rem;
+  }
+  p { margin: 0 0 1rem; }
+  a { color: var(--teal-deep); }
+  :root[data-theme="dark"] a, :root:not([data-theme="light"]) a { color: var(--teal); }
+  strong { font-weight: 650; }
+
+  ul, ol { margin: 0 0 1.1rem; padding-left: 1.3rem; }
+  li { margin: 0.35rem 0; }
+  li::marker { color: var(--teal); }
+  ul.tight li, ol.tight li { margin: 0.15rem 0; }
+
+  code {
+    font-family: var(--f-mono);
+    font-size: 0.86em;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.08em 0.36em;
+  }
+
+  /* ---------- Callouts ---------- */
+  .callout {
+    border-left: 3px solid var(--coral);
+    background: color-mix(in srgb, var(--coral) 7%, var(--surface));
+    padding: 1rem 1.15rem;
+    margin: 1.4rem 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout .callout-label {
+    font-family: var(--f-mono);
+    font-size: var(--step--1);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--coral);
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+  .callout.teal { border-left-color: var(--teal); background: color-mix(in srgb, var(--teal) 8%, var(--surface)); }
+  .callout.teal .callout-label { color: var(--teal-deep); }
+  :root[data-theme="dark"] .callout.teal .callout-label,
+  :root:not([data-theme="light"]) .callout.teal .callout-label { color: var(--teal); }
+
+  /* ---------- Figures ---------- */
+  figure { margin: 1.8rem 0; }
+  figure svg { display: block; width: 100%; height: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+  figcaption {
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+    margin-top: 0.6rem;
+    font-family: var(--f-display);
+    max-width: 62ch;
+  }
+
+  /* ---------- Tables ---------- */
+  .table-scroll { overflow-x: auto; margin: 1.4rem 0; border: 1px solid var(--line); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+  th, td { text-align: left; padding: 0.6rem 0.85rem; vertical-align: top; border-bottom: 1px solid var(--line); }
+  thead th {
+    font-family: var(--f-mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    background: var(--surface-2);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td code { background: transparent; border: none; padding: 0; color: var(--teal-deep); }
+  :root[data-theme="dark"] td code, :root:not([data-theme="light"]) td code { color: var(--teal); }
+  td:first-child { font-family: var(--f-mono); font-size: 0.82rem; white-space: nowrap; }
+
+  /* ---------- Two-column mini grid ---------- */
+  .grid-2 { display: grid; gap: 0.9rem 1.6rem; margin: 1.3rem 0; }
+  @media (min-width: 620px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
+  .grid-2 > div { border-top: 2px solid var(--line-strong); padding-top: 0.7rem; }
+  .grid-2 h4 { margin: 0 0 0.3rem; }
+  .grid-2 p { margin: 0; font-size: var(--step--1); color: var(--ink-soft); }
+
+  /* ---------- Roadmap phases ---------- */
+  .phase {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0 1.1rem;
+    padding: 1.1rem 0;
+    border-top: 1px solid var(--line);
+  }
+  .phase:last-of-type { border-bottom: 1px solid var(--line); }
+  .phase-tag {
+    font-family: var(--f-mono);
+    font-size: var(--step--1);
+    font-weight: 500;
+    color: var(--surface);
+    background: var(--teal-deep);
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+    height: fit-content;
+    white-space: nowrap;
+  }
+  .phase:nth-of-type(2) .phase-tag { background: var(--teal); }
+  .phase:nth-of-type(3) .phase-tag { background: var(--violet); }
+  .phase:nth-of-type(4) .phase-tag { background: var(--sun); color: #1a1400; }
+  .phase h4 { margin: 0 0 0.3rem; }
+  .phase ul { margin: 0.4rem 0 0; }
+  .phase p { margin: 0; color: var(--ink-soft); font-size: var(--step--1); }
+
+  /* ---------- Key-value / spec list ---------- */
+  .kv { margin: 1.3rem 0; border-top: 1px solid var(--line); }
+  .kv > div {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.1rem 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (min-width: 560px) { .kv > div { grid-template-columns: 168px 1fr; } }
+  .kv dt { font-family: var(--f-mono); font-size: var(--step--1); color: var(--teal-deep); }
+  :root[data-theme="dark"] .kv dt, :root:not([data-theme="light"]) .kv dt { color: var(--teal); }
+  .kv dd { margin: 0; font-size: var(--step--1); color: var(--ink-soft); }
+
+  /* ---------- Idea list ---------- */
+  .ideas { columns: 2 240px; column-gap: 2rem; margin: 1.2rem 0; padding: 0; list-style: none; }
+  .ideas li {
+    break-inside: avoid;
+    padding: 0.5rem 0 0.5rem 1.1rem;
+    position: relative;
+    border-bottom: 1px solid var(--line);
+    font-size: var(--step--1);
+  }
+  .ideas li::before { content: "→"; position: absolute; left: 0; color: var(--coral); }
+  .ideas li strong { display: block; font-family: var(--f-display); color: var(--ink); font-size: 0.98rem; }
+
+  footer.pg {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--line);
+    padding: 2rem 0 3rem;
+    font-family: var(--f-mono);
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+  ::selection { background: color-mix(in srgb, var(--teal) 30%, transparent); }
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <canvas class="hero-grid" id="heroGrid" aria-hidden="true"></canvas>
+    <p class="eyebrow">Plano de produto · v0.13 · 05 set 2026</p>
+    <h1>FortalRunners</h1>
+    <p class="lede">Um app gamificado onde correr por Fortaleza conquista território. Feche o circuito de um quarteirão e ele passa a ser seu, pintado na sua cor. E por baixo do jogo, a ambição de ser o app de corrida mais completo do mercado: cada par de tênis rastreado, cada métrica medida com rigor de relógio de ponta.</p>
+    <div class="meta-row">
+      <span class="chip"><strong>Backend</strong> Go</span>
+      <span class="chip"><strong>Web</strong> React</span>
+      <span class="chip"><strong>Mobile</strong> React Native</span>
+      <span class="chip"><strong>Geo</strong> PostGIS + H3</span>
+      <span class="chip"><strong>Precisão</strong> GNSS L1+L5 · fusão de sensores</span>
+      <span class="chip"><strong>Equipamento</strong> mileage de tênis</span>
+      <span class="chip"><strong>Login</strong> Google · Apple</span>
+      <span class="chip"><strong>Sincroniza</strong> Strava · Health Connect</span>
+      <span class="chip"><strong>Selos</strong> marcos históricos · eventos</span>
+      <span class="chip"><strong>Inscrições</strong> Asaas · PIX · cartão</span>
+      <span class="chip"><strong>Segurança</strong> 2FA · deny-by-default · LGPD</span>
+      <span class="chip"><strong>Na rua</strong> SOS · beacon · clima · maré</span>
+      <span class="chip"><strong>Cidade-piloto</strong> Fortaleza / CE</span>
+    </div>
+    <p class="doclinks">
+      <strong>Documentos irmãos:</strong>
+      <a href="https://claude.ai/code/artifact/8bd97373-4a1d-4fa3-8144-4eefbfdeb34b">Banco &amp; Integrações</a> ·
+      <a href="https://claude.ai/code/artifact/e662d35e-b65a-4f5c-a0ad-d2480c77f2ac">Manual de Design</a> ·
+      <a href="https://claude.ai/code/artifact/72fd46a4-ad3d-4e74-9045-8c463754c50d">Políticas &amp; Compliance</a> ·
+      <a href="https://claude.ai/code/artifact/d65150fe-12cf-4e14-ac58-49cbd29abb4e">Mockups de tela</a>
+    </p>
+  </header>
+
+  <nav class="toc" aria-label="Índice">
+    <p class="toc-title">Índice</p>
+    <ol>
+      <li><a href="#visao">Visão geral e loop central</a></li>
+      <li><a href="#territorio">O território: como funciona</a></li>
+      <li><a href="#gamificacao">Gamificação, selos, eventos e troféus</a></li>
+      <li><a href="#equipamento">Equipamento e métricas de precisão</a></li>
+      <li><a href="#social">Amigos e avaliação de rotas</a></li>
+      <li><a href="#seguranca-urbana">Segurança pessoal, clima e contexto urbano</a></li>
+      <li><a href="#arquitetura">Arquitetura técnica</a></li>
+      <li><a href="#algoritmo">Algoritmo de territórios e anti-fraude</a></li>
+      <li><a href="#dados">Modelo de dados</a></li>
+      <li><a href="#api">API — endpoints principais</a></li>
+      <li><a href="#mobile">App mobile (React Native)</a></li>
+      <li><a href="#web">Zona web: login e acompanhamento</a></li>
+      <li><a href="#admin">Zona de admin</a></li>
+      <li><a href="#privacidade">Segurança, privacidade e conformidade</a></li>
+      <li><a href="#pagamentos">Pagamentos e inscrições (Asaas)</a></li>
+      <li><a href="#infra">Infra, custos e deploy</a></li>
+      <li><a href="#ia">IA no produto: arquitetura e segurança</a></li>
+      <li><a href="#praticas">Práticas de engenharia, testes e operação</a></li>
+      <li><a href="#roadmap">Roadmap por fases</a></li>
+      <li><a href="#futuro">Implementações futuras</a></li>
+      <li><a href="#riscos">Riscos e decisões em aberto</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <section id="visao">
+      <h2><span class="h2-num">01</span>Visão geral e loop central</h2>
+      <p class="section-sub">Strava encontra Splatoon, na escala de bairro.</p>
+      <p>FortalRunners transforma a corrida de rua num jogo de conquista territorial baseado no traçado real do GPS. Cada corredor tem uma cor. Ao correr formando circuitos fechados, a área cercada vira território dominado e aparece pintada no mapa. Territórios se acumulam, aparecem no ranking, rendem troféus semanais e podem ser tomados por outros corredores.</p>
+
+      <h3>O ciclo de jogo</h3>
+      <ol>
+        <li><strong>Correr.</strong> O app grava o percurso com GPS de alta frequência, mesmo com a tela apagada.</li>
+        <li><strong>Fechar território.</strong> Quando o traçado forma um laço (ou fecha contra ruas já dominadas), o polígono interno é preenchido com a cor do corredor.</li>
+        <li><strong>Acumular.</strong> Área em m²/km², número de quarteirões, bairros tocados e percentual do mapa entram no perfil e no ranking.</li>
+        <li><strong>Comparar.</strong> O mapa mostra seus territórios e os dos amigos, cada um na sua cor, com zonas de disputa onde há sobreposição.</li>
+        <li><strong>Competir.</strong> Toda semana fecha um ciclo: quem mais conquistou leva troféu, e parte do território volta a ficar "neutro" para forçar reconquista.</li>
+      </ol>
+
+      <div class="callout teal">
+        <span class="callout-label">Decisão de design</span>
+        <p>A mecânica é <strong>híbrida</strong>: <strong>polígonos de cerco</strong> (o laço do quarteirão, fiel ao exemplo do usuário) para posse e cor no mapa, e uma <strong>grade de hexágonos H3</strong> por baixo para medir cobertura, ranking e a meta de "mapa 100%". As duas camadas convivem — o hexágono é a unidade de contagem, o polígono é o que se vê.</p>
+      </div>
+
+      <h3>Natureza do sistema</h3>
+      <p>Produto <strong>comercial voltado ao consumidor</strong>, que trata <strong>dados pessoais sensíveis</strong> (localização em tempo real, saúde) e <strong>movimenta dinheiro</strong> (inscrições, assinatura). Isso eleva as exigências de disponibilidade, auditoria, privacidade e revisão humana em decisões punitivas — tudo detalhado nas seções 14 (segurança) e 17–18 (IA e práticas de engenharia).</p>
+
+      <h3>Não objetivos do MVP</h3>
+      <ul class="tight">
+        <li>Gravar corrida pelo navegador (o GPS mora no celular).</li>
+        <li>Ligas com promoção/rebaixamento, seasons completas.</li>
+        <li>Suporte a outras cidades além de Fortaleza.</li>
+        <li>App de relógio standalone, integrações de parceria (Garmin/Coros).</li>
+        <li>Coach IA conversacional e portal de organizadores (entram nas fases 2–3).</li>
+        <li>Modalidades além de corrida a pé.</li>
+      </ul>
+
+      <h3>Critérios de sucesso</h3>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Dimensão</th><th>Métrica-alvo (revisar no beta)</th></tr></thead>
+          <tbody>
+            <tr><td>Ativação</td><td>% que fecha o 1º território na 1ª semana &gt; 60%</td></tr>
+            <tr><td>Retenção</td><td>D7 &gt; 35%, D30 &gt; 20%; ≥ 2 corridas/semana entre ativos</td></tr>
+            <tr><td>Integridade</td><td>&lt; 2% das corridas sinalizadas como suspeitas; &lt; 0,5% de contestações procedentes de território</td></tr>
+            <tr><td>Precisão</td><td>Erro de distância &lt; 1,5% mediano vs. referência de campo</td></tr>
+            <tr><td>Confiabilidade</td><td>Disponibilidade da API ≥ 99,9%; processamento de território &lt; 2 min (p95)</td></tr>
+            <tr><td>Negócio</td><td>Custo de infra + IA por usuário ativo/mês dentro do teto definido; NPS &gt; 40</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="territorio">
+      <h2><span class="h2-num">02</span>O território: como funciona</h2>
+      <p class="section-sub">Do rastro de GPS ao quarteirão pintado.</p>
+
+      <figure>
+        <svg viewBox="0 0 720 340" role="img" aria-label="Rastro de GPS formando um laço em volta de um quarteirão; a área cercada é preenchida com a cor do corredor e os hexágonos H3 tocados pelo trajeto ficam marcados.">
+          <defs>
+            <marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+              <polygon points="0 0, 8 3.2, 0 6.4" fill="var(--coral)"/>
+            </marker>
+          </defs>
+          <!-- street grid -->
+          <g stroke="var(--line-strong)" stroke-width="1.5" fill="none">
+            <line x1="60" y1="40" x2="60" y2="300"/><line x1="180" y1="40" x2="180" y2="300"/>
+            <line x1="300" y1="40" x2="300" y2="300"/><line x1="420" y1="40" x2="420" y2="300"/>
+            <line x1="540" y1="40" x2="540" y2="300"/><line x1="660" y1="40" x2="660" y2="300"/>
+            <line x1="60" y1="40" x2="660" y2="40"/><line x1="60" y1="110" x2="660" y2="110"/>
+            <line x1="60" y1="180" x2="660" y2="180"/><line x1="60" y1="250" x2="660" y2="250"/>
+            <line x1="60" y1="300" x2="660" y2="300"/>
+          </g>
+          <!-- claimed polygon -->
+          <rect x="180" y="110" width="120" height="70" fill="var(--teal)" fill-opacity="0.22" stroke="var(--teal)" stroke-width="2"/>
+          <text x="240" y="150" text-anchor="middle" font-family="var(--f-mono)" font-size="11" fill="var(--teal-deep)">território</text>
+          <!-- H3 hexes along path (approx) -->
+          <g fill="var(--sun)" fill-opacity="0.28" stroke="var(--sun)" stroke-width="1">
+            <polygon points="176,96 186,90 196,96 196,108 186,114 176,108"/>
+            <polygon points="296,96 306,90 316,96 316,108 306,114 296,108"/>
+            <polygon points="296,176 306,170 316,176 316,188 306,194 296,188"/>
+            <polygon points="176,176 186,170 196,176 196,188 186,194 176,188"/>
+          </g>
+          <!-- GPS trace loop -->
+          <path d="M186 250 L186 114 L306 114 L306 178 L200 178" fill="none" stroke="var(--coral)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ah)"/>
+          <circle cx="186" cy="250" r="4.5" fill="var(--coral)"/>
+          <text x="186" y="270" text-anchor="middle" font-family="var(--f-mono)" font-size="11" fill="var(--ink-soft)">início</text>
+          <!-- legend -->
+          <g font-family="var(--f-mono)" font-size="11" fill="var(--ink-soft)">
+            <line x1="440" y1="250" x2="470" y2="250" stroke="var(--coral)" stroke-width="3.5"/>
+            <text x="478" y="254">rastro de GPS</text>
+            <rect x="440" y="266" width="24" height="12" fill="var(--teal)" fill-opacity="0.22" stroke="var(--teal)" stroke-width="1.5"/>
+            <text x="478" y="276">área cercada = território</text>
+            <polygon points="442,286 450,282 458,286 458,296 450,300 442,296" fill="var(--sun)" fill-opacity="0.28" stroke="var(--sun)"/>
+            <text x="478" y="296">hexágono H3 tocado</text>
+          </g>
+        </svg>
+        <figcaption>O trajeto fecha um laço em torno de um quarteirão. O polígono interno é atribuído ao corredor e pintado na cor dele; em paralelo, cada célula H3 por onde o trajeto passou é registrada para as métricas de cobertura.</figcaption>
+      </figure>
+
+      <h3>Regras de conquista</h3>
+      <ul>
+        <li><strong>Laço explícito.</strong> O trajeto se cruza ou o ponto final chega a menos de ~25 m do início: fecha-se um anel e preenche-se o interior.</li>
+        <li><strong>Cerco contra território próprio.</strong> Um trajeto aberto que conecta duas bordas de território já dominado fecha a área entre eles (permite "avançar" a fronteira sem refazer a volta toda).</li>
+        <li><strong>Área mínima e máxima.</strong> Ignora laços minúsculos (&lt; 500 m²) e limita um único polígono a um teto (ex.: 0,5 km²) para evitar "cercar meio bairro" com um trajeto em linha reta pela orla.</li>
+        <li><strong>Snap às ruas (opcional, v1).</strong> Map-matching encaixa o traçado na malha viária do OpenStreetMap, então o território segue os quarteirões reais em vez do zigue-zague do GPS.</li>
+      </ul>
+
+      <h3>Sobreposição e tomada de território</h3>
+      <ul>
+        <li><strong>Área neutra:</strong> quem cerca primeiro, domina.</li>
+        <li><strong>Área de outro corredor:</strong> a conquista mais recente prevalece na porção sobreposta — o mapa do defensor perde aquele pedaço, que passa para o atacante. Área sobreposta vira <strong>zona de disputa</strong> visualmente (hachura nas duas cores) por 24 h antes de consolidar.</li>
+        <li><strong>Decaimento semanal:</strong> ao fechar o ciclo, todo território perde X% da borda (erosão) e volta a neutro; o núcleo permanece. Assim o mapa nunca "congela" e há sempre o que reconquistar.</li>
+        <li><strong>Bloqueio de amigos (config):</strong> por padrão você não toma território de quem está na sua lista de amigos — vira sobreposição amigável, sem perda.</li>
+      </ul>
+
+      <h3>A meta: cobrir Fortaleza</h3>
+      <p>A área urbana de Fortaleza é dividida numa grade H3 (resolução ~9, célula de ~0,1 km²). O placar global mostra <code>% de células dominadas</code> por corredor, por bairro e no total da cidade. Bairros ganham barras de progresso; quando um bairro chega a 100% dominado por um único corredor, ele vira "Barão(esa) do bairro" — um selo permanente no perfil, com destaque no mapa.</p>
+    </section>
+
+    <section id="gamificacao">
+      <h2><span class="h2-num">03</span>Gamificação, selos, eventos e troféus</h2>
+      <p class="section-sub">O que mede progresso, o que leva o corredor a explorar a cidade e o que gera retorno para jogar amanhã.</p>
+
+      <div class="grid-2">
+        <div><h4>Território (m² / km²)</h4><p>Métrica principal. Soma da área dominada agora.</p></div>
+        <div><h4>Cobertura (%)</h4><p>Células H3 dominadas ÷ total da cidade ou do bairro.</p></div>
+        <div><h4>Conquistas da semana</h4><p>Área líquida ganha no ciclo atual — base dos troféus.</p></div>
+        <div><h4>XP e nível</h4><p>Ganho por km, por novo quarteirão, por bairro inédito, por streak.</p></div>
+        <div><h4>Streak</h4><p>Dias/semanas seguidos com pelo menos uma corrida válida.</p></div>
+        <div><h4>Defesa</h4><p>Território seu que sobreviveu à semana sem ser tomado.</p></div>
+      </div>
+
+      <h3>Rankings</h3>
+      <ul class="tight">
+        <li><strong>Global de Fortaleza</strong> — área total e % de cobertura.</li>
+        <li><strong>Por bairro</strong> — quem domina cada bairro (Aldeota, Meireles, Benfica, Messejana...).</li>
+        <li><strong>Semanal</strong> — só conquistas do ciclo, zera toda semana.</li>
+        <li><strong>Entre amigos</strong> — recorte da sua rede.</li>
+        <li><strong>Ligas</strong> (futuro) — divisões por faixa, promoção/rebaixamento estilo esporte.</li>
+      </ul>
+
+      <h3>Troféus semanais</h3>
+      <p>O ciclo fecha domingo 23h59 (horário de Fortaleza). O sistema calcula e congela os placares, distribui prêmios e envia push. Troféus previstos:</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Troféu</th><th>Critério</th><th>Prêmio</th></tr></thead>
+          <tbody>
+            <tr><td>Conquistador da semana</td><td>Maior área líquida ganha</td><td>Troféu de ouro no perfil + moldura sazonal + destaque no mapa</td></tr>
+            <tr><td>Barão(esa) do bairro</td><td>Maior área num único bairro</td><td>Selo do bairro (um por bairro)</td></tr>
+            <tr><td>Muralha</td><td>Maior % de território defendido</td><td>Selo de defesa</td></tr>
+            <tr><td>Desbravador</td><td>Mais quarteirões inéditos (nunca dominados por ninguém)</td><td>XP bônus + pin no mapa</td></tr>
+            <tr><td>Maratonista</td><td>Maior distância acumulada</td><td>Selo de volume</td></tr>
+            <tr><td>Podium do bairro</td><td>Top 3 de cada bairro</td><td>Medalha bronze/prata/ouro por bairro</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Histórico de troféus fica no perfil (estilo "sala de troféus"). Season de 13 semanas (~1 trimestre) com ranking acumulado e reset parcial de mapa ao final.</p>
+
+      <h3>Selos de missão — marcos de Fortaleza</h3>
+      <p>Pontos de interesse com história — estátuas, fortes, faróis, praças, teatros. Chegar correndo até o marco e enviar uma foto no app rende um <strong>selo permanente</strong>. É o gancho que leva o corredor a explorar a cidade, não só o próprio bairro.</p>
+
+      <h4>Como funciona</h4>
+      <ol>
+        <li>Durante ou logo após uma corrida, o app detecta que você está no raio de um marco e avisa: <em>"Missão disponível: Iracema Guerreira"</em>.</li>
+        <li>Você abre a câmera <strong>dentro do app</strong> e tira a foto ao lado do monumento (sem upload de galeria).</li>
+        <li>Envia. O sistema valida posição, horário, sensores e integridade da foto.</li>
+        <li>Recebe o selo + XP, um <strong>card para compartilhar</strong> e um pino dourado naquele ponto do seu mapa.</li>
+      </ol>
+
+      <h4>Regras e anti-fraude</h4>
+      <ul class="tight">
+        <li>GPS dentro do raio do marco (~40 m) no momento da foto; corrida ativa ou encerrada há poucos minutos.</li>
+        <li>Foto capturada na câmera do app, com timestamp, posição e leitura de sensores embutidos; EXIF conferido; galeria bloqueada.</li>
+        <li>Verificação visual do monumento na foto por modelo on-device (v2) — opcional, aumenta a confiança.</li>
+        <li>Casos suspeitos vão para fila de moderação; cooldown por marco; um selo por marco por pessoa.</li>
+        <li><strong>Marcos em zona de risco não entram</strong> — <code>missionAllowedAt(point)</code> retorna <code>false</code> e o marco fica indisponível enquanto a zona estiver ativa (ver seção 6).</li>
+        <li>Rostos de terceiros podem ser borrados automaticamente antes de qualquer exibição pública.</li>
+      </ul>
+
+      <h4>Tipos de selo</h4>
+      <ul class="tight">
+        <li><strong>Simples</strong> — um marco, um selo.</li>
+        <li><strong>Circuito / coleção</strong> — completar um conjunto (ex.: "Circuito Praia de Iracema": Ponte dos Ingleses + Estátua de Iracema + Estoril + Espigão + Dragão do Mar).</li>
+        <li><strong>Sazonal</strong> — só disponível numa janela (São João, Réveillon da Beira-Mar, Ceará Natal de Luz).</li>
+        <li><strong>Pioneiro</strong> — primeira pessoa a registrar um marco recém-adicionado.</li>
+        <li><strong>Com desafio</strong> — foto + mini-quiz de história ("quem escreveu <em>Iracema</em>?") ou + condição de corrida (chegar a pé, dominar o quarteirão do marco).</li>
+      </ul>
+
+      <h4>Marcos curados (amostra)</h4>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Marco</th><th>Selo</th><th>Condição extra</th></tr></thead>
+          <tbody>
+            <tr><td>Estátua de Iracema — Praia de Iracema</td><td>Iracema Guerreira</td><td>—</td></tr>
+            <tr><td>Iracema Guerreira — Mucuripe</td><td>Sentinela do Mucuripe</td><td>chegar a pé</td></tr>
+            <tr><td>Ponte dos Ingleses (Ponte Metálica)</td><td>Pôr do sol na Metálica</td><td>foto entre 17h–18h30</td></tr>
+            <tr><td>Fortaleza de N. Sra. da Assunção</td><td>Onde tudo começou</td><td>mini-quiz</td></tr>
+            <tr><td>Farol do Mucuripe / Farol Velho</td><td>Guardião do Farol</td><td>—</td></tr>
+            <tr><td>Centro Dragão do Mar</td><td>Jangadeiro da Liberdade</td><td>—</td></tr>
+            <tr><td>Mercado Central + Catedral + Praça do Ferreira</td><td>Coração do Centro</td><td>coleção (3 pontos)</td></tr>
+            <tr><td>Teatro José de Alencar</td><td>Palco de Ferro</td><td>—</td></tr>
+            <tr><td>Casa de José de Alencar — Messejana</td><td>Onde nasceu Iracema</td><td>mini-quiz</td></tr>
+            <tr><td>Lagoa da Messejana</td><td>Lenda da Messejana</td><td>dar a volta na lagoa</td></tr>
+            <tr><td>Espigão da Beira-Mar</td><td>Rei da Beira-Mar</td><td>dominar o quarteirão</td></tr>
+            <tr><td>Titanzinho — Praia do Futuro</td><td>Onda do Titã</td><td>chegar a pé</td></tr>
+            <tr><td>Arena Castelão</td><td>Gigante da Boa Vista</td><td>—</td></tr>
+            <tr><td>Parque do Cocó</td><td>Pulmão Verde</td><td>3 km dentro do parque</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Selo mestre <strong>"Cidadão de Fortaleza"</strong> ao completar todos os marcos ativos da cidade. A sala de troféus mostra os selos em vitrine, com a foto que você enviou.</p>
+
+      <h3>Eventos, corridas e campanhas</h3>
+      <p>O mesmo motor de missões (check-in geolocalizado, foto, condições, selos, leaderboard próprio) é generalizado em <strong>eventos com janela de tempo</strong>. É o que transforma o app numa plataforma de engajamento — e numa fonte de receita.</p>
+
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Tipo de evento</th><th>Como funciona</th><th>Recompensa</th></tr></thead>
+          <tbody>
+            <tr><td>Corrida / maratona oficial</td><td>Organizador cadastra a prova, desenha a rota e os checkpoints. O corredor "participa" pelo app; selos de largada, km 21, chegada; território conquistado durante a prova conta em dobro. Resultado oficial importado da cronometragem.</td><td>Medalha do evento + ranking da prova</td></tr>
+            <tr><td>Desafio da comunidade</td><td>"Desafio de Julho: 100 km" ou "suba 2.000 m no mês". Progresso automático pelas corridas.</td><td>Selo + XP</td></tr>
+            <tr><td>Campanha de empresa (wellness corporativo)</td><td>Empresa cria times de colaboradores; acumulam km, território e selos; meta coletiva ("juntos, a distância Fortaleza–Recife"). Dashboard para o RH.</td><td>Selo corporativo + ranking interno + relatório de adesão</td></tr>
+            <tr><td>Campanha de marca / patrocínio</td><td>"Corra 3× na Beira-Mar em setembro com a marca X." Selo patrocinado, cupom e link de afiliado (ver seção 20).</td><td>Selo patrocinado + cupom + sorteio</td></tr>
+            <tr><td>Campanha social / ONG</td><td>"Cada 10 km viram R$ 1 doado por um patrocinador." Barra de meta coletiva.</td><td>Selo solidário + transparência da arrecadação</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Cada evento tem: janela de datas, área ou rota, objetivos (distância, checkpoints, selos, território), leaderboard isolado e recompensas (selo, XP, cupom, cosmético, brinde por sorteio). Criação em autoatendimento pelo <strong>portal de organizadores</strong> (web), com aprovação do admin; planos pagos para empresas e marcas.</p>
+
+      <h3>Identidade do atleta e QR de controle</h3>
+      <p>Toda ação de evento que precisa de <strong>controle</strong> — credenciamento, largada, checkpoints, chegada, contagem de voltas — passa por leitura de QR code amarrado ao <strong>ID do atleta</strong>. É a versão FortalRunners da cronometragem por chip, só que barata e no celular.</p>
+
+      <h4>ID FortalRunners + QR pessoal</h4>
+      <ul class="tight">
+        <li>Ao criar a conta, o atleta recebe um <strong>número público estável</strong> (ex.: <code>FR-0001234</code>) — sua identidade em provas e ações, como um número de filiação.</li>
+        <li>O app exibe um <strong>QR rotativo</strong> que codifica um token assinado de validade curta (~45 s) apontando para o ID — print ou captura de tela não servem. Funciona offline com um token em cache.</li>
+        <li>Para número de peito impresso, um <strong>QR estático assinado</strong> com ID + contexto do evento, gerado pelo organizador.</li>
+      </ul>
+
+      <h4>Ações de leitura</h4>
+      <p>Um scanner lê o QR e grava um evento de passagem <strong>na conta do dono do ID</strong>:</p>
+      <ul class="tight">
+        <li>Retirada de kit e credenciamento · acesso a balizamento (corral) e à largada.</li>
+        <li>Largada, checkpoints de percurso, linha de chegada (cronometragem por QR) · contagem de voltas em circuito.</li>
+        <li>Postos de hidratação e apoio · estande de patrocinador/parceiro (rende selo ou cupom).</li>
+        <li>QR ↔ QR entre dois apps: adicionar amigo e confirmar "corremos juntos".</li>
+        <li>Placa de QR num marco histórico — prova de presença mais forte que a foto.</li>
+      </ul>
+
+      <h4>Leitura obrigatória na conta do proprietário</h4>
+      <ul class="tight">
+        <li>Toda leitura <strong>resolve para a conta dona do ID</strong> e é registrada nela; o dono recebe notificação e vê tudo no histórico de leituras (transparência e antifraude).</li>
+        <li>O dono pode <strong>contestar</strong> uma leitura que não reconhece.</li>
+        <li>Em ações sensíveis (chegada de prova, território em dobro, selo), o app do atleta precisa <strong>co-confirmar na hora</strong> (handshake): o scanner lê o QR e o celular do dono valida, ou a leitura fica pendente até ele confirmar. QR sem o app online não fecha a ação.</li>
+      </ul>
+
+      <h4>Modo scanner (organizador)</h4>
+      <ul class="tight">
+        <li>App mobile/web para a equipe, com <strong>credencial por estação e função</strong> (kit, largada, CP3, chegada…).</li>
+        <li><strong>Fila offline</strong> para checkpoints sem sinal — sincroniza depois preservando o timestamp assinado da estação.</li>
+        <li>Painel de controle ao vivo: quem passou por onde, quem largou e não chegou, ETA por atleta, exportação de resultados.</li>
+      </ul>
+
+      <div class="callout">
+        <span class="callout-label">Privacidade</span>
+        <p>O QR carrega só o token — nunca nome, telefone ou e-mail. O <code>athlete_id</code> é público (aparece no ranking); um scan de estande de parceiro só enxerga o que o atleta liberar.</p>
+      </div>
+
+      <h3>Badges permanentes (exemplos)</h3>
+      <ul class="tight">
+        <li>Primeira volta · Primeiro bairro · 10 / 50 / 100 km · Orla completa (todo o calçadão da Beira-Mar)</li>
+        <li>Madrugador (10 corridas antes das 6h) · Notívago · Chuvoso (corrida com chuva registrada)</li>
+        <li>Cartógrafo (1% / 5% / 10% da cidade) · Rei da colina (dominou o ponto mais alto do trajeto)</li>
+      </ul>
+    </section>
+
+    <section id="equipamento">
+      <h2><span class="h2-num">04</span>Equipamento e métricas de precisão</h2>
+      <p class="section-sub">Cada corrida amarrada a um par de tênis; cada número medido com o rigor de um relógio de ponta. É aqui que o app deixa de ser "mais um" e vira o mais completo do mercado.</p>
+
+      <h3>Gestão de tênis — quilometragem por par</h3>
+      <p>Todo corredor sério tem 2–4 pares em rotação (treino leve, treino forte, prova, trilha). O app trata o tênis como <strong>equipamento com ciclo de vida</strong>.</p>
+      <ul>
+        <li><strong>Cadastro:</strong> marca, modelo, apelido, foto, data de compra, preço, distância inicial (se já usado), meta de vida útil (padrão 600–800 km, ajustável por modelo).</li>
+        <li><strong>Seleção na corrida:</strong> ao iniciar ou salvar, escolhe-se o par. Padrão = último usado; sugestão inteligente por tipo de treino e superfície (a IA aprende: "trilha no Cocó → seu tênis de trail").</li>
+        <li><strong>Acumulado por par:</strong> km, passos, horas em movimento, nº de corridas, ganho de elevação, pace médio, ritmo semanal, distribuição por superfície.</li>
+        <li><strong>Custo por km</strong> (preço ÷ km rodados) — métrica de valor que quase nenhum app mostra.</li>
+        <li><strong>Alertas:</strong> 75% da vida útil → "planeje a troca"; 90% → "rotacione menos"; 100%+ → aviso de risco de lesão por amortecimento gasto.</li>
+        <li><strong>Estados:</strong> ativo · em rotação · aposentado. Prateleira de tênis aposentados com o histórico de cada um.</li>
+        <li><strong>Filtro no mapa:</strong> "território conquistado com o Pegasus" — quanto do mapa cada par pintou.</li>
+        <li><strong>Detecção automática (futuro):</strong> assinatura de movimento/impacto identifica qual par foi calçado, sem você marcar.</li>
+      </ul>
+
+      <div class="callout teal">
+        <span class="callout-label">Dados da comunidade</span>
+        <p>Com quilometragem real de milhares de pares, o app publica <strong>durabilidade média por modelo</strong> — "o Adizero costuma passar dos 700 km antes da queda de amortecimento" — comparando seu desgaste com a base agregada e anônima.</p>
+      </div>
+
+      <h3>Precisão extrema — como cada número é medido</h3>
+      <p>A regra de ouro: <strong>o app nunca inventa um valor</strong>. Trecho com sinal ruim é marcado como estimado, explicado, e não conta para território nem para recorde.</p>
+      <ul>
+        <li><strong>GNSS multi-constelação</strong> (GPS + GLONASS + Galileo + BeiDou) e <strong>banda dupla L1+L5</strong> nos aparelhos compatíveis — corta o erro por reflexão nos prédios da Beira-Mar e no Centro.</li>
+        <li><strong>Amostragem</strong> mínima 1 Hz, 5–10 Hz onde o hardware permite.</li>
+        <li><strong>Fusão de sensores</strong> — acelerômetro + giroscópio + magnetômetro + barômetro + GNSS num filtro de Kalman estendido; posição não "pula".</li>
+        <li><strong>Cadência e passos pelo acelerômetro</strong>, nunca inferidos do GPS.</li>
+        <li><strong>Comprimento de passada calibrado por usuário</strong> — aprende ao longo das corridas comparando contagem de passos com trechos de GPS de alta confiança.</li>
+        <li><strong>Distância híbrida</strong> — GPS + passada×cadência; em túnel ou sob marquise usa <em>dead reckoning</em> puro.</li>
+        <li><strong>Elevação pelo barômetro</strong> (muito mais precisa que a vertical do GPS), corrigida pela pressão ao nível do mar da estação meteorológica de Fortaleza.</li>
+        <li><strong>Auto-pause com histerese</strong> — para no semáforo sem cortar aceleração/desaceleração real.</li>
+        <li><strong>Fix de qualidade antes de contar</strong> — aguarda HDOP &lt; 2; sincronização de relógio por NTP; timestamps monotônicos.</li>
+        <li><strong>Perfil de erro por modelo de celular</strong> — calibração conhecida por device.</li>
+        <li><strong>Integração com relógio / foot pod</strong> (Garmin, Apple Watch, Coros, Polar, Stryd) — usa sempre a fonte mais precisa disponível; running dynamics do relógio &gt; celular.</li>
+        <li><strong>Modo alta precisão</strong> (mais bateria) × <strong>modo econômico</strong>, escolha do usuário.</li>
+        <li><strong>Índice de qualidade do sinal</strong> gravado por trecho e exibido no detalhe da corrida.</li>
+      </ul>
+
+      <h3>Catálogo de métricas</h3>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Métrica</th><th>Unidade</th><th>Fonte</th><th>Precisão-alvo</th></tr></thead>
+          <tbody>
+            <tr><td>Distância</td><td>m / km</td><td>GNSS + passada (fusão)</td><td>±1%</td></tr>
+            <tr><td>Pace — instantâneo, médio, lap</td><td>min/km</td><td>fusão</td><td>±3 s/km</td></tr>
+            <tr><td>GAP (pace ajustado ao relevo)</td><td>min/km</td><td>pace + grade barométrica</td><td>—</td></tr>
+            <tr><td>Velocidade</td><td>m/s · km/h</td><td>fusão</td><td>±1%</td></tr>
+            <tr><td>Cadência</td><td>ppm (passos/min)</td><td>acelerômetro</td><td>±1 ppm</td></tr>
+            <tr><td>Passos</td><td>contagem</td><td>acelerômetro / pedômetro</td><td>±2%</td></tr>
+            <tr><td>Comprimento de passada</td><td>m</td><td>distância ÷ passos, calibrado</td><td>±3%</td></tr>
+            <tr><td>Tempo total / em movimento / parado</td><td>s</td><td>relógio + auto-pause</td><td>±1 s</td></tr>
+            <tr><td>Ganho / perda de elevação</td><td>m</td><td>barômetro + correção MSL</td><td>±1 m/100 m</td></tr>
+            <tr><td>Grade (inclinação)</td><td>%</td><td>barômetro / DEM</td><td>—</td></tr>
+            <tr><td>Splits</td><td>por km · manual · por bairro</td><td>derivado</td><td>—</td></tr>
+            <tr><td>FC média / máx / zonas / drift</td><td>bpm</td><td>cinta ou relógio óptico</td><td>±1 bpm (cinta)</td></tr>
+            <tr><td>Oscilação vertical · tempo de contato · relação vertical</td><td>mm · ms</td><td>relógio / pod compatível</td><td>fonte do device</td></tr>
+            <tr><td>Potência de corrida</td><td>W</td><td>Stryd / relógio ou estimada</td><td>fonte do device</td></tr>
+            <tr><td>VO₂máx estimado</td><td>ml/kg/min</td><td>modelo FC × pace</td><td>±1</td></tr>
+            <tr><td>Carga de treino · esforço relativo · TSS</td><td>índice</td><td>FC + duração + intensidade</td><td>—</td></tr>
+            <tr><td>Calorias</td><td>kcal</td><td>modelo (peso, FC, grade)</td><td>±10%</td></tr>
+            <tr><td>Clima na corrida — temperatura, umidade, vento</td><td>°C · % · km/h</td><td>estação meteorológica de Fortaleza</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Horas de prática e estatísticas de vida</h3>
+      <ul>
+        <li><strong>Acumulado vitalício:</strong> horas correndo, km, passos, corridas, elevação, calorias — desde sempre.</li>
+        <li><strong>Rumo às 10.000 horas:</strong> barra lúdica de progresso à maestria, com projeção de data no ritmo atual.</li>
+        <li><strong>Horas fatiadas por:</strong> semana / mês / ano, superfície, tênis, bairro, faixa de horário, tipo de treino, zona de FC, zona de pace.</li>
+        <li><strong>Consistência:</strong> dias ativos, maior streak, média semanal, mapa de calor anual (estilo grade de contribuições).</li>
+        <li><strong>Recordes pessoais:</strong> 1 k, 5 k, 10 k, 15 k, 21,1 k, 42,2 k, 1 h, maior distância, maior elevação, mais território num único dia.</li>
+        <li><strong>Projeções:</strong> "no ritmo atual você bate 1.000 km em 3 de dezembro".</li>
+      </ul>
+
+      <div class="callout">
+        <span class="callout-label">Anti-fraude cruza com equipamento</span>
+        <p>Cadência, tempo de contato e assinatura de impacto do par calçado ajudam a distinguir corrida real de carro/bike/spoofing — os mesmos sensores servem à precisão e à integridade do jogo (ver seção 8).</p>
+      </div>
+    </section>
+
+    <section id="social">
+      <h2><span class="h2-num">05</span>Amigos e avaliação de rotas</h2>
+      <p class="section-sub">Ver o mapa dos outros e saber onde vale a pena correr.</p>
+
+      <h3>Rede social</h3>
+      <ul>
+        <li>Adicionar amigos por username, contatos ou QR code. Seguir é mútuo (amizade) ou unidirecional (torcida), configurável.</li>
+        <li><strong>Mapa compartilhado:</strong> alterna entre "só meu território", "meus amigos" e "toda a cidade". Cada corredor numa cor estável; legenda lateral.</li>
+        <li>Feed de atividades: corridas dos amigos, conquistas, troféus, quando alguém toma seu território ("Fulano invadiu a Aldeota").</li>
+        <li>Reações e comentários nas corridas. Grupos/clubes (ex.: "Corredores do Cocó") com ranking interno e território somado do clube.</li>
+        <li>Privacidade: raio de ocultação em torno de casa/trabalho (o traçado não é gravado nem exibido dentro da zona), atividades privadas, modo fantasma.</li>
+      </ul>
+
+      <h3>Rotas e avaliações</h3>
+      <p>Uma <strong>rota</strong> é um percurso nomeado (criado no app ou derivado de uma corrida). Cada rota tem página própria com:</p>
+      <ul class="tight">
+        <li>Distância, ganho de elevação, superfície (asfalto/calçadão/areia/parque), iluminação, movimento de carros.</li>
+        <li><strong>Avaliação 1–5 estrelas</strong> + tags: segurança, sombra, piso, trânsito, banheiros/água, beleza.</li>
+        <li>Comentários com data (útil pra obras, alagamento, segurança).</li>
+        <li>Melhores tempos (segmento tipo "Strava segment") e recorde de quem mais dominou território ali.</li>
+        <li>Curadoria: rotas oficiais de Fortaleza (Beira-Mar, Parque do Cocó, Lagoa da Messejana, Náutico–Mucuripe, Passeio Público).</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-label">Moderação</span>
+        <p>Avaliações e comentários passam por fila de moderação (automática + reports da comunidade + painel de admin). Denúncia de rota perigosa ou informação desatualizada gera alerta pro time.</p>
+      </div>
+    </section>
+
+    <section id="seguranca-urbana">
+      <h2><span class="h2-num">06</span>Segurança pessoal, clima e contexto urbano</h2>
+      <p class="section-sub">Correr por Fortaleza com informação de verdade — o calor, a maré, a luz da rua e um plano se algo der errado.</p>
+
+      <h3>Segurança pessoal</h3>
+      <ul>
+        <li><strong>SOS / botão de pânico</strong> — segurar 3 s na tela de corrida envia localização ao vivo + áudio ambiente para os contatos de emergência (e para a organização, num evento). Repete a cada intervalo até você cancelar com PIN.</li>
+        <li><strong>Beacon ao vivo</strong> — link temporário (expira ao terminar a corrida) para a família acompanhar em tempo real, sem revelar histórico nem a zona de casa.</li>
+        <li><strong>Detecção de parada anormal</strong> — imobilidade longa sem interação → o app pergunta "tudo bem?"; sem resposta, aciona o contato.</li>
+        <li><strong>Detecção de queda</strong> pelo acelerômetro (opcional).</li>
+        <li><strong>Check-in de chegada</strong> — "avise [contato] quando eu terminar".</li>
+        <li>Funciona com tela apagada e pouco sinal (SMS de fallback com a última posição).</li>
+      </ul>
+
+      <h3>Camada colaborativa de condições da via</h3>
+      <ul>
+        <li>Usuários marcam no mapa, com validade e confirmação da comunidade: iluminação apagada, obra/tapume, alagamento, calçada interditada, cachorro solto, trecho de <strong>atenção redobrada</strong>, trânsito perigoso.</li>
+        <li>Marcações decaem no tempo, sobem/descem por confirmação e passam por moderação (linguagem neutra, sem nomear pessoas — cuidado com difamação).</li>
+        <li>Alimenta as rotas sugeridas e o <strong>modo noturno seguro</strong> (só ruas iluminadas e movimentadas; lembra de ativar o beacon).</li>
+        <li>Parceria futura com dados abertos da Prefeitura / AMC (iluminação, obras, ciclofaixas).</li>
+      </ul>
+
+      <h3>Zonas de risco: conquista e missão bloqueadas</h3>
+      <p>Por enquanto, o jogo <strong>não recompensa correr em áreas de risco</strong> — não vamos criar incentivo para ir a esses lugares.</p>
+      <ul>
+        <li><strong>O gate:</strong> uma função booleana <code>territoryAllowedAt(geom) → true | false</code> roda no pipeline de território (seção 8) e outra <code>missionAllowedAt(point)</code> nas missões/selos. Retornam <code>false</code> quando a geometria toca uma <strong>zona de risco ativa</strong> acima de um limiar de severidade.</li>
+        <li><strong>De onde vêm as zonas:</strong> polígonos curados no admin (áreas mapeadas como perigosas, com validade) + agrupamento de marcações da comunidade + fontes públicas quando disponíveis. Toda zona tem severidade, origem e data de expiração.</li>
+        <li><strong>O que acontece na conquista:</strong> a parte do polígono que cai dentro de uma zona de risco é <strong>subtraída</strong> (<code>ST_Difference</code>) antes de virar território; se a sobreposição passar de X% ou o núcleo do laço estiver dentro de uma zona de severidade alta, a conquista inteira é <strong>recusada</strong> e o corredor recebe um aviso claro (não uma punição).</li>
+        <li>As <strong>rotas sugeridas</strong> e o <strong>modo noturno seguro</strong> também evitam essas zonas.</li>
+        <li><strong>"Por enquanto":</strong> tudo atrás de uma feature flag (<code>RISK_ZONE_BLOCKING</code>), com parâmetros de severidade e % ajustáveis no admin, para reavaliar quando houver dados melhores e um mecanismo seguro (ex.: só de dia, em grupo).</li>
+      </ul>
+
+      <h3>Clima, calor e sol</h3>
+      <ul>
+        <li>Antes de sair: temperatura, <strong>sensação térmica e índice de calor</strong>, umidade, vento, <strong>índice UV</strong>, chance de chuva, nascer/pôr do sol.</li>
+        <li><strong>Melhor janela do dia</strong> — "hoje corra 5h30–6h30 ou depois das 17h30".</li>
+        <li><strong>Alerta de hidratação e eletrólitos</strong> proporcional ao calor e à duração prevista; lembrete de protetor e boné.</li>
+        <li>Qualidade do ar e alerta de fumaça/queimada.</li>
+        <li>Fontes: FUNCEME / INMET / estação de Fortaleza + provedor de previsão.</li>
+      </ul>
+
+      <h3>Praia e orla</h3>
+      <ul>
+        <li><strong>Tábua de marés</strong> — maré baixa = faixa de areia firme para Iracema, Mucuripe e Praia do Futuro.</li>
+        <li><strong>Balneabilidade</strong> por trecho (dado da SEMACE) — "orla do Meireles própria hoje".</li>
+        <li>Aviso de ressaca para quem corre na beira d'água.</li>
+      </ul>
+
+      <h3>Contexto urbano no mapa</h3>
+      <ul>
+        <li>Camadas: <strong>arborização e sombra</strong>, bebedouros e pontos de água, banheiros públicos, academias ao ar livre, bicicletários, hospitais e UPAs.</li>
+        <li><strong>Índice de "corribilidade" por rua</strong> — largura e piso da calçada, sombra, trânsito, iluminação — de dados + comunidade; também vira insumo para pressionar melhorias urbanas (produto B2G).</li>
+      </ul>
+
+      <div class="callout">
+        <span class="callout-label">Limites e privacidade</span>
+        <p>O beacon expira e não expõe casa nem histórico; contatos de emergência ficam cifrados. As marcações de via usam linguagem neutra e passam por moderação. O app <strong>deixa claro que não substitui 190 (polícia) nem 192 (SAMU)</strong> e que dados de clima, maré e balneabilidade vêm de terceiros e podem falhar.</p>
+      </div>
+    </section>
+
+    <section id="arquitetura">
+      <h2><span class="h2-num">07</span>Arquitetura técnica</h2>
+      <p class="section-sub">Um monólito modular em Go, banco geoespacial, e um worker dedicado a processar territórios fora do caminho crítico.</p>
+
+      <figure>
+        <svg viewBox="0 0 760 420" role="img" aria-label="Diagrama de arquitetura: apps mobile e web falam via HTTPS e WebSocket com a API em Go; a API lê e escreve em PostgreSQL com PostGIS, Redis e armazenamento de objetos; o upload de corrida entra numa fila consumida pelo Territory Worker, que calcula os polígonos e as células H3 e grava a geometria; o ranking é publicado no Redis e empurrado por WebSocket.">
+          <g font-family="var(--f-mono)" font-size="12">
+            <!-- clients -->
+            <rect x="20" y="60" width="150" height="52" rx="6" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+            <text x="95" y="82" text-anchor="middle" fill="var(--ink)">App Mobile</text>
+            <text x="95" y="99" text-anchor="middle" fill="var(--ink-soft)" font-size="10.5">React Native</text>
+            <rect x="20" y="128" width="150" height="52" rx="6" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+            <text x="95" y="150" text-anchor="middle" fill="var(--ink)">App Web</text>
+            <text x="95" y="167" text-anchor="middle" fill="var(--ink-soft)" font-size="10.5">React + Vite</text>
+
+            <!-- API -->
+            <rect x="250" y="70" width="170" height="130" rx="8" fill="color-mix(in srgb, var(--teal) 12%, var(--surface))" stroke="var(--teal)"/>
+            <text x="335" y="92" text-anchor="middle" fill="var(--ink)" font-size="12.5">API — Go</text>
+            <text x="335" y="110" text-anchor="middle" fill="var(--ink-soft)" font-size="10">Echo/Chi · REST + WS</text>
+            <g fill="var(--ink-soft)" font-size="10">
+              <text x="335" y="132" text-anchor="middle">auth · runs · territory</text>
+              <text x="335" y="148" text-anchor="middle">social · leaderboard</text>
+              <text x="335" y="164" text-anchor="middle">routes · admin</text>
+              <text x="335" y="184" text-anchor="middle">jobs (cron semanal)</text>
+            </g>
+
+            <!-- queue -->
+            <rect x="250" y="250" width="170" height="46" rx="6" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+            <text x="335" y="270" text-anchor="middle" fill="var(--ink)">Fila</text>
+            <text x="335" y="285" text-anchor="middle" fill="var(--ink-soft)" font-size="10">NATS / Redis Streams</text>
+
+            <!-- worker -->
+            <rect x="250" y="330" width="170" height="66" rx="6" fill="color-mix(in srgb, var(--coral) 12%, var(--surface))" stroke="var(--coral)"/>
+            <text x="335" y="352" text-anchor="middle" fill="var(--ink)">Territory Worker</text>
+            <text x="335" y="369" text-anchor="middle" fill="var(--ink-soft)" font-size="10">map-match · loop fill</text>
+            <text x="335" y="384" text-anchor="middle" fill="var(--ink-soft)" font-size="10">H3 · anti-fraude</text>
+
+            <!-- data stores -->
+            <rect x="530" y="60" width="210" height="58" rx="6" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+            <text x="635" y="82" text-anchor="middle" fill="var(--ink)">PostgreSQL + PostGIS</text>
+            <text x="635" y="100" text-anchor="middle" fill="var(--ink-soft)" font-size="10">usuários · geom · timescale p/ trajetos</text>
+
+            <rect x="530" y="134" width="210" height="46" rx="6" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+            <text x="635" y="154" text-anchor="middle" fill="var(--ink)">Redis</text>
+            <text x="635" y="169" text-anchor="middle" fill="var(--ink-soft)" font-size="10">cache · rankings · sessões · pub/sub</text>
+
+            <rect x="530" y="196" width="210" height="46" rx="6" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+            <text x="635" y="216" text-anchor="middle" fill="var(--ink)">Object Storage (S3)</text>
+            <text x="635" y="231" text-anchor="middle" fill="var(--ink-soft)" font-size="10">GPX brutos · fotos · exports</text>
+
+            <rect x="530" y="330" width="210" height="46" rx="6" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+            <text x="635" y="350" text-anchor="middle" fill="var(--ink)">Map Tiles</text>
+            <text x="635" y="365" text-anchor="middle" fill="var(--ink-soft)" font-size="10">MapTiler / self-host + OSM</text>
+          </g>
+
+          <!-- arrows -->
+          <g stroke="var(--ink-soft)" stroke-width="1.6" fill="none" marker-end="url(#a2)">
+            <defs>
+              <marker id="a2" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+                <polygon points="0 0, 8 3.2, 0 6.4" fill="var(--ink-soft)"/>
+              </marker>
+            </defs>
+            <path d="M170 90 L246 120"/>
+            <path d="M170 150 L246 150"/>
+            <path d="M420 110 L526 90"/>
+            <path d="M420 140 L526 154"/>
+            <path d="M420 170 L526 210"/>
+            <path d="M335 200 L335 246"/>
+            <path d="M335 296 L335 326"/>
+            <path d="M420 363 L526 353"/>
+            <path d="M430 360 C 490 320, 500 130, 528 112"/>
+          </g>
+          <g font-family="var(--f-mono)" font-size="9.5" fill="var(--ink-soft)">
+            <text x="188" y="98">HTTPS / WSS</text>
+            <text x="336" y="228" text-anchor="middle">enfileira corrida</text>
+            <text x="336" y="316" text-anchor="middle">consome</text>
+            <text x="470" y="300" transform="rotate(-58 470 300)">grava geometria</text>
+          </g>
+        </svg>
+        <figcaption>O upload da corrida responde rápido (só valida e enfileira). O cálculo pesado — map-matching, preenchimento de laços, resolução de sobreposição, indexação H3 — roda no worker e o resultado volta ao cliente por WebSocket ou no próximo refresh.</figcaption>
+      </figure>
+
+      <h3>Backend — Go</h3>
+      <div class="kv">
+        <div><dt>Estrutura</dt><dd>Monólito modular (pacotes por domínio: <code>auth</code>, <code>run</code>, <code>territory</code>, <code>social</code>, <code>leaderboard</code>, <code>route</code>, <code>event</code>, <code>payment</code>, <code>ai</code>, <code>admin</code>) em camadas com portas e adaptadores. Separa só o worker como binário próprio. Princípios detalhados na seção 18.</dd></div>
+        <div><dt>HTTP</dt><dd>Echo ou Chi + <code>net/http</code>. REST para CRUD, WebSocket para mapa ao vivo e feed.</dd></div>
+        <div><dt>Geo</dt><dd><code>uber/h3-go</code> para indexação; PostGIS para operações de polígono (ST_Union, ST_Difference, ST_Area, ST_Contains).</dd></div>
+        <div><dt>Auth</dt><dd>JWT de acesso curto + refresh rotativo com detecção de reuso; OAuth (Google/Apple); e-mail+senha com Argon2id; 2FA TOTP (ver seção 14).</dd></div>
+        <div><dt>Migrações</dt><dd><code>goose</code> ou <code>atlas</code>. <code>sqlc</code> para queries tipadas.</dd></div>
+        <div><dt>Observabilidade</dt><dd>OpenTelemetry + Prometheus + Grafana; logs estruturados (slog).</dd></div>
+      </div>
+
+      <h3>Mobile — React Native</h3>
+      <ul class="tight">
+        <li>Expo (com dev client) ou RN puro se precisar de módulos nativos finos de GPS.</li>
+        <li>Rastreio em background: <code>react-native-background-geolocation</code> — o ponto mais crítico do app, precisa funcionar com tela apagada e economizar bateria.</li>
+        <li>Mapa: MapLibre Native (vetorial, offline-capable) com camadas de <code>fill</code>/<code>line</code> para territórios e <code>heatmap</code> para o mapa de calor.</li>
+        <li>Estado: Zustand/Redux Toolkit + TanStack Query. Fila de upload offline (corridas gravadas sem sinal sobem depois).</li>
+        <li>Sensores extras p/ anti-fraude: acelerômetro, passos (pedômetro), altímetro.</li>
+      </ul>
+
+      <h3>Web — React</h3>
+      <ul class="tight">
+        <li>React + Vite + TypeScript, React Router, TanStack Query, Tailwind ou CSS Modules.</li>
+        <li>MapLibre GL JS para o mapa de territórios.</li>
+        <li>Duas áreas na mesma base: <strong>portal do corredor</strong> (login, acompanhamento) e <strong>painel de admin</strong> (rota protegida por role).</li>
+        <li>SSR não é necessário no MVP; landing page separada pode ser estática.</li>
+      </ul>
+
+      <h3>Mapa base: serviço pronto, não construído do zero</h3>
+      <p>Não escrevemos renderizador de mapa nem desenhamos ruas. Usamos um serviço pronto de dados + tiles e uma biblioteca open source de renderização; por cima é que entram as nossas camadas.</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Camada</th><th>Escolha</th><th>Nota</th></tr></thead>
+          <tbody>
+            <tr><td>Dados (ruas, calçadas, prédios, praças)</td><td><strong>OpenStreetMap</strong></td><td>Aberto, boa cobertura de Fortaleza, sem ToS restritivo.</td></tr>
+            <tr><td>Tiles / hospedagem</td><td><strong>MapTiler</strong> ou <strong>Protomaps</strong>, ou self-host do extrato do Ceará</td><td>Pague-por-uso ou ~US$ 20–50/mês self-hosted para uma cidade.</td></tr>
+            <tr><td>Renderização</td><td><strong>MapLibre GL</strong> — Native (mobile) + GL JS (web)</td><td>Open source, sem taxa de licença, mesmo estilo nos dois.</td></tr>
+            <tr><td>Satélite / relevo</td><td>MapTiler Satellite / Esri World Imagery</td><td>Licenciado à parte; só quando a camada é ligada.</td></tr>
+            <tr><td>Rotas / map-matching</td><td><strong>OSRM</strong> ou <strong>Valhalla</strong> self-hosted</td><td>Extrato OSM do Ceará; barato e roda offline no nosso servidor.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>O que construímos por cima:</strong> a camada de território (polígonos do PostGIS → GeoJSON / vector tiles → <code>fill</code> + <code>line</code>), a grade H3, o <strong>mapa de calor</strong> (abaixo), o estilo visual (um <em>style JSON</em> próprio que desenha os dados do OSM), marcador do corredor, traçado ao vivo, pinos de missão, camada de alertas da via e o cache offline dos tiles de Fortaleza. <strong>Não usamos Google Maps</strong> — caro em escala e os termos proíbem sobrepor dados próprios, gamificar e cachear.</p>
+
+      <h3>Mapa de calor</h3>
+      <p>Camada separada do território: onde se <em>corre</em>, não o que se <em>domina</em>. Três escopos, alternáveis no seletor de camadas:</p>
+      <ul>
+        <li><strong>Meu mapa de calor</strong> — acúmulo de todos os seus percursos; mostra suas ruas de sempre e os cantos que você nunca pisou.</li>
+        <li><strong>Amigos / clube</strong> — densidade combinada da sua rede.</li>
+        <li><strong>Cidade</strong> — onde os corredores de Fortaleza mais correm: descoberta de rotas e insumo de segurança (trecho movimentado = mais seguro à noite).</li>
+      </ul>
+      <ul class="tight">
+        <li>Filtros: período, modalidade (corrida / caminhada / trilha), faixa de horário.</li>
+        <li><strong>Técnica:</strong> pontos de GPS agregados por célula H3 (res 10–11) com peso; renderizado como camada <code>heatmap</code> do MapLibre ou como raster gerado por job. Nunca traçados individuais.</li>
+        <li><strong>Privacidade (lição do vazamento do Strava):</strong> o mapa de calor da cidade é <em>opt-in</em>, com <strong>k-anonimato</strong> (a célula só aparece com ≥ N pessoas), respeita a zona de ocultação e nunca inclui dados de menores.</li>
+      </ul>
+
+      <h3>Login social e integrações com apps de corrida</h3>
+      <p><strong>Login:</strong> e-mail+senha, <strong>Google</strong> e Apple (obrigatório na App Store se houver outro social). OAuth 2.0 / OpenID Connect, conta unificada — o mesmo usuário pode ligar vários provedores.</p>
+      <p><strong>Importação de corridas:</strong> conectar contas externas traz o histórico e as corridas novas (via webhook), que passam pelo <em>mesmo pipeline de território</em>. Corrida importada é marcada <code>data_source = import</code>, tem anti-fraude mais rígido (sem device attestation) e pode entrar em revisão antes de valer território.</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Serviço</th><th>API</th><th>Como integrar</th></tr></thead>
+          <tbody>
+            <tr><td>Strava</td><td>Aberta (OAuth2 + webhook), com limites de taxa</td><td>Prioridade 1. Import de atividades + push de novas. Atenção aos termos: exibir "Powered by Strava", link "Ver no Strava", proibido usar dados de terceiros para ML/segmentos concorrentes.</td></tr>
+            <tr><td>Apple Health (HealthKit)</td><td>No dispositivo (iOS), sem servidor</td><td>Prioridade 1 no iOS. Lê treinos de qualquer app que grave no Health (Nike Run Club, adidas Running, etc.).</td></tr>
+            <tr><td>Google Health Connect</td><td>No dispositivo (Android), aberta</td><td>Prioridade 1 no Android. Mesma função — ponte para apps sem API pública.</td></tr>
+            <tr><td>Fitbit</td><td>Aberta (Web API OAuth2)</td><td>Prioridade 2. Import de corridas e FC.</td></tr>
+            <tr><td>Polar</td><td>Aberta (AccessLink, gratuita)</td><td>Prioridade 2.</td></tr>
+            <tr><td>Garmin Connect</td><td>Parceria (Activity/Health API) — exige aprovação</td><td>Prioridade 2, começar o processo cedo (pode demorar). Melhor fonte de running dynamics.</td></tr>
+            <tr><td>Coros · Suunto · Wahoo</td><td>Parceria</td><td>Prioridade 3, conforme demanda.</td></tr>
+            <tr><td>Nike Run Club · adidas Running (Runtastic)</td><td>Sem API pública</td><td>Ponte via Apple Health / Health Connect ou import manual de arquivo <code>.gpx</code>/<code>.fit</code>/<code>.tcx</code>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul class="tight">
+        <li><strong>Deduplicação:</strong> a mesma corrida gravada no app e importada do Strava é fundida por janela de tempo + sobreposição de traçado; o usuário escolhe a fonte "de referência".</li>
+        <li><strong>Exportação também:</strong> enviar corridas do FortalRunners de volta para Strava/Garmin (fechar o ciclo, atrair quem já tem rotina).</li>
+        <li><strong>Sincronização de equipamento:</strong> puxar o "gear" do Strava para pré-preencher os tênis do usuário.</li>
+        <li><strong>Revogação:</strong> desconectar apaga tokens e, opcionalmente, as corridas importadas daquele provedor (LGPD).</li>
+      </ul>
+
+    </section>
+
+    <section id="algoritmo">
+      <h2><span class="h2-num">08</span>Algoritmo de territórios e anti-fraude</h2>
+      <p class="section-sub">O coração do produto e o que mais vai dar trabalho de acertar.</p>
+
+      <h3>Pipeline de processamento de uma corrida</h3>
+      <ol>
+        <li><strong>Ingestão.</strong> Cliente envia lista de pontos <code>(lat, lon, alt, timestamp, accuracy, speed)</code> + metadados de sensor. API valida esquema, tamanho e assinatura, grava o bruto no S3 e enfileira.</li>
+        <li><strong>Limpeza.</strong> Descarta pontos com <code>accuracy &gt; 30 m</code>, remove saltos impossíveis, suaviza com filtro (Kalman ou média móvel), reamostra para intervalo fixo.</li>
+        <li><strong>Validação de esforço.</strong> Cruza distância GPS × passos do pedômetro × perfil de aceleração × velocidade. Corrida de carro/bike tem assinatura diferente de corrida a pé.</li>
+        <li><strong>Map-matching (v1).</strong> Encaixa o traçado na malha viária OSM (OSRM/Valhalla) para obter uma polyline "grudada" nas ruas.</li>
+        <li><strong>Detecção de laços.</strong> Encontra auto-interseções e pontos de fechamento (início↔fim &lt; 25 m). Constrói anéis fechados; poligoniza (<code>ST_Polygonize</code>).</li>
+        <li><strong>Preenchimento.</strong> Para cada anel válido (área entre mín e máx), cria o polígono do território.</li>
+        <li><strong>Gate de zona de risco.</strong> <code>territoryAllowedAt(geom)</code>: subtrai (<code>ST_Difference</code>) as zonas de risco ativas do polígono; recusa a conquista se a sobreposição &gt; X% ou o núcleo do laço cair em zona de severidade alta (ver seção 6). Flag <code>RISK_ZONE_BLOCKING</code>.</li>
+        <li><strong>Resolução de conflito.</strong> <code>ST_Difference</code> contra territórios existentes de outros; parte sobreposta vira disputa; consolida via job após 24 h.</li>
+        <li><strong>Indexação H3.</strong> <code>polyfill</code> do(s) polígono(s) em células res 9; upsert na tabela de posse de células.</li>
+        <li><strong>Métricas + eventos.</strong> Recalcula área total do corredor, XP, progresso de bairro; publica evento no feed e no WebSocket; atualiza rankings no Redis.</li>
+      </ol>
+
+      <h3>Anti-fraude — camadas</h3>
+      <div class="grid-2">
+        <div><h4>Física do movimento</h4><p>Tetos de velocidade (ex.: pace &lt; 2:30/km sustentado é suspeito), aceleração plausível, elevação coerente com o relevo.</p></div>
+        <div><h4>Sensores cruzados</h4><p>Passos ≈ distância; GPS mexe junto com acelerômetro. Mock location flag do SO. Detecção de root/jailbreak.</p></div>
+        <div><h4>Integridade do device</h4><p>Play Integrity / App Attest. Corrida assinada com chave do device. Rejeita clientes não oficiais.</p></div>
+        <div><h4>Padrões estatísticos</h4><p>Traçados idênticos repetidos, área ganha por minuto fora da curva, teleporte entre pontos, horários impossíveis.</p></div>
+        <div><h4>Comunidade</h4><p>Botão de denúncia numa corrida/território. Corridas sob suspeita entram em revisão e não pontuam até liberadas.</p></div>
+        <div><h4>Sombra (shadow-ban)</h4><p>Trapaceiro reincidente joga sozinho: vê seu território, ninguém mais vê. Reduz incentivo a burlar.</p></div>
+      </div>
+
+      <div class="callout">
+        <span class="callout-label">Risco conhecido</span>
+        <p>Map-matching e resolução de sobreposição em massa são caros. Mitigações: processar por tiles/bairro, cache de malha viária, <code>ST_Subdivide</code> em polígonos grandes, e recalcular ranking de forma incremental — nunca varrer a cidade inteira a cada corrida.</p>
+      </div>
+    </section>
+
+    <section id="dados">
+      <h2><span class="h2-num">09</span>Modelo de dados</h2>
+      <p class="section-sub">Tabelas centrais (PostgreSQL + PostGIS). Colunas de auditoria (<code>created_at</code>, <code>updated_at</code>) omitidas.</p>
+      <div class="callout teal">
+        <span class="callout-label">Detalhe completo</span>
+        <p>O modelo completo — colunas, tipos, chaves, enums, índices e <strong>todos os relacionamentos com cardinalidade</strong>, mais o catálogo de serviços internos e integrações — está em <a href="https://claude.ai/code/artifact/8bd97373-4a1d-4fa3-8144-4eefbfdeb34b"><strong>Banco &amp; Integrações</strong></a>. A tabela abaixo é o resumo.</p>
+      </div>
+
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Tabela</th><th>Campos-chave</th><th>Nota</th></tr></thead>
+          <tbody>
+            <tr><td>users</td><td><code>id, athlete_id, username, email, password_hash, color_hex, avatar_url, home_blur_geom, role, status</code></td><td><code>athlete_id</code> público e estável (ex.: FR-0001234). <code>role</code>: runner / organizer / moderator / admin.</td></tr>
+            <tr><td>auth_sessions</td><td><code>id, user_id, refresh_token_hash, device_id, expires_at, revoked</code></td><td>Refresh rotativo; um registro por device.</td></tr>
+            <tr><td>identities</td><td><code>id, user_id, provider, provider_uid, email, linked_at</code></td><td>Logins sociais ligados à conta. <code>provider</code>: google / apple / email.</td></tr>
+            <tr><td>integrations</td><td><code>id, user_id, provider, external_athlete_id, access_token_enc, refresh_token_enc, scopes, webhook_sub_id, last_sync_at, status</code></td><td>Strava, Garmin, Fitbit, Polar, Health Connect, Apple Health. Tokens criptografados no cofre.</td></tr>
+            <tr><td>import_jobs</td><td><code>id, user_id, provider, kind, cursor, status, stats_jsonb</code></td><td>Backfill de histórico + fila de webhooks. <code>kind</code>: backfill / delta.</td></tr>
+            <tr><td>friendships</td><td><code>user_id, friend_id, status</code></td><td>pending / accepted / blocked. Par simétrico.</td></tr>
+            <tr><td>clubs / club_members</td><td><code>id, name, neighborhood, owner_id</code> · <code>club_id, user_id, role</code></td><td>Ranking e território somado por clube.</td></tr>
+            <tr><td>runs</td><td><code>id, user_id, shoe_id, device_id, started_at, ended_at, distance_m, moving_s, duration_s, elevation_gain_m, avg_pace_s, gap_pace_s, avg_cadence_spm, step_count, stride_len_m, avg_hr, running_power_w, vert_osc_mm, ground_contact_ms, calories, gnss_mode, avg_hdop, signal_quality_pct, data_source, weather_jsonb, status</code></td><td><code>status</code>: processing / valid / flagged / rejected. <code>data_source</code>: phone / watch / import.</td></tr>
+            <tr><td>run_tracks</td><td><code>run_id, geom(LineString,4326), points_jsonb, sensor_streams_jsonb, quality_segments_jsonb</code></td><td>Traçado limpo + amostra bruta + índice de qualidade por trecho. Particionar por mês.</td></tr>
+            <tr><td>shoes</td><td><code>id, user_id, brand, model, nickname, photo_url, purchased_at, purchase_price, initial_distance_m, lifespan_goal_m, surface_pref, status, retired_at</code></td><td><code>status</code>: active / rotation / retired.</td></tr>
+            <tr><td>shoe_stats</td><td><code>shoe_id, total_distance_m, total_steps, total_moving_s, run_count, elevation_gain_m, avg_pace_s, cost_per_km, surface_breakdown_jsonb</code></td><td>Rollup mantido pelo worker a cada corrida.</td></tr>
+            <tr><td>devices</td><td><code>id, user_id, kind, brand, model, last_seen_at, precision_profile_jsonb</code></td><td><code>kind</code>: phone / watch / footpod / hrm.</td></tr>
+            <tr><td>user_stride_calibration</td><td><code>user_id, stride_len_m, confidence, sample_count, updated_at</code></td><td>Aprende com o histórico; usada no dead reckoning.</td></tr>
+            <tr><td>personal_records</td><td><code>id, user_id, distance_key, value_s, run_id, achieved_at</code></td><td>1k/5k/10k/21k/42k/1h/maior distância/etc.</td></tr>
+            <tr><td>lifetime_stats</td><td><code>user_id, total_moving_s, total_distance_m, total_steps, run_count, elevation_gain_m, calories, active_days, longest_streak</code></td><td>Materializada; base das "horas de prática".</td></tr>
+            <tr><td>territories</td><td><code>id, user_id, run_id, geom(MultiPolygon,4326), area_m2, neighborhood_id, claimed_at, decays_at, status</code></td><td>Um registro por conquista. Estado atual = união dos ativos por usuário.</td></tr>
+            <tr><td>territory_disputes</td><td><code>id, geom, attacker_id, defender_id, opened_at, resolves_at</code></td><td>Sobreposição em janela de 24 h.</td></tr>
+            <tr><td>h3_cells</td><td><code>h3_index(bigint), owner_id, territory_id, neighborhood_id, claimed_at</code></td><td>Res 9. Base de % de cobertura. PK = h3_index.</td></tr>
+            <tr><td>heat_agg</td><td><code>h3_index(bigint), scope, period, activity, weight, runner_count, updated_at</code></td><td>Agregação de passagem para o mapa de calor. <code>scope</code>: user:&lt;id&gt; / club:&lt;id&gt; / city. Célula da cidade só servida com <code>runner_count ≥ N</code>.</td></tr>
+            <tr><td>neighborhoods</td><td><code>id, name, geom(MultiPolygon), h3_total</code></td><td>Bairros oficiais de Fortaleza (seed via IBGE/prefeitura).</td></tr>
+            <tr><td>routes</td><td><code>id, name, created_by, geom(LineString), distance_m, surface, is_official</code></td><td>Percursos nomeados.</td></tr>
+            <tr><td>route_reviews</td><td><code>id, route_id, user_id, rating, tags_jsonb, body, status</code></td><td><code>status</code> p/ moderação.</td></tr>
+            <tr><td>seasons / weekly_cycles</td><td><code>id, starts_at, ends_at</code> · <code>id, season_id, week_no, closed_at</code></td><td>Ciclo semanal fecha domingo 23h59 America/Fortaleza.</td></tr>
+            <tr><td>trophies</td><td><code>id, cycle_id, user_id, type, neighborhood_id, rank, metric_value</code></td><td>Resultado congelado de cada ciclo.</td></tr>
+            <tr><td>badges / user_badges</td><td><code>code, name, criteria_jsonb</code> · <code>user_id, badge_code, earned_at</code></td><td>Conquistas permanentes (inclui selos de marco).</td></tr>
+            <tr><td>landmarks</td><td><code>id, name, badge_code, geom(Point,4326), radius_m, blurb, hero_photo_url, difficulty, requires_on_foot, quiz_jsonb, collection_id, active_from, active_to, status</code></td><td>Marcos históricos curados. Janela sazonal opcional.</td></tr>
+            <tr><td>landmark_collections</td><td><code>id, name, description, badge_code, reward_xp</code></td><td>Circuitos (ex.: "Praia de Iracema").</td></tr>
+            <tr><td>landmark_checkins</td><td><code>id, user_id, landmark_id, run_id, photo_key, taken_at, geom(Point), sensor_sig_jsonb, quiz_ok, status, moderated_by</code></td><td><code>status</code>: pending / approved / rejected. Foto no object storage.</td></tr>
+            <tr><td>organizers</td><td><code>id, name, kind, contact_email, plan, billing_ref, status</code></td><td><code>kind</code>: race / company / brand / ngo. Planos pagos.</td></tr>
+            <tr><td>events</td><td><code>id, slug, title, type, organizer_id, starts_at, ends_at, area_geom, route_geom, goals_jsonb, rewards_jsonb, visibility, status</code></td><td><code>type</code>: race / challenge / corporate / brand / charity.</td></tr>
+            <tr><td>event_checkpoints</td><td><code>id, event_id, name, geom(Point), radius_m, ord, badge_code, requires_photo</code></td><td>Largada, km parciais, chegada, pontos de marca.</td></tr>
+            <tr><td>event_teams</td><td><code>id, event_id, name, organizer_id</code></td><td>Times (colaboradores de uma empresa, p.ex.).</td></tr>
+            <tr><td>event_participants</td><td><code>event_id, user_id, team_id, joined_at, progress_jsonb, completed_at</code></td><td>Progresso e conclusão por pessoa.</td></tr>
+            <tr><td>event_stations</td><td><code>id, event_id, name, role, ord, geom(Point), radius_m</code></td><td><code>role</code>: kit / start / checkpoint / finish / lap / aid / sponsor.</td></tr>
+            <tr><td>scanner_credentials</td><td><code>id, event_id, station_id, organizer_id, token_hash, expires_at, revoked</code></td><td>Uma credencial por posto/função; assina as leituras da estação.</td></tr>
+            <tr><td>qr_tokens</td><td><code>id, user_id, kind, payload_sig, event_id, issued_at, expires_at, revoked</code></td><td><code>kind</code>: rotating (app, ~45 s) / static (peito impresso).</td></tr>
+            <tr><td>scan_events</td><td><code>id, athlete_id, station_id, event_id, scanned_by, kind, geom(Point), scanned_at, owner_confirmed_at, status, offline_synced_at</code></td><td><code>status</code>: recorded / pending / disputed / rejected. Timestamp da estação é a fonte da verdade.</td></tr>
+            <tr><td>activity_events</td><td><code>id, actor_id, type, subject_id, payload_jsonb, visibility</code></td><td>Feed. type: run / claim / trophy / invasion / comment.</td></tr>
+            <tr><td>reports</td><td><code>id, reporter_id, target_type, target_id, reason, status, handled_by</code></td><td>Denúncias (corrida, rota, review, usuário).</td></tr>
+            <tr><td>event_prices</td><td><code>id, event_id, name, category, amount_cents, starts_at, ends_at, quota, sold</code></td><td>Lotes por data e categoria.</td></tr>
+            <tr><td>orders</td><td><code>id, user_id, kind, status, amount_cents, discount_cents, platform_fee_cents, currency, coupon_id, asaas_customer_id, created_at</code></td><td><code>kind</code>: event_registration / subscription / cosmetic / donation.</td></tr>
+            <tr><td>order_items</td><td><code>order_id, ref_type, ref_id, qty, unit_amount_cents, options_jsonb</code></td><td><code>options_jsonb</code>: camiseta, categoria, kit.</td></tr>
+            <tr><td>payments</td><td><code>id, order_id, asaas_charge_id, method, status, paid_at, net_amount_cents, split_jsonb, receipt_url, card_brand, card_last4</code></td><td><code>method</code>: pix / boleto / card. Sem PAN.</td></tr>
+            <tr><td>refunds</td><td><code>id, payment_id, asaas_refund_id, amount_cents, reason, status, requested_by</code></td><td>Estorno total ou parcial.</td></tr>
+            <tr><td>coupons</td><td><code>id, scope, code, discount_type, value, max_uses, used, valid_until, event_id</code></td><td><code>scope</code>: event / global / campaign.</td></tr>
+            <tr><td>payout_accounts</td><td><code>organizer_id, asaas_wallet_id, asaas_subaccount_id, status, kyc_state</code></td><td>Conta de repasse do organizador.</td></tr>
+            <tr><td>subscriptions</td><td><code>user_id, asaas_subscription_id, plan, status, current_period_end, cancel_at</code></td><td>Premium recorrente + dunning.</td></tr>
+            <tr><td>webhook_events</td><td><code>id, provider, external_id, event_type, payload_jsonb, signature_ok, processed_at</code></td><td>Idempotência de webhooks (Asaas, Strava...).</td></tr>
+            <tr><td>safety_contacts</td><td><code>id, user_id, name, phone, relation, verified_at</code></td><td>Contatos de emergência, cifrados.</td></tr>
+            <tr><td>sos_events</td><td><code>id, user_id, run_id, started_at, ended_at, geom(LineString), status, resolved_by, share_token</code></td><td>SOS e beacon ao vivo; <code>share_token</code> expira.</td></tr>
+            <tr><td>hazard_reports</td><td><code>id, reporter_id, type, geom(Point), severity, note, photo_key, confirms, disputes, expires_at, status</code></td><td>Camada colaborativa da via; decai no tempo, moderada.</td></tr>
+            <tr><td>risk_zones</td><td><code>id, geom(MultiPolygon,4326), severity, source, note, active_from, active_to, status</code></td><td>Curadas no admin + agrupamento de <code>hazard_reports</code>. <code>territoryAllowedAt()</code> e <code>missionAllowedAt()</code> consultam esta tabela.</td></tr>
+            <tr><td>map_pois</td><td><code>id, type, geom(Point), name, source, verified, attrs_jsonb</code></td><td><code>type</code>: water / toilet / gym / bike_rack / shade / hospital.</td></tr>
+            <tr><td>ai_interactions</td><td><code>id, user_id, feature, model, prompt_tokens, completion_tokens, cost_cents, latency_ms, tool_calls_jsonb, safety_flags, outcome, created_at</code></td><td>Telemetria de IA — sem conteúdo com PII.</td></tr>
+            <tr><td>ai_prompts</td><td><code>key, version, hash, body, active, created_by</code></td><td>Registro versionado de prompts do sistema.</td></tr>
+            <tr><td>ai_evals</td><td><code>id, prompt_key, prompt_version, dataset, scores_jsonb, run_at</code></td><td>Resultado da suíte de avaliação por versão.</td></tr>
+            <tr><td>audit_log</td><td><code>id, actor_id, actor_role, action, target_type, target_id, diff_jsonb, ip</code></td><td>Append-only. Toda ação de admin / moderação / organizador / financeira.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="api">
+      <h2><span class="h2-num">10</span>API — endpoints principais</h2>
+      <p class="section-sub">REST versionado em <code>/v1</code>. Autenticação Bearer JWT. WebSocket em <code>/v1/ws</code>.</p>
+
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Método + rota</th><th>Descrição</th></tr></thead>
+          <tbody>
+            <tr><td>POST /v1/auth/register · /login · /refresh · /logout</td><td>Fluxo de credenciais e tokens.</td></tr>
+            <tr><td>GET /v1/auth/oauth/:provider · GET /v1/auth/oauth/:provider/callback</td><td>Login/vínculo social (Google, Apple). Retorna par de tokens.</td></tr>
+            <tr><td>GET/POST /v1/integrations · DELETE /v1/integrations/:provider</td><td>Listar, conectar (inicia OAuth) e revogar Strava/Garmin/Fitbit/Polar/Health Connect.</td></tr>
+            <tr><td>POST /v1/integrations/:provider/sync</td><td>Disparar backfill ou sincronização manual.</td></tr>
+            <tr><td>POST /v1/webhooks/:provider</td><td>Receptor de eventos (nova atividade no Strava, etc.). Assinatura verificada.</td></tr>
+            <tr><td>GET /v1/me · PATCH /v1/me</td><td>Perfil, cor, preferências de privacidade.</td></tr>
+            <tr><td>POST /v1/runs</td><td>Upload de corrida (pontos + streams de sensor + <code>shoe_id</code> + <code>device_id</code>). Retorna <code>202</code> + <code>run_id</code> em processamento.</td></tr>
+            <tr><td>GET /v1/runs/:id</td><td>Status, métricas completas, qualidade de sinal por trecho, território gerado.</td></tr>
+            <tr><td>GET/POST /v1/shoes · PATCH /v1/shoes/:id · GET /v1/shoes/:id/stats</td><td>Cadastro, aposentadoria e quilometragem/passos/custo por par.</td></tr>
+            <tr><td>GET/POST /v1/devices</td><td>Parear relógio / foot pod / cinta de FC.</td></tr>
+            <tr><td>GET /v1/me/lifetime · GET /v1/me/records · GET /v1/me/calibration</td><td>Horas de prática, recordes pessoais, calibração de passada.</td></tr>
+            <tr><td>GET /v1/territories?bbox=&amp;scope=me|friends|all</td><td>GeoJSON dos territórios na área visível do mapa.</td></tr>
+            <tr><td>GET /v1/coverage?scope=city|neighborhood:id</td><td>% de cobertura e ranking associado.</td></tr>
+            <tr><td>GET /v1/heatmap?bbox=&amp;scope=me|friends|city&amp;period=&amp;activity=</td><td>Células de calor agregadas (nunca traçados). Cidade sujeita a k-anonimato.</td></tr>
+            <tr><td>GET /v1/leaderboards/:kind</td><td>global / weekly / neighborhood / friends / club.</td></tr>
+            <tr><td>GET /v1/trophies?cycle=current|:id</td><td>Troféus do ciclo.</td></tr>
+            <tr><td>GET /v1/landmarks?bbox= · GET /v1/landmarks/:id</td><td>Marcos próximos, status por usuário, texto histórico.</td></tr>
+            <tr><td>POST /v1/landmarks/:id/checkin</td><td>Multipart: foto + posição + <code>run_id</code> (+ respostas do quiz). Retorna selo ou pendência de moderação.</td></tr>
+            <tr><td>GET /v1/events · GET /v1/events/:slug · POST /v1/events/:slug/join</td><td>Descobrir, ver e entrar em eventos.</td></tr>
+            <tr><td>GET /v1/events/:slug/leaderboard · POST /v1/events/:slug/checkpoints/:id/checkin</td><td>Ranking do evento e check-in de checkpoint.</td></tr>
+            <tr><td>/v1/organizer/*</td><td>Portal de organizadores: CRUD de eventos, checkpoints, times, estações, credenciais de scanner, exportar resultados. Role <code>organizer</code>.</td></tr>
+            <tr><td>GET /v1/me/qr · GET /v1/me/qr/static?event=slug</td><td>Token rotativo (curta validade) + <code>athlete_id</code>; QR estático para número de peito.</td></tr>
+            <tr><td>GET /v1/me/scans · POST /v1/me/scans/:id/dispute</td><td>Histórico de leituras da minha conta e contestação.</td></tr>
+            <tr><td>POST /v1/scan</td><td>App scanner envia <code>qr_token</code> + credencial de estação. Grava a passagem na conta do dono; retorna o atleta resumido. Aceita lote (fila offline).</td></tr>
+            <tr><td>POST /v1/scan/confirm</td><td>App do atleta co-confirma o handshake de uma leitura sensível pendente.</td></tr>
+            <tr><td>POST /v1/friends · PATCH /v1/friends/:id · GET /v1/feed</td><td>Rede social e feed de atividades.</td></tr>
+            <tr><td>GET/POST /v1/routes · POST /v1/routes/:id/reviews</td><td>Rotas e avaliações.</td></tr>
+            <tr><td>POST /v1/reports</td><td>Denúncia genérica.</td></tr>
+            <tr><td>GET/POST /v1/safety/contacts</td><td>Contatos de emergência.</td></tr>
+            <tr><td>POST /v1/sos · POST /v1/sos/:id/cancel · GET /s/:token</td><td>Iniciar SOS/beacon, cancelar com PIN, página pública de acompanhamento ao vivo.</td></tr>
+            <tr><td>GET/POST /v1/hazards?bbox= · POST /v1/hazards/:id/confirm|dispute</td><td>Camada colaborativa da via.</td></tr>
+            <tr><td>GET /v1/risk-zones?bbox=</td><td>Zonas de risco ativas para desenhar no mapa e explicar por que a conquista foi recusada. CRUD em <code>/v1/admin/risk-zones</code>.</td></tr>
+            <tr><td>GET /v1/conditions?lat=&lon=</td><td>Clima, sensação térmica, UV, sol, maré, balneabilidade, melhor janela do dia.</td></tr>
+            <tr><td>GET /v1/pois?bbox=&type=</td><td>Bebedouros, banheiros, sombra, hospitais, bicicletários.</td></tr>
+            <tr><td>POST /v1/coach/ask · GET /v1/coach/summary</td><td>Chat de coach e resumo do período. Rate limit e teto de custo próprios; saída validada por schema (ver seção 17).</td></tr>
+            <tr><td>GET /v1/events/:slug/prices</td><td>Lotes e categorias disponíveis.</td></tr>
+            <tr><td>POST /v1/orders · GET /v1/orders/:id · GET /v1/me/orders</td><td>Criar pedido (itens + cupom), consultar status, histórico.</td></tr>
+            <tr><td>POST /v1/orders/:id/checkout</td><td>Método (pix / card / boleto) → devolve QR/copia-e-cola PIX, link 3DS do cartão ou boleto. Idempotency-Key obrigatória.</td></tr>
+            <tr><td>POST /v1/orders/:id/refund</td><td>Estorno conforme política do evento. Role organizer/admin + reautenticação.</td></tr>
+            <tr><td>GET/POST /v1/me/subscription</td><td>Assinatura premium: status, criar, cancelar.</td></tr>
+            <tr><td>POST /v1/webhooks/asaas</td><td>Confirmação de cobrança/estorno. Assinatura HMAC + IP allowlist + idempotência.</td></tr>
+            <tr><td>WS /v1/ws</td><td>Eventos: <code>territory.updated</code>, <code>feed.new</code>, <code>run.processed</code>, <code>cycle.closed</code>, <code>order.paid</code>.</td></tr>
+            <tr><td>/v1/organizer/*</td><td>Preços, cupons, vendas, repasses, resultados. Role <code>organizer</code> + 2FA.</td></tr>
+            <tr><td>/v1/admin/*</td><td>Namespace separado, exige role admin/moderator + 2FA (ver seção 13).</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="mobile">
+      <h2><span class="h2-num">11</span>App mobile (React Native)</h2>
+      <p class="section-sub">Telas principais.</p>
+      <div class="callout teal">
+        <span class="callout-label">Design</span>
+        <p>A linguagem visual — cor, tipografia, ícones, movimento, componentes, selos, troféus e tamanhos de imagem, em claro e escuro — vive no <a href="https://claude.ai/code/artifact/e662d35e-b65a-4f5c-a0ad-d2480c77f2ac"><strong>Manual de Design</strong></a>. Mockups navegáveis das telas de mapa e histórico: <a href="https://claude.ai/code/artifact/d65150fe-12cf-4e14-ac58-49cbd29abb4e"><strong>Mockups de tela</strong></a>.</p>
+      </div>
+      <div class="grid-2">
+        <div><h4>Mapa (home)</h4><p>Territórios coloridos, seu progresso de bairro, botão grande "Iniciar corrida". Toggle meu / amigos / cidade. Botão de camadas: estilo do mapa + sobreposições (território, amigos, mapa de calor, missões, alertas na via).</p></div>
+        <div><h4>Corrida ativa</h4><p>Tempo, distância, pace, cadência, FC, elevação, mini-mapa ao vivo e prévia da área que está sendo cercada. Telas de dados configuráveis.</p></div>
+        <div><h4>Resumo pós-corrida</h4><p>Território ganho, quarteirões novos, todas as métricas, par de tênis usado, qualidade do sinal, XP, badges, card pra compartilhar.</p></div>
+        <div><h4>Histórico de corridas</h4><p>Lista com resumo do mês, mini-mapa por corrida, ritmo, tênis e conquistas; filtro por período e tipo de treino.</p></div>
+        <div><h4>Detalhe da corrida</h4><p>Mapa com traçado + território daquela corrida, grade de métricas, pace por km, equipamento, clima na corrida, qualidade do sinal, exportar GPX/TCX.</p></div>
+        <div><h4>Meus tênis</h4><p>Pares em rotação com barra de vida útil, km/passos/horas/custo por km, cadastrar e aposentar.</p></div>
+        <div><h4>Estatísticas</h4><p>Horas de prática (rumo às 10.000 h), acumulado vitalício, recordes pessoais, mapa de calor anual, cargas de treino.</p></div>
+        <div><h4>Ranking</h4><p>Abas: semanal, global, bairro, amigos.</p></div>
+        <div><h4>Perfil</h4><p>Cor, área total, % da cidade, sala de troféus, badges, histórico.</p></div>
+        <div><h4>Amigos / Feed</h4><p>Atividades, reações, buscar e adicionar.</p></div>
+        <div><h4>Rotas</h4><p>Explorar, filtrar por bairro/superfície, avaliar.</p></div>
+        <div><h4>Missões</h4><p>Mapa e lista de marcos de Fortaleza: bloqueado / disponível / conquistado, progresso das coleções, câmera de missão.</p></div>
+        <div><h4>Eventos</h4><p>Descobrir e entrar em corridas, desafios e campanhas; progresso, checkpoints, leaderboard do evento.</p></div>
+        <div><h4>Carteirinha</h4><p>ID FortalRunners + QR rotativo + foto, brilho máx, funciona offline. Scanner P2P para ler o QR de outro atleta. Histórico de leituras e contestação.</p></div>
+        <div><h4>Checkout e inscrições</h4><p>Detalhe do evento com lotes/categorias, pagamento por PIX/cartão/boleto (Asaas), tela de status, confirmação com peito + QR. "Minhas inscrições e pedidos", recibos, assinatura premium.</p></div>
+        <div><h4>Condições do dia</h4><p>Card na home: sensação térmica, UV, chuva, nascer/pôr do sol, maré, melhor janela para correr, alerta de hidratação.</p></div>
+        <div><h4>Segurança</h4><p>Contatos de emergência, botão SOS na corrida ativa, beacon ao vivo, detecção de parada/queda, check-in de chegada, reportar perigo no mapa.</p></div>
+        <div><h4>Ajustes</h4><p>Modo de precisão, calibração de passada, dispositivos pareados, privacidade, zona de ocultação, notificações, unidades, conta.</p></div>
+      </div>
+    </section>
+
+    <section id="web">
+      <h2><span class="h2-num">12</span>Zona web: login e acompanhamento</h2>
+      <p class="section-sub">Portal do corredor no navegador — mesma conta do app.</p>
+      <ul>
+        <li><strong>Login / cadastro:</strong> e-mail+senha, Google, Apple. Recuperação de senha, verificação de e-mail, 2FA opcional (TOTP).</li>
+        <li><strong>Dashboard:</strong> mapa grande de territórios (meu / amigos / cidade), cards de área total, % de cobertura, posição nos rankings, streak.</li>
+        <li><strong>Histórico de corridas:</strong> lista + detalhe (mapa, splits, elevação, cadência, FC, par de tênis, qualidade de sinal, território daquela corrida). Exportar GPX/TCX.</li>
+        <li><strong>Evolução:</strong> gráficos de área dominada, km por semana, bairros conquistados, troféus por season, horas de prática acumuladas, cargas de treino.</li>
+        <li><strong>Tênis:</strong> painel de quilometragem por par, custo por km, curva de vida útil, histórico de aposentados, comparação com a durabilidade média do modelo.</li>
+        <li><strong>Amigos:</strong> comparar mapas lado a lado, ver ranking da rede, gerenciar convites.</li>
+        <li><strong>Rotas:</strong> navegar, criar rota desenhando no mapa, ler e escrever avaliações.</li>
+        <li><strong>Missões e eventos:</strong> ver selos de marco conquistados (com as fotos), progresso de coleções, eventos em que está inscrito e seus rankings.</li>
+        <li><strong>Contas conectadas:</strong> ligar/desligar Google, Apple, Strava, Garmin, Fitbit, Polar, Health Connect; status da última sincronização; disparar backfill.</li>
+        <li><strong>Pedidos e assinatura:</strong> histórico de inscrições e compras, recibos/comprovantes, gerenciar a assinatura premium, pedir reembolso.</li>
+        <li><strong>Segurança:</strong> ativar 2FA (TOTP), códigos de recuperação, sessões ativas, dispositivos conectados, contatos de emergência, histórico de SOS.</li>
+        <li><strong>Acompanhar ao vivo:</strong> página pública do beacon (link temporário) para a família seguir uma corrida em tempo real, sem login.</li>
+        <li><strong>Conta:</strong> dados pessoais, privacidade, exportar todos os dados (LGPD), excluir conta.</li>
+      </ul>
+      <p>Não há gravação de corrida pelo navegador no MVP (o GPS mora no celular). A web é consulta, comparação e gestão.</p>
+
+      <h3>Portal de organizadores</h3>
+      <p>App web separado (role <code>organizer</code>) para quem cria eventos — assessorias de corrida, empresas, marcas, ONGs.</p>
+      <ul class="tight">
+        <li>Criar evento: tipo, datas, área/rota no mapa, checkpoints, objetivos, recompensas, texto e identidade visual.</li>
+        <li><strong>Estações e credenciais de scanner:</strong> montar postos (kit, largada, CP, chegada, voltas) no mapa e gerar as credenciais assinadas para a equipe.</li>
+        <li>Gerar números de peito com QR (PDF) para impressão.</li>
+        <li><strong>Painel de controle ao vivo:</strong> passagens por estação, largou × chegou, ETA por atleta, tempos por trecho; modo scanner web para postos com notebook + leitor.</li>
+        <li>Acompanhamento ao vivo: inscritos, progresso, leaderboard, mapa de calor da participação.</li>
+        <li><strong>Dashboard corporativo</strong> para RH: adesão por time, km e selos acumulados, metas coletivas, relatório exportável.</li>
+        <li>Exportar resultados (CSV) e, em corridas oficiais, importar a cronometragem.</li>
+        <li><strong>Vendas e financeiro:</strong> preços e lotes, cupons, vendas em tempo real, conta de repasse Asaas, saldo e extrato, política de reembolso, relatório financeiro.</li>
+        <li>Faturamento da plataforma: taxa por inscrição (R$ fixo + %) ou plano por porte do evento; campanhas de marca sob contrato.</li>
+      </ul>
+    </section>
+
+    <section id="admin">
+      <h2><span class="h2-num">13</span>Zona de admin</h2>
+      <p class="section-sub">App web separado por rota protegida (<code>/admin</code>), roles <code>moderator</code> e <code>admin</code>, tudo auditado.</p>
+
+      <h3>Módulos</h3>
+      <div class="grid-2">
+        <div><h4>Visão geral</h4><p>Usuários ativos, corridas/dia, área conquistada, % da cidade coberta, fila do worker, erros.</p></div>
+        <div><h4>Usuários</h4><p>Buscar, ver perfil e sensores, suspender, banir, shadow-ban, resetar senha, mudar role, mesclar contas duplicadas.</p></div>
+        <div><h4>Corridas suspeitas</h4><p>Fila de <code>flagged</code>: ver traçado, sensores, score de fraude; aprovar, rejeitar, anular território.</p></div>
+        <div><h4>Territórios</h4><p>Inspecionar polígono, forçar recálculo, remover conquista, corrigir atribuição de bairro.</p></div>
+        <div><h4>Moderação</h4><p>Fila de denúncias (rotas, reviews, comentários, fotos, usernames). Aprovar/remover, avisar, banir.</p></div>
+        <div><h4>Rotas oficiais</h4><p>Criar/editar rotas curadas, marcar como oficial, destacar.</p></div>
+        <div><h4>Marcos históricos</h4><p>Editor de ponto, raio, texto, foto de referência, quiz, coleção e janela sazonal. Fila de moderação de check-ins (ver foto + GPS, aprovar/rejeitar). Marcar "pioneiro".</p></div>
+        <div><h4>Eventos e organizadores</h4><p>Aprovar/suspender eventos e contas de organizador, gerenciar planos e faturamento, moderar identidade visual, kill switch de evento.</p></div>
+        <div><h4>Identidade e QR</h4><p>Buscar por <code>athlete_id</code>, reemitir ID, revogar QR comprometido, ver e auditar todas as leituras de um atleta, resolver contestações, marcar fraude de scan.</p></div>
+        <div><h4>Ciclos e troféus</h4><p>Ver status do ciclo, disparar fechamento manual, recalcular, revogar/conceder troféu, ajustar datas de season.</p></div>
+        <div><h4>Bairros / geodados</h4><p>Importar limites de bairro, ajustar grade H3, recalcular totais.</p></div>
+        <div><h4>Config do jogo</h4><p>Feature flags e parâmetros: raio de fechamento, área mín/máx, % de decaimento semanal, tetos de pace, XP por ação, <code>RISK_ZONE_BLOCKING</code>.</p></div>
+        <div><h4>Catálogo de tênis</h4><p>Base global de marca/modelo que o usuário seleciona, vida útil padrão por modelo, aprovar submissões da comunidade, ver durabilidade real agregada.</p></div>
+        <div><h4>Precisão e devices</h4><p>Perfis de erro por modelo de celular, parâmetros de fusão/auto-pause, homologar integrações de relógio, reprocessar corridas com sinal ruim.</p></div>
+        <div><h4>Integrações</h4><p>Chaves OAuth de Strava/Garmin/Fitbit/Polar, saúde dos webhooks, filas de import, taxa de erro por provedor, forçar re-sync de um usuário.</p></div>
+        <div><h4>Financeiro</h4><p>Todos os pedidos e pagamentos, conciliação com o extrato Asaas, reembolsos, chargebacks, taxa da plataforma por organizador, contas de repasse, kill switch de vendas.</p></div>
+        <div><h4>Segurança</h4><p>Sessões ativas, tentativas de login, reset de 2FA, revogar tokens, alertas de anomalia, trilha de acesso a dados de localização.</p></div>
+        <div><h4>Condições e via</h4><p>Moderar marcações da via (remover difamação, banir spammer), TTL das marcações, configurar provedores de clima/UV/maré/balneabilidade e o índice de corribilidade. POIs do mapa.</p></div>
+        <div><h4>Zonas de risco</h4><p>Desenhar/editar polígonos de risco, severidade e validade; revisar zonas geradas de marcações; ligar/desligar <code>RISK_ZONE_BLOCKING</code> e ajustar limiar de severidade e % de sobreposição que recusa a conquista.</p></div>
+        <div><h4>SOS (suporte)</h4><p>Ver eventos de SOS/beacon para atendimento e auditoria; nunca para vigilância — acesso restrito e registrado.</p></div>
+        <div><h4>Comunicação</h4><p>Push/e-mail em massa, banners in-app, notas de versão.</p></div>
+        <div><h4>Auditoria</h4><p>Log imutável de toda ação administrativa, filtrável por admin/alvo/data.</p></div>
+        <div><h4>Suporte</h4><p>Tickets, ver conta do usuário como leitura, reprocessar corrida a pedido.</p></div>
+      </div>
+
+      <div class="callout teal">
+        <span class="callout-label">Segurança do painel</span>
+        <p>2FA obrigatório para <code>admin</code>, <code>moderator</code> e <code>organizer</code>; allowlist de IP opcional; sessões curtas; ações destrutivas e financeiras com reautenticação; separação <code>moderator</code> (só conteúdo) × <code>admin</code> (config, roles, dados, financeiro) × <code>organizer</code> (só os próprios eventos).</p>
+      </div>
+    </section>
+
+    <section id="privacidade">
+      <h2><span class="h2-num">14</span>Segurança, privacidade e conformidade</h2>
+      <p class="section-sub">O app carrega dados de geolocalização e movimenta dinheiro — segurança não é um item, é um pré-requisito de cada camada.</p>
+
+      <h3>Rotas e autorização</h3>
+      <ul>
+        <li><strong>Deny by default:</strong> toda rota exige autenticação salvo uma allowlist explícita (login, health, webhooks assinados).</li>
+        <li><strong>Autorização em duas dimensões:</strong> por papel (<code>runner</code> / <code>organizer</code> / <code>moderator</code> / <code>admin</code>) e por posse — o servidor confere que o recurso pertence ao solicitante; IDs vindos do cliente nunca são de confiança.</li>
+        <li><strong>Namespaces isolados:</strong> <code>/v1/admin/*</code> e <code>/v1/organizer/*</code> com middleware próprio, checagem extra e, no admin, 2FA + sessão curta + allowlist de IP opcional.</li>
+        <li><strong>Sem vazamento de existência:</strong> recurso de outro usuário responde <code>404</code>, não <code>403</code>; IDs são ULID/UUID (sem enumeração sequencial); paginação e limite obrigatórios em toda listagem.</li>
+        <li><strong>DTOs de saída explícitos:</strong> allowlist de campos por endpoint — nunca serializar a linha do banco direto; e-mail, telefone, tokens e coordenadas de casa jamais entram em resposta pública.</li>
+      </ul>
+
+      <h3>Injeção e entrada</h3>
+      <ul>
+        <li><strong>SQL:</strong> acesso a dados só por queries parametrizadas — <code>sqlc</code> gera código tipado, sem montagem de string; PostGIS via funções com bind params; o CI barra qualquer <code>fmt.Sprintf</code> em contexto de query.</li>
+        <li><strong>Validação estrita</strong> de todo payload (tipo, tamanho, faixa, formato) antes de tocar na lógica; rejeição de JSON desconhecido em endpoints sensíveis.</li>
+        <li><strong>Uploads</strong> (fotos de missão, avatares): checagem de <em>magic bytes</em>, reprocessamento da imagem, remoção de EXIF além do necessário, varredura de malware, servidos de domínio isolado por URL assinada com expiração.</li>
+        <li><strong>Saída:</strong> escaping por contexto na web, CSP estrita, sem <code>dangerouslySetInnerHTML</code>; proteção anti-CSRF onde há cookie de sessão.</li>
+      </ul>
+
+      <h3>Env, secrets e ambientes</h3>
+      <ul>
+        <li>Nenhum segredo no código ou no repositório; <code>.env</code> só em dev e fora do git; <em>secret scanning</em> no CI e no pre-commit.</li>
+        <li>Produção lê segredos de um cofre (Vault / AWS Secrets Manager / Doppler) injetados em runtime, nunca na imagem Docker.</li>
+        <li><strong>Ambientes totalmente separados</strong> (dev / staging / prod): bancos, chaves, buckets e credenciais distintos; dados de prod não descem para outros ambientes sem anonimização.</li>
+        <li>Tokens de terceiros (Strava, Garmin, Asaas) e dados sensíveis em repouso criptografados com AES-GCM, chave no cofre e rotacionável.</li>
+        <li>Credenciais de banco e de nuvem com <strong>menor privilégio</strong>; a app não usa superusuário de banco.</li>
+      </ul>
+
+      <h3>Autenticação e 2FA</h3>
+      <ul>
+        <li>Senha com <strong>Argon2id</strong>; verificação de e-mail; lockout progressivo + captcha após tentativas; alerta de login novo (device/IP).</li>
+        <li>JWT de acesso curto (~15 min) + <strong>refresh rotativo com detecção de reuso</strong> — reaproveitar um refresh antigo revoga toda a família de tokens.</li>
+        <li><strong>2FA (TOTP)</strong> + códigos de recuperação: <strong>obrigatório</strong> para <code>admin</code>, <code>moderator</code> e <code>organizer</code>; opcional e incentivado para atletas.</li>
+        <li>2FA (ou reautenticação) exigido para ações críticas: trocar e-mail/senha, alterar conta de repasse, sacar, excluir conta, dar refund.</li>
+        <li>Passkeys / WebAuthn no roadmap.</li>
+      </ul>
+
+      <h3>Proteção da API e da infra</h3>
+      <ul>
+        <li>Rate limiting por IP, por usuário e por rota; WAF/edge (Cloudflare); proteção anti-bot no cadastro; <em>idempotency keys</em> em POSTs financeiros.</li>
+        <li>Attestation do app (Play Integrity / App Attest) + requisições assinadas; clientes não oficiais recusados.</li>
+        <li>TLS 1.2+ com HSTS preload; headers de segurança (CSP, X-Content-Type-Options, Referrer-Policy, Permissions-Policy); CORS com allowlist estrita.</li>
+        <li>Banco em rede privada sem IP público; backups criptografados com <em>restore drill</em> periódico; patching automático; imagens mínimas (distroless).</li>
+        <li>CI com SAST, <code>govulncheck</code>, scan de dependências (Dependabot) e SBOM; nada sobe com vulnerabilidade crítica aberta.</li>
+        <li><strong>Log de auditoria append-only</strong> de ações sensíveis e de admin; alertas de anomalia (pico de 403, brute force, exfiltração); trilha de todo acesso a dados de localização; logs sem PII nem secrets.</li>
+      </ul>
+
+      <h3>Privacidade dos dados de corrida</h3>
+      <ul>
+        <li><strong>Zona de ocultação:</strong> raio configurável (padrão 200 m) em torno de casa/trabalho — o traçado dentro dele nunca é gravado nem exibido, nem para amigos.</li>
+        <li><strong>Visibilidade por corrida:</strong> pública / só amigos / privada; modo fantasma temporário.</li>
+        <li><strong>Dados de terceiros:</strong> amigos veem território agregado (polígono/hexágono), não o traçado ponto a ponto nem horários exatos, salvo permissão do dono.</li>
+        <li>Retenção definida por tipo de dado; exclusão de conta remove ou anonimiza em prazo publicado.</li>
+      </ul>
+
+      <h3>Conformidade</h3>
+      <ul>
+        <li><strong>LGPD:</strong> base legal para geolocalização, consentimento granular, minimização, exportação e exclusão self-service, DPO nomeado, política publicada, plano de resposta a incidente com comunicação à ANPD.</li>
+        <li><strong>PCI-DSS:</strong> escopo mínimo (SAQ-A) — o cartão é tokenizado e processado pelo Asaas; o app nunca vê o número do cartão.</li>
+        <li><strong>Menores:</strong> idade mínima 16 (ou consentimento parental verificável), sem exibição pública de localização de menores.</li>
+        <li>Revisão de segurança em todo PR; pentest antes do lançamento público; bug bounty depois.</li>
+      </ul>
+      <div class="callout teal">
+        <span class="callout-label">Textos completos</span>
+        <p>Política de Privacidade, Termos de Uso, Política de Eventos, Termos para Organizadores, Pagamentos/Reembolso, Diretrizes da Comunidade, Fair Play, Moderação, Retenção, Subprocessadores e mais estão no pacote <a href="https://claude.ai/code/artifact/72fd46a4-ad3d-4e74-9045-8c463754c50d"><strong>Políticas &amp; Compliance</strong></a> (rascunho — requer revisão jurídica antes de publicar).</p>
+      </div>
+    </section>
+
+    <section id="pagamentos">
+      <h2><span class="h2-num">15</span>Pagamentos e inscrições (Asaas)</h2>
+      <p class="section-sub">Comprar inscrição de evento dentro do app, com PIX, cartão ou boleto — e o dinheiro caindo direto na conta do organizador.</p>
+
+      <h3>O que se compra no app</h3>
+      <ul class="tight">
+        <li><strong>Inscrição em eventos e corridas</strong> — com lotes por data, categorias, tamanho de camiseta, opção de retirada de kit.</li>
+        <li><strong>Assinatura premium</strong> — recorrência mensal/anual.</li>
+        <li><strong>Campanhas corporativas</strong> — fatura para a empresa (boleto/PIX de valor fechado).</li>
+        <li><strong>Doações</strong> em campanhas sociais.</li>
+        <li>Itens cosméticos (molduras, cores) — sempre estéticos, nunca vantagem de jogo.</li>
+      </ul>
+
+      <h3>Fluxo de inscrição paga</h3>
+      <ol>
+        <li>O atleta escolhe evento, lote e categoria; o app monta um <strong>pedido</strong> (com cupom, se houver) e mostra o valor com as taxas discriminadas.</li>
+        <li>Checkout no app: <strong>PIX</strong> (QR + copia-e-cola), <strong>cartão</strong> (à vista ou parcelado, com 3DS) ou <strong>boleto</strong>. A cobrança é criada via API do Asaas; o app <strong>nunca armazena dados de cartão</strong>.</li>
+        <li>O Asaas processa e dispara <strong>webhook</strong> de confirmação (assinatura verificada, IP na allowlist, idempotência por <code>event_id</code>).</li>
+        <li>Confirmado: cria-se <code>event_participants</code>, emite-se número de peito + QR, e vão e-mail e push de confirmação. PIX confirma em segundos; boleto em 1–2 dias úteis (pedido fica "aguardando pagamento").</li>
+      </ol>
+
+      <h3>Repasse ao organizador (split)</h3>
+      <ul>
+        <li><strong>Split do Asaas:</strong> o valor da inscrição é dividido na própria liquidação — organizador recebe o líquido na conta/subconta Asaas dele, menos a <strong>taxa da plataforma</strong> (comissão FortalRunners, configurável por organizador, ex.: R$ 2 + 5%) e a taxa do Asaas.</li>
+        <li>Organizador conecta a conta Asaas (ou o app cria uma subconta) — dados bancários e KYC ficam no Asaas.</li>
+        <li>Repasses e saldo visíveis no portal do organizador; extrato exportável.</li>
+      </ul>
+
+      <h3>Reembolso, cupom e conciliação</h3>
+      <ul class="tight">
+        <li><strong>Política de reembolso por evento</strong> (ex.: 100% até 30 dias antes, 50% até 7 dias, 0% depois); estorno via API do Asaas.</li>
+        <li><strong>Cupons</strong> do organizador ou de campanha de marca, com limite de uso e validade.</li>
+        <li><strong>Conciliação diária:</strong> job cruza o extrato do Asaas com os pedidos por <code>external_id</code>; divergência gera alerta no admin.</li>
+        <li>Abstração de gateway (interface <code>PaymentProvider</code>) para poder plugar outro PSP no futuro sem reescrever o fluxo.</li>
+      </ul>
+
+      <div class="callout teal">
+        <span class="callout-label">O que o app guarda</span>
+        <p>Só metadados: status, valor, método, bandeira e últimos 4 dígitos, IDs da transação e do repasse, URL do comprovante. Nenhum dado sensível de cartão — isso vive no Asaas (escopo PCI SAQ-A).</p>
+      </div>
+    </section>
+
+    <section id="infra">
+      <h2><span class="h2-num">16</span>Infra, custos e deploy</h2>
+      <div class="kv">
+        <div><dt>Hospedagem</dt><dd>1 VPS/Fly.io/Render para API + worker no MVP. Postgres gerenciado (Neon/RDS/Supabase) com PostGIS. Redis gerenciado.</dd></div>
+        <div><dt>Mapas</dt><dd>MapTiler ou Protomaps (tiles OSM). Self-host de tiles quando o volume justificar.</dd></div>
+        <div><dt>Roteamento</dt><dd>OSRM ou Valhalla self-hosted só com o extrato de Fortaleza/Ceará — barato e rápido.</dd></div>
+        <div><dt>CI/CD</dt><dd>GitHub Actions: testes, lint, build de imagem, migração, deploy. EAS Build para o app.</dd></div>
+        <div><dt>Push</dt><dd>Expo Push ou FCM/APNs direto.</dd></div>
+        <div><dt>Erros</dt><dd>Sentry (mobile, web, backend).</dd></div>
+        <div><dt>Pagamentos</dt><dd>Asaas (PIX, cartão, boleto, split, assinatura) atrás de uma interface <code>PaymentProvider</code>. Sem PCI no app — cartão só no Asaas.</dd></div>
+        <div><dt>IA</dt><dd>Claude (Anthropic) como padrão atrás de <code>AIProvider</code>, substituível; visão computacional e ML clássico self-host/gerenciado conforme o caso (ver seção 17).</dd></div>
+        <div><dt>Observabilidade</dt><dd>OpenTelemetry + Prometheus + Grafana + Sentry; logs slog com <code>trace_id</code>.</dd></div>
+        <div><dt>Secrets</dt><dd>Vault / AWS Secrets Manager / Doppler; nada no repositório ou na imagem.</dd></div>
+        <div><dt>Custo inicial</dt><dd>Ordem de US$ 50–150/mês até alguns milhares de usuários + taxas do Asaas por transação (repassadas no checkout). Escala com Postgres e tiles.</dd></div>
+      </div>
+    </section>
+
+    <section id="ia">
+      <h2><span class="h2-num">17</span>IA no produto: arquitetura e segurança</h2>
+      <p class="section-sub">Onde a IA entra, como ela fica isolada do domínio e por que a saída do modelo nunca é confiável por padrão. Referências: OWASP Top 10 para aplicações com LLM e NIST AI RMF.</p>
+
+      <h3>Onde usamos IA</h3>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Uso</th><th>Tipo</th><th>Risco / revisão</th></tr></thead>
+          <tbody>
+            <tr><td>Antifraude esportivo (anomalia de movimento)</td><td>ML clássico</td><td>Alto — decisão punitiva sempre com apelação humana</td></tr>
+            <tr><td>Detecção do par de tênis por assinatura de movimento</td><td>ML clássico</td><td>Baixo</td></tr>
+            <tr><td>Verificação visual do marco na foto de selo</td><td>Visão computacional</td><td>Médio — só aumenta confiança, não bloqueia sozinha</td></tr>
+            <tr><td>Moderação assistida (fotos, avaliações, comentários)</td><td>Classificação + LLM</td><td>Alto — remove/oculta com revisão; banimento é humano</td></tr>
+            <tr><td>Coach IA / chat sobre os próprios dados</td><td>LLM + RAG</td><td>Médio — sugestão, não conselho médico</td></tr>
+            <tr><td>Rota por objetivo, "seu mês em revisão"</td><td>LLM + heurística</td><td>Baixo/médio</td></tr>
+            <tr><td>Chatbot de suporte</td><td>LLM + RAG na base de ajuda</td><td>Médio — escalona para humano em conta/pagamento</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Arquitetura</h3>
+      <ul>
+        <li><strong>Camada <code>AIService</code> isolada</strong> atrás de interface, com adaptadores por provedor (Claude/Anthropic como padrão, substituível). O domínio nunca chama o SDK do provedor direto.</li>
+        <li>Módulos separados e testáveis: montagem de contexto · gestão de histórico · seleção de modelo · guardrails de política · validação de entrada · <strong>validação de saída por schema</strong> · uso de ferramentas (allowlist) · telemetria · tratamento de erro.</li>
+        <li><strong>Prompts versionados</strong> no repositório, com hash e suíte de avaliação associada; mudança de prompt ou de modelo passa por revisão e roda a regressão antes de subir.</li>
+        <li><strong>RAG com autorização:</strong> o contexto só é montado com dados que o solicitante pode ver e que a base legal permite; PII minimizada ou mascarada antes de ir ao modelo.</li>
+      </ul>
+
+      <h3>Segurança (OWASP LLM)</h3>
+      <ul>
+        <li><strong>Prompt injection:</strong> instrução e dados são separados por delimitadores; conteúdo de terceiros (avaliações, comentários, nomes de usuário, atividades importadas do Strava) entra sempre como <em>dado não confiável</em>, nunca como instrução. O modelo não tem autoridade — toda ação sensível é decidida por código determinístico + autorização.</li>
+        <li><strong>Saída insegura:</strong> resposta do modelo nunca é renderizada como HTML sem sanitizar, nem executada como SQL/código, nem usada direto para enviar e-mail, alterar registro ou chamar API. Sempre passa por validação de schema + regras de negócio + autorização.</li>
+        <li><strong>Excesso de agência / abuso de ferramentas:</strong> allowlist de ferramentas, parâmetros tipados e validados, escopo mínimo (a ferramenta "buscar corridas" só acessa as do próprio usuário). Ações irreversíveis (excluir dados, pagar, mudar privacidade, banir) <strong>nunca</strong> são executadas pela IA — no máximo sugeridas, com confirmação humana.</li>
+        <li><strong>Vazamento de dados:</strong> contrato com o provedor com opt-out de treinamento; não enviar PII desnecessária nem dados de terceiros; logs de IA sem prompt/resposta com dado pessoal (ou mascarados); retenção curta.</li>
+        <li><strong>DoS e custo:</strong> limites por usuário e globais de tokens, chamadas por minuto e custo por dia; timeout; fila; cache de respostas determinísticas; degradação ("coach indisponível agora") ao estourar o orçamento.</li>
+        <li><strong>Dependência de terceiros:</strong> <code>AIProvider</code> abstrato, com fallback para outro provedor ou para o modo sem IA; health check e circuit breaker.</li>
+        <li><strong>Transparência:</strong> a IA sinaliza incerteza, diz que é estimativa/sugestão, cita a corrida ou o dado de origem, diferencia fato de inferência e <strong>não dá diagnóstico médico</strong> — encaminha.</li>
+        <li><strong>Governança:</strong> inventário dos casos de uso, classificação de risco (NIST AI RMF) e revisão humana obrigatória nos de alto impacto (moderação, antifraude).</li>
+      </ul>
+
+      <h3>Testes de IA</h3>
+      <ul class="tight">
+        <li>Suíte de avaliação por caso de uso: precisão, relevância, segurança, consistência, taxa de alucinação.</li>
+        <li>Casos adversariais: extrair o prompt do sistema, acessar dados de outro usuário pelo chat, injeção via avaliação/nome/atividade importada.</li>
+        <li>Regressão: toda mudança de prompt ou modelo roda a suíte; orçamento de latência e custo por chamada verificado.</li>
+      </ul>
+
+      <div class="callout teal">
+        <span class="callout-label">Regra de ouro</span>
+        <p>A saída do modelo é <strong>entrada não confiável</strong>, como qualquer dado vindo do usuário. Se ela vai produzir efeito — consultar banco, montar tela, mandar mensagem, chamar API, mudar registro — passa antes por validação determinística, autorização e regra de negócio.</p>
+      </div>
+    </section>
+
+    <section id="praticas">
+      <h2><span class="h2-num">18</span>Práticas de engenharia, testes e operação</h2>
+      <p class="section-sub">Como o sistema é construído, testado, monitorado e evoluído — não só o que ele faz.</p>
+
+      <h3>Princípios de arquitetura</h3>
+      <ul>
+        <li><strong>Camadas com dependência para dentro:</strong> interface (handlers HTTP/WS) → aplicação (casos de uso) → domínio (regras puras, sem framework) → infraestrutura (adaptadores). O domínio não conhece Postgres, Asaas nem provedor de IA.</li>
+        <li><strong>Portas e adaptadores</strong> para banco, fila, object storage, autenticação, IA, pagamento, mapas/roteamento, push, e-mail e integrações. SDK de terceiro não vaza para o domínio; trocar de provedor não reescreve regra de negócio.</li>
+        <li>Interface <strong>nunca</strong> acessa o banco direto; regra de negócio <strong>nunca</strong> chama SDK externo direto.</li>
+        <li><strong>Monólito modular deliberado</strong> (pacotes por domínio), só o worker como processo separado. Um módulo só vira serviço próprio quando tiver escala ou cadência de deploy comprovadamente distintas.</li>
+        <li><strong>Contratos versionados:</strong> API <code>/v1</code>, schemas de evento, migrações, prompts e configs. Mudança aditiva primeiro; depreciação anunciada; sem quebra em versão menor.</li>
+        <li><strong>Sem abstração prematura:</strong> cria-se interface quando há 2+ implementações reais ou uma fronteira de teste clara — e a decisão é registrada.</li>
+        <li><strong>Configuração por ambiente fora do código</strong> (12-factor); feature flags para ligar/desligar recurso sem deploy.</li>
+        <li><strong>ADRs</strong> (Architecture Decision Records) para decisões relevantes, com alternativas descartadas e trade-offs.</li>
+      </ul>
+
+      <h3>Resiliência</h3>
+      <ul>
+        <li>Para <strong>toda</strong> dependência externa: timeout, retry com backoff + jitter e teto, circuit breaker, fallback definido, limite de custo, health check e comportamento em indisponibilidade documentado.</li>
+        <li><strong>Idempotência</strong> em toda escrita sensível: upload de corrida, checkout, webhook, check-in, leitura de QR.</li>
+        <li>Filas para trabalho pesado e assíncrono (territórios, import, IA em lote), com <strong>dead-letter queue</strong>, replay e deduplicação de eventos.</li>
+        <li><strong>Degradação controlada:</strong> mapa sem tiles → modo simplificado; IA fora → sem coach; Strava fora → só corridas nativas; pagamento fora → pedido fica pendente sem perda.</li>
+        <li>Cancelamento de operação longa; jobs retomáveis após restart; nada de estado crítico só em memória.</li>
+        <li><strong>Testes de resiliência:</strong> provedor indisponível, resposta malformada, evento duplicado, perda de conexão, banco lento, fila acumulada, rajada de requisições.</li>
+      </ul>
+
+      <h3>Estratégia de testes</h3>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Nível</th><th>Objetivo</th><th>Exemplos no FortalRunners</th></tr></thead>
+          <tbody>
+            <tr><td>Unitário</td><td>Regras de domínio isoladas</td><td>Fechamento de laço, área mín/máx, decaimento semanal, cálculo de split, política de reembolso</td></tr>
+            <tr><td>Integração</td><td>Banco, fila, serviços</td><td>PostGIS (ST_Difference/polyfill), fila, Asaas sandbox, OSRM</td></tr>
+            <tr><td>Contrato</td><td>Compatibilidade API ↔ apps e webhooks</td><td>Schema de <code>POST /v1/runs</code>, payload do webhook Asaas</td></tr>
+            <tr><td>E2E</td><td>Fluxos completos</td><td>Cadastro → corrida → território; inscrição paga → peito + QR; SOS → contato</td></tr>
+            <tr><td>Segurança</td><td>Authz, injeção, limites</td><td>"Usuário sem permissão X não acessa Y mesmo manipulando a requisição"; SQLi; rate limit; prompt injection</td></tr>
+            <tr><td>Avaliação de IA</td><td>Qualidade e segurança da resposta</td><td>Precisão do coach, alucinação, recusa de conselho médico, resistência a extração de prompt</td></tr>
+            <tr><td>Resiliência</td><td>Recuperação diante de falha</td><td>Provedor fora, resposta malformada, evento duplicado, banco lento</td></tr>
+            <tr><td>Desempenho / carga</td><td>Latência, concorrência, custo</td><td>p95 de processamento de território; pico de uploads pós-prova</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Cada requisito tem um <strong>critério de aceite verificável</strong>. Exemplo: <em>"um corredor não vê o traçado ponto a ponto de outro que não seja seu amigo, nem manipulando o parâmetro <code>scope</code> da requisição"</em>. Dados de teste são sintéticos — nunca dados reais de produção.</p>
+
+      <h3>Qualidade de código</h3>
+      <ul class="tight">
+        <li>Go: <code>golangci-lint</code>, <code>gofmt</code>/<code>goimports</code>, erros explícitos (sem panic em fluxo normal), funções pequenas, nomes claros. TypeScript estrito no front.</li>
+        <li>Revisão obrigatória em PR; a descrição do PR diz o que mudou, o risco e como foi testado; não se altera arquivo não relacionado.</li>
+        <li>Conventional commits, CHANGELOG, comentários só quando agregam contexto.</li>
+        <li><strong>CI que barra merge:</strong> lint + testes + SAST + <code>govulncheck</code> + secret scanning + build + <em>dry-run</em> de migração. Dependências com versão pinada e SBOM.</li>
+      </ul>
+
+      <h3>Observabilidade e operação</h3>
+      <ul>
+        <li><strong>Logs estruturados</strong> (slog) com <code>request_id</code>/<code>trace_id</code> de ponta a ponta; sem PII, segredo ou token.</li>
+        <li><strong>Métricas</strong> (Prometheus): latência p50/p95/p99, erro por rota, profundidade e idade da fila, tempo de processamento de território no worker, tokens e custo de IA, taxa de sucesso de pagamento.</li>
+        <li><strong>Traces distribuídos</strong> (OpenTelemetry) app → worker → banco e serviços, correlacionados por requisição.</li>
+        <li><strong>Painéis e alertas:</strong> erro acima do limiar, fila velha, p95 acima do SLO, custo de IA/dia, falha de webhook, queda de provedor.</li>
+        <li><strong>Runbooks</strong> para: fila travada, worker em loop, provedor de pagamento fora, suspeita de vazamento, restauração de backup, rollback de deploy.</li>
+        <li><strong>Backup:</strong> Postgres com point-in-time recovery e teste de restauração mensal; objetos versionados.</li>
+        <li><strong>Migrações reversíveis</strong> (up/down); deploy com rollback rápido para a imagem anterior; feature flag para desligar recurso problemático sem deploy.</li>
+        <li><strong>SLOs</strong> definidos e acompanhados (disponibilidade da API ≥ 99,9%; processamento de território &lt; 2 min p95).</li>
+      </ul>
+
+      <div class="callout">
+        <span class="callout-label">Como este documento se conecta ao desenvolvimento</span>
+        <p>Este plano funciona como especificação inicial. Cada entrega deve produzir, além do código: migrações, testes, configuração, documentação de decisão (ADR), critérios de aceite e uma nota de riscos e débitos técnicos. "Gerar o código" sozinho não fecha uma entrega.</p>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <h2><span class="h2-num">19</span>Roadmap por fases</h2>
+      <p class="section-sub">Entregar o loop central primeiro; social e ligas depois.</p>
+
+      <div class="phase">
+        <span class="phase-tag">Fase 0 — Fundação</span>
+        <div>
+          <h4>Semanas 1–4</h4>
+          <p>Monorepo, auth com e-mail + login Google (app e web), esquema de banco, deploy básico, mapa com tiles, gravação de corrida no mobile com upload. Base de segurança e engenharia desde o dia 1: arquitetura em camadas com portas e adaptadores, deny-by-default nas rotas, queries parametrizadas (sqlc), secrets em cofre, ambientes separados, testes (unit + integração), logs/métricas/traces, migrações reversíveis, CI com lint + SAST + govulncheck + secret scanning.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">Fase 1 — MVP jogável</span>
+        <div>
+          <h4>Semanas 5–12</h4>
+          <ul class="tight">
+            <li>Pipeline de território: detecção de laço, preenchimento, H3, cor no mapa.</li>
+            <li>Métricas core de precisão: distância fundida, pace, cadência, passos, elevação barométrica, splits, auto-pause.</li>
+            <li>Gestão de tênis: cadastro, seleção na corrida, km/passos/horas por par, alertas de vida útil.</li>
+            <li>Estatísticas de vida: horas de prática, acumulados, recordes pessoais.</li>
+            <li>Meu mapa de calor (percursos acumulados) + seletor de estilo/camadas do mapa.</li>
+            <li>Integração com Strava (import + webhook) e Apple Health / Health Connect; deduplicação de corridas.</li>
+            <li>Login Apple (requisito da App Store).</li>
+            <li>2FA (TOTP) para todos os perfis; obrigatório para admin/moderator.</li>
+            <li>Ranking global e semanal + fechamento de ciclo + 3 troféus.</li>
+            <li>Perfil, resumo pós-corrida, badges básicos.</li>
+            <li>Portal web de acompanhamento.</li>
+            <li>Painel de admin: usuários, corridas suspeitas, config do jogo, ciclos.</li>
+            <li>Anti-fraude v1 (física + sensores + device attest).</li>
+            <li>Beta fechado com um clube de corrida de Fortaleza.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">Fase 2 — Social e disputa</span>
+        <div>
+          <h4>Semanas 13–20</h4>
+          <ul class="tight">
+            <li>Amigos, feed, mapa compartilhado, clubes.</li>
+            <li>Tomada de território, zonas de disputa, decaimento semanal.</li>
+            <li>Rotas + avaliações + moderação.</li>
+            <li>Card de condições do dia (clima, sensação térmica, UV, sol, melhor janela); contatos de emergência + SOS + beacon ao vivo; camada de bebedouros e banheiros.</li>
+            <li>Map-matching (territórios grudados nas ruas).</li>
+            <li>Integrações Fitbit e Polar; processo de parceria Garmin iniciado.</li>
+            <li>Integrações de relógio (Garmin, Apple Watch, Coros, Stryd), running dynamics, GAP, potência.</li>
+            <li>Exportar corridas do FortalRunners de volta para Strava/Garmin.</li>
+            <li>Carga de treino, VO₂máx, clima na corrida, GNSS dual-band, calibração por device.</li>
+            <li>Durabilidade de tênis por modelo com dados agregados da comunidade.</li>
+            <li>Selos de marco (photo check-in) + 15–20 marcos curados de Fortaleza + coleções.</li>
+            <li>ID FortalRunners + QR pessoal rotativo + scanner P2P (amigos / "corremos juntos") + QR em marcos.</li>
+            <li>Motor de eventos: desafios da comunidade e leaderboards isolados.</li>
+            <li>Mapa de calor de amigos/clube e da cidade (opt-in, k-anonimato).</li>
+            <li>Inscrição paga em eventos via Asaas (PIX + cartão + boleto), split para o organizador, cupons, reembolso, conciliação.</li>
+            <li>Assinatura premium recorrente; pentest antes do lançamento público.</li>
+            <li>Troféus completos por bairro, seasons.</li>
+            <li>Lançamento público em Fortaleza.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">Fase 3 — Profundidade</span>
+        <div>
+          <h4>Depois</h4>
+          <p>Ligas com promoção/rebaixamento, portal de organizadores (corridas oficiais, wellness corporativo, campanhas de marca), modo scanner com estações e fila offline, cronometragem por QR e painel de controle ao vivo, integração com cronometragem de provas, segmentos, verificação visual de selos por IA, camada colaborativa de perigos + modo noturno seguro + maré/balneabilidade + índice de corribilidade, coach IA (com guardrails, allowlist de ferramentas e suíte de avaliação — seção 17), e o que estiver validado da lista abaixo.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="futuro">
+      <h2><span class="h2-num">20</span>Implementações futuras</h2>
+      <p class="section-sub">Banco de ideias — priorizar depois do MVP conforme feedback.</p>
+
+      <h4>Jogo e território</h4>
+      <ul class="ideas">
+        <li><strong>Ligas e divisões</strong> — promoção/rebaixamento semanal estilo campeonato.</li>
+        <li><strong>Eventos ao vivo</strong> — "Domingo de conquista": bairro-alvo com pontuação dobrada.</li>
+        <li><strong>Guerras de clube</strong> — dois clubes disputam um bairro no fim de semana.</li>
+        <li><strong>Poderes/power-ups</strong> — escudo de território, dobro de área, radar de invasão (ganhos por streak, nunca por dinheiro).</li>
+        <li><strong>Fortalezas</strong> — dominar o mesmo quarteirão N semanas seguidas cria um ponto fortificado, mais difícil de tomar.</li>
+        <li><strong>Modo captura da bandeira</strong> — pontos de interesse (praças, faróis) que valem bônus enquanto dominados.</li>
+        <li><strong>Territórios 3D / elevação</strong> — bônus por ladeira, "rei da colina" real.</li>
+        <li><strong>Decaimento inteligente</strong> — território que você revisita não decai; abandonado decai mais rápido.</li>
+        <li><strong>Missões diárias/semanais</strong> — "corra por 3 bairros diferentes", "feche 5 quarteirões".</li>
+        <li><strong>Temporadas temáticas</strong> — mapa e cores especiais no Ceará Natal de Luz, São João, réveillon da Beira-Mar.</li>
+        <li><strong>Névoa de guerra</strong> — modo exploração: o mapa começa escuro e você revela o que corre.</li>
+        <li><strong>Modo cooperativo de clube</strong> — território conjunto numa cor única.</li>
+        <li><strong>Território "vivo"</strong> — animação da tinta se espalhando; time-lapse do seu ano.</li>
+        <li><strong>Camadas separadas</strong> — caminhada, bike, trail, carrinho de bebê, cachorro, cada uma com seu mapa.</li>
+        <li><strong>Rota que maximiza território</strong> — "hoje corra por aqui e ganhe 12 quarteirões novos".</li>
+      </ul>
+
+      <h4>Social e comunidade</h4>
+      <ul class="ideas">
+        <li><strong>Chat</strong> por clube e por bairro.</li>
+        <li><strong>Encontros/grupos de corrida</strong> — agenda de treinos com ponto de encontro e rota.</li>
+        <li><strong>Corrida em grupo ao vivo</strong> — território somado da turma na mesma saída.</li>
+        <li><strong>Rivalidades</strong> — acompanhar um adversário específico, notificação quando ele invade.</li>
+        <li><strong>Cards compartilháveis</strong> — imagem do mapa conquistado pra Instagram/WhatsApp.</li>
+        <li><strong>Perfil público web</strong> — <code>fortalrunners.com/@usuario</code>.</li>
+        <li><strong>Mentor/padrinho</strong> — corredor experiente adota iniciante, ganham juntos.</li>
+        <li><strong>Desafio 1v1 direto</strong> — "te desafio: mais território no Cocó até domingo".</li>
+        <li><strong>Corrida contra fantasma</strong> — seu recorde ou o fantasma de um amigo naquela rota.</li>
+        <li><strong>Matchmaking de parceiro de treino</strong> — por pace, horário e bairro; perfil "disponível pra correr junto".</li>
+        <li><strong>Stories 24h</strong> e kudos ao vivo enquanto o amigo corre.</li>
+        <li><strong>Clube como entidade real</strong> — mensalidade opcional, gestão de membros, agenda de treinos, território somado.</li>
+      </ul>
+
+      <h4>Treino e saúde</h4>
+      <ul class="ideas">
+        <li><strong>Integração Strava / Garmin / Apple Health / Google Fit</strong> — importar corridas e gerar território.</li>
+        <li><strong>Planos de treino</strong> adaptados à meta de conquista ("cubra a Aldeota em 4 semanas").</li>
+        <li><strong>Alerta de lesão</strong> — aumento súbito de carga (regra dos 10%), tênis vencido, queda de cadência sob fadiga.</li>
+        <li><strong>Recomendação de troca de tênis</strong> por padrão de desgaste real e mudança de pace/impacto.</li>
+        <li><strong>Detecção automática do par calçado</strong> pela assinatura de movimento — zero toques.</li>
+        <li><strong>Modo esteira</strong> — sem GPS, distância por cadência + calibração de passada.</li>
+        <li><strong>Áudio coach</strong> durante a corrida com dicas de rota pra maximizar território.</li>
+        <li><strong>Alerta de segurança</strong> — compartilhar localização ao vivo com um contato durante a corrida; SOS.</li>
+        <li><strong>Recomendação de rota</strong> por horário — sombra de manhã, iluminação à noite.</li>
+        <li><strong>Componentes do tênis</strong> — trocar palmilha/cadarço zera parte do desgaste.</li>
+        <li><strong>Prova-alvo</strong> — vincular um par "de prova", contagem regressiva e taper.</li>
+        <li><strong>Diário de treino</strong> — como se sentiu (RPE), notas, clima da sessão.</li>
+        <li><strong>Sono e recuperação</strong> — importados do relógio; "prontidão do dia".</li>
+        <li><strong>Registro de lesão</strong> — período de pausa e retorno gradual assistido.</li>
+        <li><strong>Ciclo menstrual</strong> para atletas — opt-in, dado sensível, protegido.</li>
+        <li><strong>Portal do treinador/fisio</strong> — compartilhar dados com um profissional que acompanha vários alunos.</li>
+        <li><strong>Planos de treino estruturados</strong> — intervalado com alertas por FC/pace; metrônomo de cadência.</li>
+        <li><strong>Previsor de prova</strong> — tempo estimado de 5k/10k/21k (VDOT/Riegel).</li>
+      </ul>
+
+      <h4>Coach e inteligência</h4>
+      <ul class="ideas">
+        <li><strong>Rota por objetivo</strong> — "8 km, 12 quarteirões novos, com sombra" e o app desenha.</li>
+        <li><strong>Resumo automático</strong> — "seu mês em revisão" com destaques e tendências.</li>
+        <li><strong>Alerta de overtraining</strong> — carga fora da curva, queda de cadência sob fadiga.</li>
+        <li><strong>Chat de coach</strong> — pergunte sobre os seus próprios dados.</li>
+        <li><strong>Detecção de padrão pré-lesão</strong> a partir do histórico.</li>
+      </ul>
+
+      <h4>Onboarding, retenção e indicações</h4>
+      <ul class="ideas">
+        <li><strong>Boas-vindas</strong> — primeira "corrida guiada" curta com celebração do 1º território.</li>
+        <li><strong>Programa de indicação</strong> — convide um amigo e os dois ganham XP / moldura / 1 mês premium.</li>
+        <li><strong>Win-back contextual</strong> — "seu bairro está sob ataque", "faltam 3 quarteirões pra dominar a Aldeota".</li>
+        <li><strong>Congelar / consertar streak</strong> — 1× por mês.</li>
+        <li><strong>Central de notificações</strong> — preferências finas e horário de silêncio.</li>
+        <li><strong>NPS e feedback no app</strong>; roadmap público com votação de features; programa beta.</li>
+      </ul>
+
+      <h4>Confiança e operação</h4>
+      <ul class="ideas">
+        <li><strong>Status page pública</strong> e comunicação de incidente.</li>
+        <li><strong>Central de ajuda / FAQ</strong> e chat de suporte no app.</li>
+        <li><strong>Perfil verificado</strong> — selo para atletas de elite, organizadores e lojas parceiras.</li>
+        <li><strong>Bloqueio pessoal forte</strong> — some do mapa, feed e rankings compartilhados do outro.</li>
+        <li><strong>Detecção de perseguição</strong> — alerta se alguém aparece repetidamente perto ou consulta muito seu perfil.</li>
+      </ul>
+
+      <h4>Acessibilidade e inclusão</h4>
+      <ul class="ideas">
+        <li><strong>Modos de atividade</strong> — cadeira de rodas / handbike.</li>
+        <li><strong>Corrida guiada para pessoa com deficiência visual</strong> — dupla com guia, território conta para os dois.</li>
+        <li><strong>Multi-idioma</strong> desde cedo — turistas e expansão.</li>
+        <li><strong>Modo carrinho de bebê</strong> e <strong>modo cachorro</strong> — com métricas do pet, se quiser.</li>
+      </ul>
+
+      <h4>Cidade e parcerias</h4>
+      <ul class="ideas">
+        <li><strong>Patrocínio de bairro</strong> — comércio local patrocina o troféu do bairro.</li>
+        <li><strong>Recompensas reais</strong> — desconto em loja de corrida pra quem fica no pódio.</li>
+        <li><strong>Parceria com a Prefeitura</strong> — dados agregados de uso de vias pra ciclovias/calçadas.</li>
+        <li><strong>Desafios de marca</strong> — corrida oficial de um evento (ex.: Meia Maratona de Fortaleza) vira território temático.</li>
+        <li><strong>Pontos turísticos</strong> — checkpoints em Mucuripe, Praia do Futuro, Centro Dragão do Mar.</li>
+        <li><strong>Modo turista</strong> — visitante ganha território "temporário" que expira ao sair da cidade.</li>
+        <li><strong>Rota guiada "Caminho de Iracema"</strong> — narração em áudio da lenda ao passar por cada marco.</li>
+        <li><strong>Selo em realidade aumentada</strong> no ponto do marco; filtro de foto oficial do evento.</li>
+        <li><strong>Integração com plataformas de inscrição</strong> de provas (Ticket Sports, Chronotrack) e cronometragem por chip/RFID.</li>
+        <li><strong>Medalha física</strong> enviada a quem completa um circuito ou evento; brinde por sorteio.</li>
+        <li><strong>Modo espectador</strong> — acompanhar amigos ao vivo durante uma prova.</li>
+        <li><strong>Pulseira / cartão NFC</strong> como alternativa ao QR para leitura rápida em checkpoint.</li>
+        <li><strong>Quiosque de autoatendimento</strong> para retirada de kit lendo o QR do atleta.</li>
+        <li><strong>OCR do número de peito</strong> quando não há QR — a câmera do posto lê o número impresso.</li>
+        <li><strong>Passaporte do corredor</strong> — carimbo digital por prova concluída, com o QR como comprovação.</li>
+        <li><strong>Integração com filiação FPA / CBAt</strong> — vincular o número federativo ao ID.</li>
+        <li><strong>Marcos de outras cidades</strong> quando expandir — cada cidade com seu circuito histórico.</li>
+        <li><strong>Calendário de corridas do Ceará</strong> — agregador de todas as provas, mesmo as não vendidas no app; porta de entrada para organizadores.</li>
+        <li><strong>Plogging mode</strong> — correr catando lixo rende selo e bônus.</li>
+        <li><strong>Árvores plantadas por km</strong> — parceria ambiental.</li>
+        <li><strong>Dados de corribilidade e acessibilidade de calçada</strong> — insumo de urbanismo para a Prefeitura (B2G).</li>
+      </ul>
+
+      <h4>Vitrine de equipamentos e afiliados</h4>
+      <ul class="ideas">
+        <li><strong>Equipamentos mais usados</strong> — ranking de tênis, relógios, cintas e acessórios pela quantidade real de usuários na base e pela nota média das avaliações.</li>
+        <li><strong>Ficha do produto</strong> — nº de corredores usando, km médios rodados, durabilidade real agregada, avaliações e para que tipo de treino a comunidade usa.</li>
+        <li><strong>Links comissionados</strong> — botão "comprar" com deep link de afiliado do dono do app para marketplaces (Amazon, Netshoes, Centauro, lojas parceiras); comissão por venda.</li>
+        <li><strong>"O que os campeões calçam"</strong> — equipamento do top 10 do ranking semanal / dos barões de cada bairro.</li>
+        <li><strong>Comparador</strong> — dois modelos lado a lado por preço, durabilidade real, custo por km e nota.</li>
+        <li><strong>Alerta de reposição</strong> — quando seu par chega a 85% da vida útil, sugere o substituto mais bem avaliado com o link de compra.</li>
+        <li><strong>Transparência</strong> — marcação clara de "link patrocinado"; o ranking de uso/nota nunca é pago, só o link de checkout é comissionado.</li>
+        <li><strong>Painel de afiliados no admin</strong> — cadastrar programas, tags por marketplace, acompanhar cliques, conversões e comissão estimada.</li>
+        <li><strong>Cupons da comunidade</strong> — negociar desconto com marcas em troca de volume.</li>
+      </ul>
+
+      <h4>Produto e plataforma</h4>
+      <ul class="ideas">
+        <li><strong>Modo caminhada / bike</strong> em camadas separadas do mapa.</li>
+        <li><strong>Suporte a outras cidades</strong> — arquitetura já multi-cidade, é só habilitar.</li>
+        <li><strong>Mapa offline</strong> completo pra correr sem dados.</li>
+        <li><strong>Wear OS / watchOS app</strong> — iniciar/parar corrida do relógio.</li>
+        <li><strong>Widget e Live Activity</strong> — território da semana na tela de bloqueio.</li>
+        <li><strong>API pública</strong> pra devs e pesquisadores (dados agregados/anônimos).</li>
+        <li><strong>Assinatura premium</strong> — histórico ilimitado, análises avançadas, cores/molduras exclusivas, sem anúncios. Nunca vender vantagem de conquista.</li>
+        <li><strong>Marketplace de rotas</strong> criadas pela comunidade, com curadoria.</li>
+        <li><strong>Modo daltônico</strong> e padrões de textura além da cor pros territórios.</li>
+        <li><strong>Replay animado</strong> da evolução do seu mapa no ano.</li>
+        <li><strong>Apple Pay / Google Pay</strong> no checkout; carteira de créditos e cashback em selos.</li>
+        <li><strong>Parcelamento sem juros patrocinado</strong> por marca numa campanha.</li>
+        <li><strong>NF-e/NFS-e automática</strong> da taxa da plataforma; emissão delegada para o organizador.</li>
+        <li><strong>Passkeys / WebAuthn</strong> e login por biometria do device.</li>
+        <li><strong>Cofre de dados do usuário</strong> — painel de "quem acessou o quê" e revogação granular.</li>
+        <li><strong>Offline completo</strong> — mapa baixado e fila de sync; backup/restore de conta e sync multi-dispositivo.</li>
+        <li><strong>Atalhos de voz</strong> (Siri / Google) — "iniciar corrida".</li>
+        <li><strong>Loja de cosméticos</strong> — skins de território, temas de mapa, molduras (sempre estético, nunca vantagem).</li>
+        <li><strong>Merch print-on-demand</strong> — pôster e camiseta com o seu mapa; medalha física de circuito.</li>
+        <li><strong>SaaS para assessorias</strong> — plano para treinadores gerirem alunos (planilhas, cobrança, acompanhamento).</li>
+        <li><strong>Presentear assinatura</strong> e <strong>plano família</strong>.</li>
+        <li><strong>Ciclo de vida de outros equipamentos</strong> — relógio, fone, pochete, roupa.</li>
+      </ul>
+    </section>
+
+    <section id="riscos">
+      <h2><span class="h2-num">21</span>Riscos e decisões em aberto</h2>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Tema</th><th>Questão</th><th>Direção sugerida</th></tr></thead>
+          <tbody>
+            <tr><td>GPS em background</td><td>Precisão e bateria variam muito entre aparelhos Android.</td><td>Investir cedo em testes de campo; usar lib madura; degradar com elegância.</td></tr>
+            <tr><td>Precisão × bateria</td><td>GNSS dual-band + 10 Hz + fusão consomem bateria; "precisão extrema" custa autonomia.</td><td>Modo alta precisão opt-in; econômico como padrão; deixar claro o trade-off na UI.</td></tr>
+            <tr><td>Métricas premium</td><td>Running dynamics e potência dependem de hardware que poucos têm.</td><td>Estimar no celular quando possível; marcar como estimado; não gatear o jogo nelas.</td></tr>
+            <tr><td>Termos do Strava</td><td>A API proíbe usos como treinar modelos e exibir dados de terceiros; limites de taxa apertados.</td><td>Usar dados só do próprio usuário; "Powered by Strava" e link de volta; cache e sync incremental; revisão jurídica do agreement.</td></tr>
+            <tr><td>Parceria Garmin/Coros</td><td>Exigem aprovação e podem demorar meses.</td><td>Iniciar cedo; não depender delas no lançamento; cobrir a maioria via Health Connect / Apple Health.</td></tr>
+            <tr><td>Território de corrida importada</td><td>Trace de terceiros não tem device attestation — porta de entrada para fraude.</td><td>Anti-fraude reforçado, teto de área por corrida importada, revisão manual acima de um limiar, sinalização visível da fonte.</td></tr>
+            <tr><td>Custo geoprocessamento</td><td>PostGIS pode ficar caro em escala.</td><td>Processar incremental por bairro; cache agressivo; considerar Tile38/pré-agregação.</td></tr>
+            <tr><td>Trapaça</td><td>Spoofing de GPS é o maior risco de reputação.</td><td>Device attestation obrigatória + sensores + revisão humana + shadow-ban.</td></tr>
+            <tr><td>Segurança física</td><td>O jogo não pode empurrar ninguém para área de risco.</td><td><strong>Gate booleano <code>territoryAllowedAt()</code> / <code>missionAllowedAt()</code></strong>: zona de risco = sem território e sem selo (subtrai ou recusa a conquista). Flag <code>RISK_ZONE_BLOCKING</code>, curadoria por bairro, rotas e modo noturno evitam as zonas. Reavaliar quando houver mecanismo seguro.</td></tr>
+            <tr><td>"Mapa cheio"</td><td>O que acontece quando a cidade é 100% dominada?</td><td>Decaimento semanal garante que nunca fecha de vez; seasons resetam parcialmente.</td></tr>
+            <tr><td>Mecânica de cerco</td><td>Snap às ruas agora ou depois?</td><td>MVP sem snap (polígono do traçado); map-matching na Fase 2.</td></tr>
+            <tr><td>Monetização</td><td>Como pagar a conta sem quebrar o jogo?</td><td>Premium cosmético/analítico + patrocínio de bairro + afiliados de equipamento + planos para organizadores de evento e wellness corporativo + campanhas de marca; ranking de uso/nota nunca pago; nunca pay-to-win.</td></tr>
+            <tr><td>Afiliados × confiança</td><td>Vitrine comissionada pode parecer propaganda disfarçada.</td><td>Ranking por uso real e nota, separado e não vendável; rótulo claro de "link patrocinado"; sem pop-ups.</td></tr>
+            <tr><td>Fotos de missão</td><td>Selfies em local público podem capturar terceiros e menores.</td><td>Captura só in-app, blur automático de rostos antes de exibição pública, foto privada por padrão, termos claros, moderação.</td></tr>
+            <tr><td>Segurança dos marcos</td><td>Levar corredores a monumentos pode incentivar deslocamento a áreas de risco à noite.</td><td>Só marcos avaliados como seguros; janelas de horário; aviso de segurança; curadoria por bairro.</td></tr>
+            <tr><td>Marca e conteúdo de evento</td><td>Organizador mal-intencionado ou campanha enganosa.</td><td>Aprovação prévia do admin, contrato para marcas, kill switch, moderação da identidade visual.</td></tr>
+            <tr><td>QR compartilhado</td><td>Print do QR passado para outra pessoa "correr por você".</td><td>Token rotativo de validade curta; handshake obrigatório do app do dono em ações sensíveis; limite de leituras por intervalo; histórico visível ao dono.</td></tr>
+            <tr><td>Checkpoint offline adulterado</td><td>Equipamento sem sinal pode ter leituras forjadas ou fora de ordem.</td><td>Credencial assinada por estação, timestamp monotônico, reconciliação no servidor, tolerância a duplicatas, sequência esperada de estações.</td></tr>
+            <tr><td>Scan sem consentimento</td><td>Estande de parceiro lê o QR e coleta mais do que devia.</td><td>Escopo mínimo de dados no scan, confirmação do dono, log de toda leitura, denúncia.</td></tr>
+            <tr><td>PSP único (Asaas)</td><td>Dependência de um gateway para toda a receita de eventos.</td><td>Interface <code>PaymentProvider</code> desde o início para plugar Pagar.me/Stripe BR depois; conciliação independente do PSP.</td></tr>
+            <tr><td>Webhook de pagamento</td><td>Evento duplicado, fora de ordem ou forjado deixa inscrição inconsistente.</td><td>Idempotência por <code>external_id</code>, verificação de assinatura + IP allowlist, status sempre reconferido via API, conciliação diária.</td></tr>
+            <tr><td>Chargeback e fraude de cartão</td><td>Estorno forçado após emitir peito/QR.</td><td>3DS obrigatório, análise de risco do Asaas, política clara, bloqueio de reincidente, PIX como método incentivado.</td></tr>
+            <tr><td>Repasse e obrigações fiscais</td><td>Split a organizador levanta questão de NF e responsabilidade tributária.</td><td>Contrato com o organizador (responsável pela NF da inscrição), subconta/KYC no Asaas, FortalRunners emite NF só da própria taxa.</td></tr>
+            <tr><td>Superfície de segurança</td><td>Geolocalização + dinheiro + dados de menores = alvo atraente.</td><td>Segurança embutida em cada fase (seção 14), pentest pré-lançamento, bug bounty, DPO, plano de resposta a incidente.</td></tr>
+            <tr><td>SOS não é emergência oficial</td><td>Usuário pode achar que o app chama a polícia/SAMU.</td><td>Deixar explícito na UI e nos termos; SOS aciona contatos pessoais; sempre exibir 190/192; PIN de cancelamento contra alarme falso.</td></tr>
+            <tr><td>Marcações de "perigo" na via</td><td>Difamação de local/bairro, pânico, responsabilidade por informação errada.</td><td>Linguagem neutra ("atenção redobrada"), sem nomear pessoas, decaimento + confirmação da comunidade, moderação ativa, disclaimer de fonte.</td></tr>
+            <tr><td>Beacon ao vivo vazado</td><td>Link público de localização em tempo real.</td><td>Token curto que expira ao terminar, sem PII nem histórico, rota-limite, revogável na hora.</td></tr>
+            <tr><td>Reidentificação pelo mapa de calor</td><td>Caso Strava 2018: heatmap expôs rotas e bases militares.</td><td>Opt-in; só agregado por célula H3, nunca traçado; k-anonimato (≥ N pessoas); respeita zona de ocultação; sem menores; sem heatmap individual de terceiros.</td></tr>
+            <tr><td>Dados de clima / maré / balneabilidade</td><td>Fontes de terceiros podem falhar ou atrasar.</td><td>Exibir fonte e horário da leitura, nunca prometer exatidão, degradar com aviso.</td></tr>
+            <tr><td>Alucinação e conselho da IA</td><td>Coach pode inventar número ou dar orientação de saúde indevida.</td><td>Saída validada por schema, cita a fonte, sinaliza incerteza, recusa diagnóstico e encaminha; suíte de avaliação por versão (seção 17).</td></tr>
+            <tr><td>Prompt injection via conteúdo</td><td>Avaliação, nome de usuário ou atividade importada tentando dar ordem ao modelo.</td><td>Conteúdo de terceiros sempre como dado não confiável; ações sensíveis decididas por código; testes adversariais na CI.</td></tr>
+            <tr><td>Custo de IA sem teto</td><td>Uso abusivo ou pico inflaciona a conta do provedor.</td><td>Limites por usuário e globais de tokens/chamadas/custo, cache, fila, degradação ao estourar orçamento.</td></tr>
+            <tr><td>Lock-in de provedor de IA</td><td>Depender de um único fornecedor de modelo.</td><td>Interface <code>AIProvider</code> com adaptadores; prompts e evals versionados; fallback para outro provedor ou modo sem IA.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="pg">
+    FortalRunners · plano de produto v0.13 · gerado 05 set 2026 · documento vivo, revisar a cada fase
+  </footer>
+</div>
+
+<script>
+  // Faint hex-grid backdrop for the hero — decorative, drawn to the subject (a coverage map).
+  (function () {
+    var c = document.getElementById("heroGrid");
+    if (!c) return;
+    var ctx = c.getContext("2d");
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+    function draw() {
+      var w = c.offsetWidth, h = c.offsetHeight;
+      c.width = w * dpr; c.height = h * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+      var r = 26, hgap = r * 1.5, vgap = r * Math.sqrt(3) / 2 * 2 * 0.5 * 2;
+      vgap = r * Math.sqrt(3);
+      var line = css("--line-strong") || "#ccc";
+      var teal = css("--teal") || "#0E7C86";
+      var coral = css("--coral") || "#E05633";
+      var sun = css("--sun") || "#C98F2E";
+      var fills = [teal, coral, sun];
+      var col = 0;
+      for (var x = -r; x < w + r; x += hgap) {
+        var yoff = (col % 2) ? vgap / 2 : 0;
+        for (var y = -r; y < h + r; y += vgap) {
+          hex(x, y + yoff, r * 0.9);
+          var seed = Math.sin((col * 12.9898 + (y | 0) * 78.233)) * 43758.5453;
+          seed = seed - Math.floor(seed);
+          if (seed > 0.86) {
+            ctx.fillStyle = fills[Math.floor(seed * 97) % 3];
+            ctx.globalAlpha = 0.16;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          }
+          ctx.strokeStyle = line;
+          ctx.globalAlpha = 0.35;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+        col++;
+      }
+    }
+    function hex(cx, cy, rad) {
+      ctx.beginPath();
+      for (var i = 0; i < 6; i++) {
+        var a = Math.PI / 180 * (60 * i);
+        var px = cx + rad * Math.cos(a), py = cy + rad * Math.sin(a);
+        i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      }
+      ctx.closePath();
+    }
+    draw();
+    var t;
+    window.addEventListener("resize", function () { clearTimeout(t); t = setTimeout(draw, 150); });
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    (mq.addEventListener ? mq.addEventListener.bind(mq, "change") : mq.addListener.bind(mq))(draw);
+  })();
+
+  // TOC active-section highlight
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll("nav.toc a"));
+    var map = {};
+    links.forEach(function (a) { map[a.getAttribute("href").slice(1)] = a; });
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          links.forEach(function (l) { l.style.color = ""; l.style.background = ""; });
+          var a = map[e.target.id];
+          if (a) { a.style.color = "var(--ink)"; a.style.background = "var(--surface)"; }
+        }
+      });
+    }, { rootMargin: "-10% 0px -80% 0px" });
+    document.querySelectorAll("main section").forEach(function (s) { obs.observe(s); });
+  })();
+</script>
