@@ -120,6 +120,30 @@ func TestCadenceStreamAndSteps(t *testing.T) {
 	}
 }
 
+func TestBestEfforts(t *testing.T) {
+	// 6 km a 100 m / 30 s constante => 300 s/km. 1k=300, 5k=1500. Sem 10k.
+	m := computeMetrics(line(61, 100, 30, 0), nil, nil)
+	if got := m.BestEfforts["1k"]; got < 295 || got > 305 {
+		t.Errorf("1k = %d, esperava ~300", got)
+	}
+	if got := m.BestEfforts["5k"]; got < 1490 || got > 1510 {
+		t.Errorf("5k = %d, esperava ~1500", got)
+	}
+	if _, ok := m.BestEfforts["10k"]; ok {
+		t.Error("não deveria haver recorde de 10k numa corrida de 6 km")
+	}
+
+	// corrida longa (1h20) => recorde de "1h" em metros
+	long := computeMetrics(line(481, 20, 10, 0), nil, nil) // 9600 m em 4800 s
+	if _, ok := long.BestEfforts["1h"]; !ok {
+		t.Error("esperava recorde de 1h")
+	}
+	// ~20 m / 10 s = 2 m/s => 7200 m numa hora
+	if d := long.BestEfforts["1h"]; d < 6800 || d > 7400 {
+		t.Errorf("1h = %d m, esperava ~7200", d)
+	}
+}
+
 func TestMetricsEmpty(t *testing.T) {
 	m := computeMetrics([]Point{{Lat: -3.73, Lon: -38.5, T: 0}}, nil, nil)
 	if len(m.Splits) != 0 || m.HasAltitude || m.HasCadence {

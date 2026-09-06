@@ -30,8 +30,8 @@ type IngestInput struct {
 type MetricsView struct {
 	RunID         string    `json:"run_id"`
 	Splits        []Split   `json:"splits"`
-	ElevGainM     float64   `json:"elev_gain_m"`
-	ElevLossM     float64   `json:"elev_loss_m"`
+	ElevGainM     int       `json:"elev_gain_m"`
+	ElevLossM     int       `json:"elev_loss_m"`
 	AltMinM       *float64  `json:"alt_min_m,omitempty"`
 	AltMaxM       *float64  `json:"alt_max_m,omitempty"`
 	AvgCadenceSPM *int      `json:"avg_cadence_spm,omitempty"`

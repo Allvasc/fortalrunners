@@ -49,13 +49,22 @@ func (r *Rollup) Run(ctx context.Context, runID string) {
 		log.Error("stats: shoe", "err", err)
 		return
 	}
+	// Recordes de "quanto" (maior é melhor): distância, elevação, território, 1 h.
 	for _, pr := range []struct{ key, expr string }{
-		{"longest_distance", "distance_m"},
-		{"max_elevation", "elevation_gain_m"},
-		{"biggest_territory", "territory_area_m2"},
+		{"longest", "r.distance_m"},
+		{"max_elev", "r.elevation_gain_m"},
+		{"biggest_territory", "r.territory_area_m2"},
+		{"1h", "COALESCE((rt.best_efforts_jsonb->>'1h')::bigint, 0)"},
 	} {
-		if _, err = tx.Exec(ctx, prUpsert(pr.expr), id.New(), runID, pr.key); err != nil {
+		if _, err = tx.Exec(ctx, prUpsertMax(pr.expr), id.New(), runID, pr.key); err != nil {
 			log.Error("stats: pr", "key", pr.key, "err", err)
+			return
+		}
+	}
+	// Recordes de "quão rápido" (menor é melhor): melhores esforços por distância.
+	for _, key := range []string{"1k", "5k", "10k", "15k", "21k", "42k"} {
+		if _, err = tx.Exec(ctx, prUpsertMinEffort, id.New(), runID, key); err != nil {
+			log.Error("stats: pr efforts", "key", key, "err", err)
 			return
 		}
 	}
@@ -110,12 +119,25 @@ UPDATE shoe_stats st SET
 FROM runs r
 WHERE r.id = $1 AND r.shoe_id IS NOT NULL AND st.shoe_id = r.shoe_id`
 
-func prUpsert(valueExpr string) string {
+// prUpsertMax: recorde onde MAIOR é melhor (distância, elevação, território, 1 h).
+func prUpsertMax(valueExpr string) string {
 	return `
-INSERT INTO personal_records (id, user_id, key, value, run_id)
-SELECT $1, r.user_id, $3, r.` + valueExpr + `, r.id FROM runs r WHERE r.id = $2
-  AND r.` + valueExpr + ` > 0
-ON CONFLICT (user_id, key) DO UPDATE
-    SET value = EXCLUDED.value, run_id = EXCLUDED.run_id, achieved_at = now()
-    WHERE personal_records.value < EXCLUDED.value`
+INSERT INTO personal_records (id, user_id, distance_key, value_s, run_id)
+SELECT $1, r.user_id, $3, round(` + valueExpr + `)::bigint, r.id
+FROM runs r JOIN run_tracks rt ON rt.run_id = r.id
+WHERE r.id = $2 AND round(` + valueExpr + `)::bigint > 0
+ON CONFLICT (user_id, distance_key) DO UPDATE
+    SET value_s = EXCLUDED.value_s, run_id = EXCLUDED.run_id, achieved_at = now()
+    WHERE personal_records.value_s < EXCLUDED.value_s`
 }
+
+// prUpsertMinEffort: recorde de tempo (MENOR é melhor) para uma distância-padrão,
+// lido de run_tracks.best_efforts_jsonb.
+const prUpsertMinEffort = `
+INSERT INTO personal_records (id, user_id, distance_key, value_s, run_id)
+SELECT $1, r.user_id, $3, (rt.best_efforts_jsonb->>$3)::bigint, r.id
+FROM runs r JOIN run_tracks rt ON rt.run_id = r.id
+WHERE r.id = $2 AND jsonb_exists(rt.best_efforts_jsonb, $3) AND (rt.best_efforts_jsonb->>$3)::bigint > 0
+ON CONFLICT (user_id, distance_key) DO UPDATE
+    SET value_s = EXCLUDED.value_s, run_id = EXCLUDED.run_id, achieved_at = now()
+    WHERE personal_records.value_s > EXCLUDED.value_s`

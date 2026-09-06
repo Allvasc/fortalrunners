@@ -37,21 +37,31 @@ type Split struct {
 
 // Metrics é o pacote de precisão de uma corrida.
 type Metrics struct {
-	Splits        []Split `json:"splits"`
-	ElevGainM     float64 `json:"elev_gain_m"`
-	ElevLossM     float64 `json:"elev_loss_m"`
-	AltMinM       float64 `json:"alt_min_m"`
-	AltMaxM       float64 `json:"alt_max_m"`
-	AvgCadenceSPM float64 `json:"avg_cadence_spm"`
-	MaxCadenceSPM float64 `json:"max_cadence_spm"`
-	AvgHRBPM      float64 `json:"avg_hr_bpm"`
-	MaxHRBPM      float64 `json:"max_hr_bpm"`
-	BestKmPaceS   float64 `json:"best_km_pace_s"`
-	GradeAdjPaceS float64 `json:"grade_adjusted_pace_s"`
-	StepCount     int     `json:"step_count"`
-	HasAltitude   bool    `json:"has_altitude"`
-	HasCadence    bool    `json:"has_cadence"`
-	HasHR         bool    `json:"has_heart_rate"`
+	Splits        []Split        `json:"splits"`
+	ElevGainM     float64        `json:"elev_gain_m"`
+	ElevLossM     float64        `json:"elev_loss_m"`
+	AltMinM       float64        `json:"alt_min_m"`
+	AltMaxM       float64        `json:"alt_max_m"`
+	AvgCadenceSPM float64        `json:"avg_cadence_spm"`
+	MaxCadenceSPM float64        `json:"max_cadence_spm"`
+	AvgHRBPM      float64        `json:"avg_hr_bpm"`
+	MaxHRBPM      float64        `json:"max_hr_bpm"`
+	BestKmPaceS   float64        `json:"best_km_pace_s"`
+	GradeAdjPaceS float64        `json:"grade_adjusted_pace_s"`
+	StepCount     int            `json:"step_count"`
+	BestEfforts   map[string]int `json:"best_efforts"` // distance_key -> segundos (ou metros p/ "1h")
+	HasAltitude   bool           `json:"has_altitude"`
+	HasCadence    bool           `json:"has_cadence"`
+	HasHR         bool           `json:"has_heart_rate"`
+}
+
+// distâncias-padrão de recorde pessoal (metros). "1h" é tratado à parte.
+var standardEfforts = []struct {
+	key string
+	m   float64
+}{
+	{"1k", 1000}, {"5k", 5000}, {"10k", 10000},
+	{"15k", 15000}, {"21k", 21097}, {"42k", 42195},
 }
 
 // computeMetrics deriva splits, elevação suavizada, cadência, FC e pace ajustado
@@ -181,7 +191,72 @@ func computeMetrics(pts []Point, cadence, hr []Sample) Metrics {
 	if m.HasCadence && totalMoving > 0 {
 		m.StepCount = int(math.Round(m.AvgCadenceSPM / 60.0 * totalMoving))
 	}
+	m.BestEfforts = bestEfforts(pts)
 	return m
+}
+
+// bestEfforts acha o melhor tempo contínuo para cada distância-padrão e a maior
+// distância numa janela de 1 h (recordes pessoais). Janela deslizante sobre os
+// acumulados de distância e tempo.
+func bestEfforts(pts []Point) map[string]int {
+	n := len(pts)
+	if n < 2 {
+		return nil
+	}
+	cumD := make([]float64, n)
+	cumT := make([]float64, n)
+	for i := 1; i < n; i++ {
+		cumD[i] = cumD[i-1] + haversine(pts[i-1].Lat, pts[i-1].Lon, pts[i].Lat, pts[i].Lon)
+		dt := float64(pts[i].T-pts[i-1].T) / 1000.0
+		if dt < 0 {
+			dt = 0
+		}
+		cumT[i] = cumT[i-1] + dt
+	}
+	total := cumD[n-1]
+	out := map[string]int{}
+
+	for _, e := range standardEfforts {
+		if total < e.m {
+			continue
+		}
+		best := math.MaxFloat64
+		j := 0
+		for i := 0; i < n; i++ {
+			for cumD[i]-cumD[j] > e.m && j < i {
+				j++
+			}
+			if j > 0 && cumD[i]-cumD[j-1] >= e.m {
+				if t := cumT[i] - cumT[j-1]; t > 0 && t < best {
+					best = t
+				}
+			}
+		}
+		if best != math.MaxFloat64 {
+			out[e.key] = int(math.Round(best))
+		}
+	}
+
+	// "1h": maior distância em qualquer janela de 3600 s
+	if cumT[n-1] >= 3600 {
+		var far float64
+		j := 0
+		for i := 0; i < n; i++ {
+			for cumT[i]-cumT[j] > 3600 && j < i {
+				j++
+			}
+			if d := cumD[i] - cumD[j]; d > far {
+				far = d
+			}
+		}
+		if far > 0 {
+			out["1h"] = int(math.Round(far))
+		}
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
 }
 
 func elevSeg(a, b Point, s *Split) {

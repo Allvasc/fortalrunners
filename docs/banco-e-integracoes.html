@@ -129,7 +129,7 @@
 
 <div class="wrap">
   <header class="hero">
-    <p class="eyebrow">Referência técnica · v1.1 · 06 set 2026</p>
+    <p class="eyebrow">Referência técnica · v1.2 · 06 set 2026</p>
     <h1>Banco de dados &amp; Integrações</h1>
     <p class="lede">O modelo de dados completo — tabelas, tipos, chaves e relacionamentos — e o catálogo de serviços internos, data stores e integrações de terceiros. Consolida e detalha o que estava espalhado no plano.</p>
     <p class="backlink">← <a href="https://claude.ai/code/artifact/f171dbf5-8933-40a3-98ff-32f169ff869b">Plano de produto</a> · <a href="https://claude.ai/code/artifact/e662d35e-b65a-4f5c-a0ad-d2480c77f2ac">Manual de Design</a></p>
@@ -292,8 +292,8 @@
           <tr><td>email</td><td>citext</td><td><span class="k uq">UQ</span>, <span class="k ix">IX</span></td></tr>
           <tr><td>email_verified_at</td><td>timestamptz</td><td>null até verificar</td></tr>
           <tr><td>password_hash</td><td>text</td><td>Argon2id; null se só social</td></tr>
-          <tr><td>totp_secret_enc</td><td>bytea</td><td>2FA; cifrado (AES-GCM)</td></tr>
-          <tr><td>recovery_codes_enc</td><td>bytea</td><td>hashes</td></tr>
+          <tr><td>totp_secret_enc</td><td>bytea</td><td>2FA TOTP (RFC 6238); cifrado AES-256-GCM (<code>MFA_ENC_KEY</code>)</td></tr>
+          <tr><td>totp_activated_at</td><td>timestamptz</td><td>null = pendente ou desligado; não-null = 2FA ativo</td></tr>
           <tr><td>display_name</td><td>text</td><td>—</td></tr>
           <tr><td>color_hex</td><td>char(7)</td><td>slot 1 da paleta de corredor</td></tr>
           <tr><td>avatar_key</td><td>text</td><td>chave no object storage</td></tr>
@@ -335,6 +335,19 @@
           <tr><td>ip / user_agent</td><td>inet / text</td><td>—</td></tr>
           <tr><td>expires_at</td><td>timestamptz</td><td><span class="k ix">IX</span></td></tr>
           <tr><td>revoked_at</td><td>timestamptz</td><td>—</td></tr>
+          <tr><td>mfa_verified</td><td>boolean</td><td>a sessão passou pelo 2FA; o access token carrega o bit; preservado no refresh</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>mfa_recovery_codes <span class="pk">1:N de users</span></h4>
+      <p>Códigos de recuperação de 2FA, uso único. Guarda o hash SHA-256, nunca o texto.</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>user_id</td><td>ulid</td><td><span class="k pk">PK</span> <span class="k fk">FK</span> users</td></tr>
+          <tr><td>code_hash</td><td>text</td><td><span class="k pk">PK</span> — SHA-256 do código normalizado</td></tr>
+          <tr><td>used_at</td><td>timestamptz</td><td>null enquanto não usado</td></tr>
+          <tr><td>created_at</td><td>timestamptz</td><td>—</td></tr>
         </tbody>
       </table></div>
 
@@ -474,11 +487,13 @@
           <tr><td>event_id</td><td>ulid</td><td><span class="k fk">FK</span> events (nullable — corrida de prova)</td></tr>
           <tr><td>started_at / ended_at</td><td>timestamptz</td><td>—</td></tr>
           <tr><td>distance_m / moving_s / duration_s</td><td>int</td><td>—</td></tr>
-          <tr><td>elevation_gain_m / avg_hr / calories</td><td>int</td><td>—</td></tr>
-          <tr><td>avg_pace_s / gap_pace_s / avg_cadence_spm</td><td>int</td><td>—</td></tr>
-          <tr><td>step_count</td><td>int</td><td>—</td></tr>
+          <tr><td>elevation_gain_m / elev_loss_m</td><td>int</td><td>com histerese anti-ruído barométrico</td></tr>
+          <tr><td>alt_min_m / alt_max_m</td><td>numeric(6,1)</td><td>—</td></tr>
+          <tr><td>avg_hr / max_hr / calories</td><td>int</td><td>—</td></tr>
+          <tr><td>avg_pace_s / gap_pace_s / best_km_pace_s</td><td>int</td><td>gap = pace ajustado ao aclive (Minetti)</td></tr>
+          <tr><td>avg_cadence_spm / max_cadence_spm / step_count</td><td>int</td><td>—</td></tr>
           <tr><td>stride_len_m</td><td>numeric(4,3)</td><td>—</td></tr>
-          <tr><td>running_power_w / vert_osc_mm / ground_contact_ms</td><td>numeric</td><td>relógio compatível</td></tr>
+          <tr><td>running_power_w / vert_osc_mm / ground_contact_ms</td><td>numeric</td><td>relógio compatível (Fase 2)</td></tr>
           <tr><td>gnss_mode</td><td>text</td><td>l1 / l1l5 / multi</td></tr>
           <tr><td>avg_hdop</td><td>numeric(4,2)</td><td>—</td></tr>
           <tr><td>signal_quality_pct</td><td>smallint</td><td>—</td></tr>
@@ -499,8 +514,10 @@
           <tr><td>started_at</td><td>timestamptz</td><td>chave de partição</td></tr>
           <tr><td>geom</td><td>geometry(LineStringZ,4326)</td><td><span class="k gx">GIST</span> traçado limpo (com Z)</td></tr>
           <tr><td>points_jsonb</td><td>jsonb</td><td>amostra bruta (lat,lon,alt,ts,acc,spd)</td></tr>
-          <tr><td>sensor_streams_jsonb</td><td>jsonb</td><td>acel/giro/baro/FC por tempo</td></tr>
+          <tr><td>sensor_streams_jsonb</td><td>jsonb</td><td>acel/giro/baro/FC/cadência por tempo</td></tr>
           <tr><td>quality_segments_jsonb</td><td>jsonb</td><td>índice de sinal por trecho</td></tr>
+          <tr><td>splits_jsonb</td><td>jsonb</td><td>split por km: distância, tempo, moving, pace, D+/D−, cadência, FC</td></tr>
+          <tr><td>best_efforts_jsonb</td><td>jsonb</td><td>melhor esforço contínuo por distância (1k…42k) + maior distância em 1&nbsp;h; alimenta <code>personal_records</code></td></tr>
         </tbody>
       </table></div>
 
@@ -624,8 +641,8 @@
         <tbody>
           <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
           <tr><td>user_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k uq">UQ</span>(user_id, distance_key)</td></tr>
-          <tr><td>distance_key</td><td>text</td><td>1k / 5k / 10k / 15k / 21k / 42k / 1h / longest / max_elev</td></tr>
-          <tr><td>value_s</td><td>int</td><td>tempo (ou valor)</td></tr>
+          <tr><td>distance_key</td><td>text</td><td>1k / 5k / 10k / 15k / 21k / 42k / 1h / longest / max_elev / biggest_territory</td></tr>
+          <tr><td>value_s</td><td>bigint</td><td>tempo em s (distâncias) ou valor: metros (1h, longest, max_elev), m² (biggest_territory)</td></tr>
           <tr><td>run_id</td><td>ulid</td><td><span class="k fk">FK</span> runs</td></tr>
           <tr><td>achieved_at</td><td>timestamptz</td><td>—</td></tr>
         </tbody>
@@ -1083,6 +1100,7 @@
           <tr><td>identities</td><td>N:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
           <tr><td>auth_sessions</td><td>N:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
           <tr><td>auth_sessions</td><td>N:1</td><td>devices</td><td>device_id</td><td>set null</td></tr>
+          <tr><td>mfa_recovery_codes</td><td>N:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
           <tr><td>devices</td><td>N:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
           <tr><td>integrations</td><td>N:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
           <tr><td>import_jobs</td><td>N:1</td><td>integrations</td><td>integration_id</td><td>cascade</td></tr>
@@ -1286,7 +1304,7 @@
   </main>
 
   <footer class="pg">
-    FortalRunners · banco de dados &amp; integrações v1.1 · 06 set 2026 · consolida o modelo de dados e o catálogo de serviços do plano de produto.
+    FortalRunners · banco de dados &amp; integrações v1.2 · 06 set 2026 · consolida o modelo de dados e o catálogo de serviços do plano de produto.
   </footer>
 </div>
 

@@ -134,7 +134,7 @@ func (h *Handler) lifetime(c echo.Context) error {
 
 func (h *Handler) records(c echo.Context) error {
 	rows, err := h.pool.Query(c.Request().Context(),
-		`SELECT key, value, run_id, achieved_at FROM personal_records WHERE user_id = $1 ORDER BY key`,
+		`SELECT distance_key, value_s, run_id, achieved_at FROM personal_records WHERE user_id = $1 ORDER BY distance_key`,
 		auth.UserID(c))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "erro interno")
@@ -143,13 +143,13 @@ func (h *Handler) records(c echo.Context) error {
 	out := []map[string]any{}
 	for rows.Next() {
 		var key string
-		var value float64
+		var value int64
 		var runID *string
 		var at any
 		if err := rows.Scan(&key, &value, &runID, &at); err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "erro interno")
 		}
-		out = append(out, map[string]any{"key": key, "value": value, "run_id": runID, "achieved_at": at})
+		out = append(out, map[string]any{"distance_key": key, "value_s": value, "run_id": runID, "achieved_at": at})
 	}
 	return c.JSON(http.StatusOK, map[string]any{"records": out})
 }

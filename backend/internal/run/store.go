@@ -45,22 +45,24 @@ func (s *store) create(ctx context.Context, a createArgs) (View, error) {
 	if a.Clean.distM > 0 {
 		pace = int(a.Clean.movingS / (a.Clean.distM / 1000.0))
 	}
-	// A elevação e a cadência vêm das métricas de precisão (suavizadas / do stream).
-	elevGain := int(math.Round(a.Metrics.ElevGainM))
-	var cadence, steps *int
-	if a.Metrics.HasCadence {
-		c := int(math.Round(a.Metrics.AvgCadenceSPM))
-		cadence = &c
-		if a.Metrics.StepCount > 0 {
-			steps = &a.Metrics.StepCount
+	m := a.Metrics
+	// elevação e cadência vêm das métricas de precisão (suavizadas / do stream).
+	var cadence, maxCad, steps *int
+	if m.HasCadence {
+		cadence = intPtr(true, m.AvgCadenceSPM)
+		maxCad = intPtr(true, m.MaxCadenceSPM)
+		if m.StepCount > 0 {
+			steps = &m.StepCount
 		}
 	}
 
 	const insRun = `
 		INSERT INTO runs (id, user_id, shoe_id, started_at, ended_at, distance_m, moving_s, duration_s,
-		                  avg_pace_s, elevation_gain_m, avg_cadence_spm, step_count, gnss_mode, avg_hdop, data_source,
-		                  weather_jsonb, fraud_score, status)
-		VALUES ($1,$2,nullif($3,''),$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::run_source,$16,$17,$18::run_status)
+		                  avg_pace_s, gap_pace_s, best_km_pace_s, elevation_gain_m, elev_loss_m, alt_min_m, alt_max_m,
+		                  avg_cadence_spm, max_cadence_spm, step_count, avg_hr, max_hr,
+		                  gnss_mode, avg_hdop, data_source, weather_jsonb, fraud_score, status)
+		VALUES ($1,$2,nullif($3,''),$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
+		        $21,$22,$23::run_source,$24,$25,$26::run_status)
 		RETURNING id, user_id, started_at, ended_at, distance_m, moving_s, duration_s,
 		          avg_pace_s, elevation_gain_m, data_source::text, territory_area_m2,
 		          new_blocks, status::text, created_at`
@@ -69,8 +71,11 @@ func (s *store) create(ctx context.Context, a createArgs) (View, error) {
 	err = tx.QueryRow(ctx, insRun,
 		a.ID, a.UserID, a.In.ShoeID, a.In.StartedAt, a.In.EndedAt,
 		int(a.Clean.distM), int(a.Clean.movingS), int(a.Clean.durS),
-		pace, elevGain, cadence, steps, nullStr(a.In.GNSSMode), a.In.AvgHDOP, src,
-		weather, a.FraudScore, a.Status,
+		pace, intPtr(m.GradeAdjPaceS > 0, m.GradeAdjPaceS), intPtr(m.BestKmPaceS > 0, m.BestKmPaceS),
+		int(math.Round(m.ElevGainM)), int(math.Round(m.ElevLossM)),
+		altPtr(m.HasAltitude, m.AltMinM), altPtr(m.HasAltitude, m.AltMaxM),
+		cadence, maxCad, steps, intPtr(m.HasHR, m.AvgHRBPM), intPtr(m.HasHR, m.MaxHRBPM),
+		nullStr(a.In.GNSSMode), a.In.AvgHDOP, src, weather, a.FraudScore, a.Status,
 	).Scan(&v.ID, &v.UserID, &v.StartedAt, &v.EndedAt, &v.DistanceM, &v.MovingS, &v.DurationS,
 		&v.AvgPaceS, &v.ElevationGainM, &v.DataSource, &v.TerritoryAreaM2, &v.NewBlocks, &v.Status, &v.CreatedAt)
 	if err != nil {
@@ -78,57 +83,46 @@ func (s *store) create(ctx context.Context, a createArgs) (View, error) {
 	}
 
 	ptsJSON, _ := json.Marshal(a.Clean.points)
+	splitsJSON, _ := json.Marshal(m.Splits)
+	effortsJSON, _ := json.Marshal(m.BestEfforts)
+	if len(effortsJSON) == 0 || string(effortsJSON) == "null" {
+		effortsJSON = []byte("{}")
+	}
 	var streams []byte
 	if len(a.In.Cadence) > 0 || len(a.In.HeartRate) > 0 {
 		streams, _ = json.Marshal(map[string]any{"cadence": a.In.Cadence, "heart_rate": a.In.HeartRate})
 	}
+	// LineStringZ: (lon, lat, alt) — altitude 0 quando o ponto não a traz.
 	const insTrack = `
-		INSERT INTO run_tracks (run_id, geom, points_jsonb, sensor_streams_jsonb)
+		INSERT INTO run_tracks (run_id, started_at, geom, points_jsonb, sensor_streams_jsonb, splits_jsonb, best_efforts_jsonb)
 		VALUES (
-			$1,
-			ST_MakeLine(ARRAY(
-				SELECT ST_SetSRID(ST_MakePoint((p->>'lon')::float8, (p->>'lat')::float8), 4326)
-				FROM jsonb_array_elements($2::jsonb) WITH ORDINALITY AS e(p, ord)
+			$1, $2,
+			ST_SetSRID(ST_MakeLine(ARRAY(
+				SELECT ST_MakePoint((p->>'lon')::float8, (p->>'lat')::float8, COALESCE((p->>'alt')::float8, 0))
+				FROM jsonb_array_elements($3::jsonb) WITH ORDINALITY AS e(p, ord)
 				ORDER BY ord
-			)),
-			$2, $3
+			)), 4326),
+			$3, $4, $5, $6
 		)`
-	if _, err := tx.Exec(ctx, insTrack, a.ID, ptsJSON, streams); err != nil {
+	if _, err := tx.Exec(ctx, insTrack, a.ID, a.In.StartedAt, ptsJSON, streams, splitsJSON, effortsJSON); err != nil {
 		return View{}, fmt.Errorf("run: insert track: %w", err)
-	}
-
-	if err := insertMetrics(ctx, tx, a.ID, a.Metrics); err != nil {
-		return View{}, fmt.Errorf("run: insert metrics: %w", err)
 	}
 
 	return v, tx.Commit(ctx)
 }
 
-func insertMetrics(ctx context.Context, tx pgx.Tx, runID string, m Metrics) error {
-	splits, _ := json.Marshal(m.Splits)
-	const q = `
-		INSERT INTO run_metrics (run_id, splits_jsonb, elev_gain_m, elev_loss_m, alt_min_m, alt_max_m,
-		    avg_cadence_spm, max_cadence_spm, avg_hr_bpm, max_hr_bpm, best_km_pace_s, grade_adjusted_pace_s,
-		    has_altitude, has_cadence, has_heart_rate)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`
-	_, err := tx.Exec(ctx, q, runID, splits,
-		round1(m.ElevGainM), round1(m.ElevLossM),
-		altPtr(m.HasAltitude, m.AltMinM), altPtr(m.HasAltitude, m.AltMaxM),
-		intPtr(m.HasCadence, m.AvgCadenceSPM), intPtr(m.HasCadence, m.MaxCadenceSPM),
-		intPtr(m.HasHR, m.AvgHRBPM), intPtr(m.HasHR, m.MaxHRBPM),
-		intPtr(m.BestKmPaceS > 0, m.BestKmPaceS), intPtr(m.GradeAdjPaceS > 0, m.GradeAdjPaceS),
-		m.HasAltitude, m.HasCadence, m.HasHR)
-	return err
-}
-
 func (s *store) metrics(ctx context.Context, id, userID string) (MetricsView, error) {
 	const q = `
-		SELECT m.run_id, m.splits_jsonb, m.elev_gain_m, m.elev_loss_m, m.alt_min_m, m.alt_max_m,
-		       m.avg_cadence_spm, m.max_cadence_spm, m.avg_hr_bpm, m.max_hr_bpm,
-		       m.best_km_pace_s, m.grade_adjusted_pace_s,
-		       m.has_altitude, m.has_cadence, m.has_heart_rate, m.computed_at
-		FROM run_metrics m JOIN runs r ON r.id = m.run_id
-		WHERE m.run_id = $1 AND r.user_id = $2`
+		SELECT r.id, rt.splits_jsonb,
+		       r.elevation_gain_m, r.elev_loss_m, r.alt_min_m, r.alt_max_m,
+		       r.avg_cadence_spm, r.max_cadence_spm, r.avg_hr, r.max_hr,
+		       r.best_km_pace_s, r.gap_pace_s,
+		       (r.alt_min_m IS NOT NULL) AS has_alt,
+		       (r.avg_cadence_spm IS NOT NULL) AS has_cad,
+		       (r.avg_hr IS NOT NULL) AS has_hr,
+		       r.created_at
+		FROM runs r JOIN run_tracks rt ON rt.run_id = r.id
+		WHERE r.id = $1 AND r.user_id = $2`
 	var mv MetricsView
 	var splitsRaw []byte
 	err := s.pool.QueryRow(ctx, q, id, userID).Scan(
@@ -142,19 +136,19 @@ func (s *store) metrics(ctx context.Context, id, userID string) (MetricsView, er
 	if err != nil {
 		return mv, err
 	}
-	if err := json.Unmarshal(splitsRaw, &mv.Splits); err != nil {
-		return mv, fmt.Errorf("run: splits: %w", err)
+	if len(splitsRaw) > 0 {
+		if err := json.Unmarshal(splitsRaw, &mv.Splits); err != nil {
+			return mv, fmt.Errorf("run: splits: %w", err)
+		}
 	}
 	return mv, nil
 }
-
-func round1(v float64) float64 { return math.Round(v*10) / 10 }
 
 func altPtr(ok bool, v float64) *float64 {
 	if !ok {
 		return nil
 	}
-	r := round1(v)
+	r := math.Round(v*10) / 10
 	return &r
 }
 
