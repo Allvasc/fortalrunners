@@ -6,6 +6,9 @@ run: ## sobe a API (aplica migrações no boot)
 run-worker: ## sobe o territory-worker
 	go run ./cmd/worker
 
+run-scheduler: ## sobe o scheduler (períodos de desafio, jobs)
+	go run ./cmd/scheduler
+
 build:
 	go build -o bin/api ./cmd/api
 	go build -o bin/worker ./cmd/worker

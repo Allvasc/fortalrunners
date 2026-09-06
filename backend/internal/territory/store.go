@@ -91,15 +91,16 @@ WHERE g IS NOT NULL AND NOT ST_IsEmpty(g)`
 }
 
 // insertTerritory grava o território e resolve o bairro por ponto interno.
+// O território é permanente e pessoal — nenhum outro corredor o apaga ou o disputa.
 func (s *store) insertTerritory(ctx context.Context, id, userID, runID string, wkb []byte, areaM2 float64) error {
 	const q = `
-		INSERT INTO territories (id, user_id, run_id, neighborhood_id, geom, area_m2, decays_at, status)
+		INSERT INTO territories (id, user_id, run_id, neighborhood_id, geom, area_m2, status)
 		VALUES (
 			$1, $2, $3,
 			(SELECT n.id FROM neighborhoods n
 			 WHERE ST_Contains(n.geom, ST_PointOnSurface(ST_GeomFromWKB($4, 4326)))
 			 LIMIT 1),
-			ST_GeomFromWKB($4, 4326), $5, now() + interval '7 days', 'active'
+			ST_GeomFromWKB($4, 4326), $5, 'active'
 		)`
 	_, err := s.pool.Exec(ctx, q, id, userID, runID, wkb, areaM2)
 	return err

@@ -67,9 +67,13 @@ Ver `docs/plano.html` § 16.
   - ✅ pipeline de território no worker: detecção de laço → polígono (PostGIS) → gate de zona de risco → gravação; `GET /v1/territories` (GeoJSON)
   - ✅ gestão de tênis (`/v1/shoes`), km/passos/horas/custo-por-km/vida-útil, corrida amarrada ao par
   - ✅ rollup pós-corrida: `shoe_stats`, `lifetime_stats` (com streak), `personal_records`
-  - ✅ ranking (`/v1/leaderboards/global` e `/neighborhood/:id`), `/v1/me/lifetime`, `/v1/me/records`
-  - ⬜ métricas de precisão (splits, cadência), mapa de calor, fechamento de ciclo semanal + troféus,
-    integrações (Strava), 2FA, portal web (mapa MapLibre), painel de admin
+  - ✅ ranking **all-time por área coberta** (`/v1/leaderboards/global`, `/neighborhood/:id`) — território é
+    permanente e pessoal, ninguém apaga ou disputa o do outro
+  - ✅ **desafios recorrentes** (semanal / quinzenal / mensal): `/v1/challenges`,
+    `/v1/challenges/:slug/leaderboard`; `cmd/scheduler` abre e fecha os períodos e concede badges
+  - ✅ `/v1/me/lifetime`, `/v1/me/records`
+  - ⬜ métricas de precisão (splits, cadência), mapa de calor, integrações (Strava), 2FA,
+    portal web (mapa MapLibre), painel de admin
 
 ## Convenções
 
