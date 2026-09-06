@@ -15,11 +15,17 @@ const (
 )
 
 type cleaned struct {
-	points   []Point
-	distM    float64
-	movingS  float64
-	durS     float64
-	elevGain float64
+	points    []Point
+	distM     float64
+	movingS   float64
+	durS      float64
+	elevGain  float64
+	teleports int     // pontos descartados por salto impossível (sinal de spoofing)
+	rawKept   int     // pontos que passaram no filtro de precisão
+	minLat    float64 // caixa envolvente — para o teste de "traçado reto demais"
+	minLon    float64
+	maxLat    float64
+	maxLon    float64
 }
 
 // clean ordena, filtra e resume os pontos. Devolve ok=false quando o traçado
@@ -33,13 +39,18 @@ func clean(in []Point) (cleaned, bool) {
 
 	out := make([]Point, 0, len(pts))
 	var dist, moving, elev float64
+	var teleports, kept int
 	var prev *Point
+	c := cleaned{minLat: 90, minLon: 180, maxLat: -90, maxLon: -180}
 
 	for i := range pts {
 		p := pts[i]
 		if p.Acc != nil && *p.Acc > maxAccuracyM {
 			continue
 		}
+		kept++
+		c.minLat, c.maxLat = math.Min(c.minLat, p.Lat), math.Max(c.maxLat, p.Lat)
+		c.minLon, c.maxLon = math.Min(c.minLon, p.Lon), math.Max(c.maxLon, p.Lon)
 		if prev == nil {
 			out = append(out, p)
 			prev = &out[len(out)-1]
@@ -54,6 +65,7 @@ func clean(in []Point) (cleaned, bool) {
 			continue // parado / ruído
 		}
 		if d/dt > maxSpeedMS {
+			teleports++
 			continue // salto impossível
 		}
 		dist += d
@@ -76,7 +88,14 @@ func clean(in []Point) (cleaned, bool) {
 	if moving == 0 {
 		moving = durS
 	}
-	return cleaned{points: out, distM: dist, movingS: moving, durS: durS, elevGain: elev}, true
+	c.points, c.distM, c.movingS, c.durS, c.elevGain = out, dist, moving, durS, elev
+	c.teleports, c.rawKept = teleports, kept
+	return c, true
+}
+
+// bboxDiagonalM devolve a diagonal da caixa envolvente do traçado, em metros.
+func (c cleaned) bboxDiagonalM() float64 {
+	return haversine(c.minLat, c.minLon, c.maxLat, c.maxLon)
 }
 
 func haversine(lat1, lon1, lat2, lon2 float64) float64 {

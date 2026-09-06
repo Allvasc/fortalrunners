@@ -24,6 +24,10 @@ type IngestInput struct {
 	Cadence    []Sample  `json:"cadence,omitempty"`    // passos por minuto ao longo do tempo
 	HeartRate  []Sample  `json:"heart_rate,omitempty"` // bpm ao longo do tempo
 	Weather    any       `json:"weather,omitempty"`
+
+	// Sinais anti-fraude vindos do cliente.
+	MockLocation bool   `json:"mock_location,omitempty"` // flag de localização simulada do SO
+	Attestation  string `json:"attestation,omitempty"`   // token Play Integrity / App Attest
 }
 
 // MetricsView é a projeção de leitura de GET /v1/runs/:id/metrics.

@@ -55,7 +55,12 @@ function FlaggedRuns() {
                 <td className="mono">
                   {pace(r.avg_pace_s)} <span className="muted">/ {clock(r.moving_s)}</span>
                 </td>
-                <td className="mono">{r.fraud_score.toFixed(2)}</td>
+                <td className="mono">
+                  {r.fraud_score.toFixed(2)}
+                  {r.fraud_flags?.length > 0 && (
+                    <span className="muted small"> · {r.fraud_flags.join(", ")}</span>
+                  )}
+                </td>
                 <td className="row-btns">
                   <button
                     className="btn quiet sm"

@@ -20,9 +20,6 @@ var (
 	ErrShoeNotYours = errors.New("esse par de tênis não é seu")
 )
 
-// suspiciousPaceS: mais rápido que 2:30/km sustentado é sinalizado para revisão.
-const suspiciousPaceS = 150
-
 // ShoeChecker confirma a posse de um par de tênis (implementado por shoe.Service).
 type ShoeChecker interface {
 	OwnedBy(ctx context.Context, userID, shoeID string) (bool, error)
@@ -63,18 +60,16 @@ func (s *Service) Ingest(ctx context.Context, userID string, in IngestInput) (Vi
 	}
 
 	metrics := computeMetrics(c.points, in.Cadence, in.HeartRate)
+	fraud := scoreFraud(in, c, metrics)
 
 	status := "processing"
-	var fraud float64
-	if c.distM > 0 {
-		pace := c.movingS / (c.distM / 1000.0)
-		if pace > 0 && pace < suspiciousPaceS {
-			status, fraud = "flagged", 0.8
-		}
+	if fraud.flagged() {
+		status = "flagged"
 	}
 
 	v, err := s.store.create(ctx, createArgs{
-		ID: id.New(), UserID: userID, In: in, Clean: c, Metrics: metrics, FraudScore: fraud, Status: status,
+		ID: id.New(), UserID: userID, In: in, Clean: c, Metrics: metrics,
+		FraudScore: fraud.Score, FraudFlags: fraud.Flags, Status: status,
 	})
 	if err != nil {
 		return View{}, err

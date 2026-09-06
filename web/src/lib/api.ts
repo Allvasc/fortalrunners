@@ -230,6 +230,7 @@ export type FlaggedRun = {
   moving_s: number;
   avg_pace_s: number;
   fraud_score: number;
+  fraud_flags: string[];
   status: string;
 };
 

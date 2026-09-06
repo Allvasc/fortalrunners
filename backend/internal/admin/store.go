@@ -136,24 +136,25 @@ func (s *store) setUserRole(ctx context.Context, uid, role string) error {
 // --- corridas sinalizadas ---
 
 type flaggedRun struct {
-	ID         string    `json:"id"`
-	UserID     string    `json:"user_id"`
-	Username   string    `json:"username"`
-	StartedAt  time.Time `json:"started_at"`
-	DistanceM  int       `json:"distance_m"`
-	MovingS    int       `json:"moving_s"`
-	AvgPaceS   int       `json:"avg_pace_s"`
-	FraudScore float64   `json:"fraud_score"`
-	Status     string    `json:"status"`
+	ID         string          `json:"id"`
+	UserID     string          `json:"user_id"`
+	Username   string          `json:"username"`
+	StartedAt  time.Time       `json:"started_at"`
+	DistanceM  int             `json:"distance_m"`
+	MovingS    int             `json:"moving_s"`
+	AvgPaceS   int             `json:"avg_pace_s"`
+	FraudScore float64         `json:"fraud_score"`
+	FraudFlags json.RawMessage `json:"fraud_flags"`
+	Status     string          `json:"status"`
 }
 
 func (s *store) flaggedRuns(ctx context.Context, limit int) ([]flaggedRun, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT r.id, r.user_id, u.username, r.started_at, r.distance_m, r.moving_s,
-		       r.avg_pace_s, r.fraud_score, r.status::text
+		       r.avg_pace_s, r.fraud_score, r.fraud_flags, r.status::text
 		FROM runs r JOIN users u ON u.id = r.user_id
 		WHERE r.status = 'flagged'
-		ORDER BY r.started_at DESC LIMIT $1`, limit)
+		ORDER BY r.fraud_score DESC, r.started_at DESC LIMIT $1`, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +163,7 @@ func (s *store) flaggedRuns(ctx context.Context, limit int) ([]flaggedRun, error
 	for rows.Next() {
 		var f flaggedRun
 		if err := rows.Scan(&f.ID, &f.UserID, &f.Username, &f.StartedAt, &f.DistanceM,
-			&f.MovingS, &f.AvgPaceS, &f.FraudScore, &f.Status); err != nil {
+			&f.MovingS, &f.AvgPaceS, &f.FraudScore, &f.FraudFlags, &f.Status); err != nil {
 			return nil, err
 		}
 		out = append(out, f)
