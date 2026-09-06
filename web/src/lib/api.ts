@@ -262,6 +262,11 @@ export const api = {
   territories: (bbox?: [number, number, number, number]) =>
     request<FeatureCollection>(`/v1/territories${bbox ? `?bbox=${bbox.join(",")}` : ""}`),
 
+  heatmap: (bbox?: [number, number, number, number]) =>
+    request<GeoJSON.FeatureCollection<GeoJSON.Point, { w: number; hits: number }>>(
+      `/v1/heatmap?scope=me${bbox ? `&bbox=${bbox.join(",")}` : ""}`,
+    ),
+
   leaderboardGlobal: () => request<Leaderboard>("/v1/leaderboards/global"),
 
   lifetime: () => request<Lifetime>("/v1/me/lifetime"),

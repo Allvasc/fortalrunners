@@ -1,6 +1,7 @@
 // Comando: scheduler — jobs periódicos do FortalRunners.
-// Fase 1: garante os períodos de desafio e fecha os que encerraram (com prêmios).
-// Depois: refresh de heat_agg, reconstrução de risk_zones, conciliação, etc.
+// Fase 1: garante/fecha os períodos de desafio (com prêmios) e faz o refresh do
+// mapa de calor pessoal (heat_agg).
+// Depois: reconstrução de risk_zones, conciliação Asaas, etc.
 package main
 
 import (
@@ -13,6 +14,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/Allvasc/fortalrunners/backend/internal/challenge"
+	"github.com/Allvasc/fortalrunners/backend/internal/heatmap"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/config"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/db"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/logging"
@@ -38,6 +40,7 @@ func main() {
 	defer pool.Close()
 
 	chl := challenge.NewService(pool, log)
+	heat := heatmap.NewService(pool, log)
 
 	tick := func() {
 		if err := chl.EnsurePeriods(ctx); err != nil {
@@ -45,6 +48,9 @@ func main() {
 		}
 		if err := chl.ClosePeriods(ctx); err != nil {
 			log.Error("ClosePeriods", "err", err)
+		}
+		if err := heat.Refresh(ctx); err != nil {
+			log.Error("heatmap.Refresh", "err", err)
 		}
 	}
 

@@ -79,11 +79,14 @@ Ver `docs/plano.html` § 16.
   - ✅ **métricas de precisão** (`internal/run/metrics.go`): splits por km, elevação
     suavizada (histerese barométrica), cadência e FC dos streams de sensor, pace
     ajustado ao aclive (GAP, modelo de custo de Minetti); `GET /v1/runs/:id/metrics`
-  - ✅ **portal web** (`web/`): rota + shell, mapa MapLibre com o território do corredor,
-    histórico com splits/GAP/cadência por corrida, ranking all-time, desafios com
-    ranking de período, perfil com stats/recordes e gestão de 2FA
-  - ⬜ mapa de calor, integrações (Strava), style JSON próprio do mapa
-    (MapTiler/Protomaps), painel de admin
+  - ✅ **mapa de calor pessoal** (`internal/heatmap`): `heat_agg` (grade ~50 m como
+    stand-in de H3), refresh no `cmd/scheduler`, `GET /v1/heatmap?scope=me` (GeoJSON);
+    amigos/cidade + k-anonimato = Fase 2/3
+  - ✅ **portal web** (`web/`): rota + shell, mapa MapLibre com território + camada
+    de calor ligável, histórico com splits/GAP/cadência, ranking all-time, desafios,
+    perfil com stats/recordes e gestão de 2FA
+  - ⬜ integrações (Strava, Health Connect), login Apple, style JSON próprio do mapa
+    (MapTiler/Protomaps), painel de admin, anti-fraude v1
 
 ## Convenções
 

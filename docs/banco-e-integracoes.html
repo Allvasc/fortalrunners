@@ -129,7 +129,7 @@
 
 <div class="wrap">
   <header class="hero">
-    <p class="eyebrow">Referência técnica · v1.2 · 06 set 2026</p>
+    <p class="eyebrow">Referência técnica · v1.3 · 06 set 2026</p>
     <h1>Banco de dados &amp; Integrações</h1>
     <p class="lede">O modelo de dados completo — tabelas, tipos, chaves e relacionamentos — e o catálogo de serviços internos, data stores e integrações de terceiros. Consolida e detalha o que estava espalhado no plano.</p>
     <p class="backlink">← <a href="https://claude.ai/code/artifact/f171dbf5-8933-40a3-98ff-32f169ff869b">Plano de produto</a> · <a href="https://claude.ai/code/artifact/e662d35e-b65a-4f5c-a0ad-d2480c77f2ac">Manual de Design</a></p>
@@ -552,16 +552,18 @@
       </table></div>
 
       <h4>heat_agg <span class="pk">agregação</span></h4>
-      <p>Passagem agregada para o mapa de calor. Refresh incremental por job. Nunca traçados individuais.</p>
+      <p>Passagem agregada para o mapa de calor. Refresh por job do <code>scheduler</code>. Nunca traçados individuais. Fase 1: só <code>scope=user:&lt;id&gt;</code> (mapa de calor pessoal); amigos/clube/cidade + k-anonimato = Fase 2/3.</p>
       <div class="tw"><table class="t-col">
         <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
         <tbody>
-          <tr><td>h3_index</td><td>bigint</td><td>parte da <span class="k pk">PK</span> composta</td></tr>
+          <tr><td>h3_index</td><td>bigint</td><td>parte da <span class="k pk">PK</span>. H3 é Fase 2 (cgo) → stand-in decodificável (latIdx·1e7+lonIdx, grade ~50&nbsp;m)</td></tr>
           <tr><td>scope</td><td>text</td><td><span class="k pk">PK</span> — <code>user:&lt;id&gt;</code> / <code>club:&lt;id&gt;</code> / <code>city</code></td></tr>
           <tr><td>period</td><td>text</td><td><span class="k pk">PK</span> — <code>all</code> / <code>2026-w36</code> / <code>2026-09</code></td></tr>
           <tr><td>activity</td><td>text</td><td><span class="k pk">PK</span> — run / walk / trail</td></tr>
-          <tr><td>weight</td><td>numeric</td><td>densidade normalizada</td></tr>
-          <tr><td>runner_count</td><td>int</td><td>k-anonimato: cidade só servida com ≥ N</td></tr>
+          <tr><td>hits</td><td>int</td><td>pontos de GPS na célula (base da agregação e do merge user→city)</td></tr>
+          <tr><td>weight</td><td>numeric(6,4)</td><td>densidade normalizada 0..1</td></tr>
+          <tr><td>runner_count</td><td>int</td><td>k-anonimato: cidade só servida com ≥ N (lição do Strava 2018)</td></tr>
+          <tr><td>cell_geom</td><td>geometry(Point,4326)</td><td><span class="k gx">GIST</span> centro da célula (filtro por bbox enquanto não há H3; derivável do índice depois)</td></tr>
           <tr><td>updated_at</td><td>timestamptz</td><td>—</td></tr>
         </tbody>
       </table></div>
@@ -1083,7 +1085,7 @@
     <section id="indices">
       <h2><span class="h2n">12</span>Índices &amp; particionamento</h2>
       <ul>
-        <li><strong>Geoespaciais (GIST):</strong> <code>run_tracks.geom</code>, <code>territories.geom</code>, <code>h3_cells</code> (B-tree em <code>h3_index</code>), <code>neighborhoods.geom</code>, <code>risk_zones.geom</code>, <code>landmarks.geom</code>, <code>hazard_reports.geom</code>, <code>map_pois.geom</code>, <code>events.area_geom</code>, <code>event_stations.geom</code>.</li>
+        <li><strong>Geoespaciais (GIST):</strong> <code>run_tracks.geom</code>, <code>territories.geom</code>, <code>h3_cells</code> (B-tree em <code>h3_index</code>), <code>heat_agg.cell_geom</code>, <code>neighborhoods.geom</code>, <code>risk_zones.geom</code>, <code>landmarks.geom</code>, <code>hazard_reports.geom</code>, <code>map_pois.geom</code>, <code>events.area_geom</code>, <code>event_stations.geom</code>.</li>
         <li><strong>Particionamento:</strong> <code>run_tracks</code> e <code>activity_events</code> por mês (<code>RANGE</code> em <code>started_at</code>/<code>created_at</code>); <code>ai_interactions</code> e <code>audit_log</code> por mês; <code>scan_events</code> por evento quando alto volume.</li>
         <li><strong>Ranking:</strong> acumulado por área coberta, all-time. Fase 1 agrega em SQL; <strong>Redis sorted sets</strong> (global, por bairro, por clube, entre amigos) quando o volume pedir — recalculo incremental, nunca varrendo a cidade a cada corrida. Placar de desafio: janela por <code>claimed_at</code>/<code>started_at</code>, congelado em <code>challenge_entries</code> ao fechar.</li>
         <li><strong>Composite IX comuns:</strong> <code>runs(user_id, started_at desc)</code>, <code>territories(user_id, status)</code>, <code>h3_cells(owner_id)</code>, <code>activity_events(actor_id, created_at desc)</code>, <code>scan_events(athlete_id, scanned_at)</code>, <code>ai_interactions(user_id, created_at)</code>.</li>
@@ -1173,6 +1175,7 @@
           <tr><td><strong>territory-worker</strong> <em>(binário próprio)</em></td><td>Limpeza, map-matching, detecção de laço, preenchimento, gate de risco, resolução de conflito, H3, anti-fraude, rollups</td><td>Postgres+PostGIS, OSRM, fila, Redis</td></tr>
           <tr><td>ranking</td><td>Leaderboard acumulado por área coberta (all-time), por bairro/amigos/clube</td><td>Postgres (Redis quando escalar)</td></tr>
           <tr><td>challenge</td><td>Desafios recorrentes: matemática de período, placar por métrica, fechamento com prêmio</td><td>Postgres, scheduler</td></tr>
+          <tr><td>heatmap</td><td>Serve o mapa de calor (<code>heat_agg</code> → GeoJSON) e mantém a agregação por job do scheduler. Fase 1: só pessoal</td><td>Postgres+PostGIS, scheduler</td></tr>
           <tr><td>social</td><td>Amizades, clubes, feed, bloqueio</td><td>Postgres, Redis pub/sub</td></tr>
           <tr><td>route</td><td>Rotas, avaliações, curadoria</td><td>Postgres+PostGIS</td></tr>
           <tr><td>gamification</td><td>Badges (conquistas permanentes), records, missões, check-in de marco</td><td>Postgres, object storage</td></tr>
@@ -1304,7 +1307,7 @@
   </main>
 
   <footer class="pg">
-    FortalRunners · banco de dados &amp; integrações v1.2 · 06 set 2026 · consolida o modelo de dados e o catálogo de serviços do plano de produto.
+    FortalRunners · banco de dados &amp; integrações v1.3 · 06 set 2026 · consolida o modelo de dados e o catálogo de serviços do plano de produto.
   </footer>
 </div>
 

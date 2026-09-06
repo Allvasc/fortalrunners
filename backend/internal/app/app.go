@@ -11,6 +11,7 @@ import (
 	"github.com/Allvasc/fortalrunners/backend/internal/auth"
 	"github.com/Allvasc/fortalrunners/backend/internal/challenge"
 	"github.com/Allvasc/fortalrunners/backend/internal/health"
+	"github.com/Allvasc/fortalrunners/backend/internal/heatmap"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/config"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/httpx"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/queue"
@@ -63,6 +64,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	territory.NewHandler(pool).Register(secured)
 	ranking.NewHandler(pool).Register(secured)
 	challenge.NewHandler(challenge.NewService(pool, log)).Register(secured)
+	heatmap.NewHandler(heatmap.NewService(pool, log)).Register(secured)
 
 	return &API{Echo: e, Pool: pool, Queue: pub}, nil
 }
