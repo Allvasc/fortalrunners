@@ -111,8 +111,10 @@ Ver `docs/plano.html` § 16.
   - ✅ **clubes de corrida** (`internal/club`): cadastro e adesão a equipes de Fortaleza (*Beira-Mar Runners*, *Grupo Cocó Trail*); UI web (`/clubes`) e mobile (`Clubs`)
   - ✅ **segurança pessoal & SOS** (`internal/safety`): contatos de emergência e alertas de pânico com localização GPS (`POST /v1/safety/sos`)
   - ✅ **condições climáticas** (`internal/weather`): relatório do clima em Fortaleza (sensação, UV, vento) e melhores janelas para corrida integrados no mapa
-  - ⬜ Health Connect / Apple Health (ponte on-device), style JSON próprio do mapa
-    (chave MapTiler/Protomaps), fusão de sensores para precisão, cobertura H3 (%)
+  - ✅ **eventos & provas oficiais** (`internal/event`): diretório de corridas noturnas e maratonas de Fortaleza, lotes de ingressos e formulário de inscrição; UI web (`/eventos`) e mobile (`Events`)
+  - ✅ **passaporte digital & QR code** (`internal/qr`): geração de tokens QR rotativos (~45s) para estações de largada e kit do evento (`/v1/qr/token`, `/v1/qr/scan`)
+  - ✅ **checkout & pagamentos** (`internal/payment`): cobranças PIX Copy&Paste e gateway Asaas com confirmação via webhook (`POST /v1/payments/checkout`)
+  - ✅ **coach IA fortalrunners** (`internal/ai`): recomendações personalizadas de treino, vestuário, hidratação e horários ideais para corridas em Fortaleza (`POST /v1/ai/coach`); UI web (`/coach`) e mobile (`AICoach`)
 
 ## Convenções
 
