@@ -29,6 +29,7 @@ export function Home({ navigation }: Props) {
   const life = useQuery({ queryKey: ["lifetime"], queryFn: api.lifetime });
   const cov = useQuery({ queryKey: ["coverage"], queryFn: api.coverage });
   const runs = useQuery({ queryKey: ["runs"], queryFn: () => api.runs(6) });
+  const weather = useQuery({ queryKey: ["weather"], queryFn: api.weather });
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
@@ -63,6 +64,25 @@ export function Home({ navigation }: Props) {
             <Tile v={`${cov.data?.city.pct ?? 0}%`} l="de Fortaleza" />
           </Tap>
         </FadeIn>
+
+        {weather.data && (
+          <FadeIn delay={100}>
+            <View style={s.weather}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.wTemp}>
+                  {weather.data.temp_c}°C <Text style={s.wFeels}>· sensação {weather.data.feels_like_c}°</Text>
+                </Text>
+                <Text style={s.wAdvice} numberOfLines={2}>
+                  {weather.data.advice}
+                </Text>
+              </View>
+              <View style={s.wRight}>
+                <Text style={s.wUv}>UV {weather.data.uv_index}</Text>
+                <Text style={s.wWind}>{weather.data.wind_kmh} km/h</Text>
+              </View>
+            </View>
+          </FadeIn>
+        )}
 
         <FadeIn delay={120}>
           <Tap style={s.cta} to={0.97} onPress={() => navigation.navigate("Recording")}>
@@ -161,6 +181,21 @@ const s = StyleSheet.create({
     elevation: 5,
   },
   ctaText: { color: "#fff", fontWeight: "800", fontSize: 17 },
+  weather: {
+    flexDirection: "row",
+    gap: 12,
+    backgroundColor: C.surface,
+    borderWidth: 1,
+    borderColor: C.line,
+    borderRadius: 14,
+    padding: 14,
+  },
+  wTemp: { fontSize: 16, fontWeight: "800", color: C.ink },
+  wFeels: { fontSize: 12, fontWeight: "600", color: C.ink3 },
+  wAdvice: { fontSize: 12, color: C.ink2, marginTop: 3, lineHeight: 16 },
+  wRight: { alignItems: "flex-end", justifyContent: "center" },
+  wUv: { fontSize: 12, fontWeight: "700", color: C.gold },
+  wWind: { fontSize: 11, color: C.ink3, marginTop: 2 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   link: {
     width: "48%",

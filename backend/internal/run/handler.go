@@ -20,6 +20,21 @@ func (h *Handler) Register(g *echo.Group) {
 	g.GET("/runs", h.list)
 	g.GET("/runs/:id", h.get)
 	g.GET("/runs/:id/metrics", h.metrics)
+	g.GET("/runs/:id/export", h.export)
+}
+
+func (h *Handler) export(c echo.Context) error {
+	format := c.QueryParam("format")
+	if format == "" {
+		format = "gpx"
+	}
+	body, mime, err := h.svc.Export(c.Request().Context(), c.Param("id"), auth.UserID(c), format)
+	if err != nil {
+		return runErr(err)
+	}
+	c.Response().Header().Set("Content-Disposition",
+		`attachment; filename="fortalrunners-`+c.Param("id")+"."+format+`"`)
+	return c.Blob(http.StatusOK, mime, []byte(body))
 }
 
 func (h *Handler) upload(c echo.Context) error {

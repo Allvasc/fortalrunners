@@ -20,7 +20,7 @@ import type { RootStack } from "../../App";
 
 type Props = NativeStackScreenProps<RootStack, "Recording">;
 
-const EMPTY: LiveStats = { distanceM: 0, movingS: 0, elapsedS: 0, paceS: 0, points: [] };
+const EMPTY: LiveStats = { distanceM: 0, movingS: 0, elapsedS: 0, paceS: 0, points: [], autoPaused: false };
 
 export function Recording({ navigation }: Props) {
   useKeepAwake();
@@ -105,6 +105,7 @@ export function Recording({ navigation }: Props) {
       <TrackPreview points={stats.points} size={240} />
 
       {phase === "paused" && <Text style={s.pausedTag}>pausado</Text>}
+      {phase === "recording" && stats.autoPaused && <Text style={s.pausedTag}>⏸ pausa automática</Text>}
 
       <View style={s.controls}>
         <TouchableOpacity style={[s.ctrl, s.ghost]} onPress={togglePause} disabled={upload.isPending}>

@@ -1,7 +1,22 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { api, type Run, type Split } from "../lib/api";
+import { api, apiBase, getTokens, type Run, type Split } from "../lib/api";
 import { clock, date, km, pace } from "../lib/format";
+
+async function downloadRun(id: string, format: "gpx" | "tcx") {
+  const t = getTokens();
+  const res = await fetch(`${apiBase}/v1/runs/${id}/export?format=${format}`, {
+    headers: t ? { Authorization: `Bearer ${t.access_token}` } : {},
+  });
+  if (!res.ok) return;
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `fortalrunners-${id}.${format}`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export function History() {
   const q = useQuery({ queryKey: ["runs"], queryFn: () => api.runs(40) });
@@ -51,7 +66,19 @@ function RunItem({ run }: { run: Run }) {
           <span className="chip">{run.status}</span>
         )}
       </button>
-      {open && <RunMetrics id={run.id} />}
+      {open && (
+        <>
+          <div className="run-export">
+            <button className="btn quiet sm" onClick={() => downloadRun(run.id, "gpx")}>
+              Exportar GPX
+            </button>
+            <button className="btn quiet sm" onClick={() => downloadRun(run.id, "tcx")}>
+              Exportar TCX
+            </button>
+          </div>
+          <RunMetrics id={run.id} />
+        </>
+      )}
     </div>
   );
 }

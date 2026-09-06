@@ -492,6 +492,7 @@ export const api = {
     request<void>("/v1/me", { method: "DELETE", body: JSON.stringify({ confirm: "EXCLUIR" }) }),
   territoriesScope: (scope: "me" | "friends") => request<GeoFC>(`/v1/territories?scope=${scope}`),
   leaderboardFriends: () => request<Leaderboard>("/v1/leaderboards/friends"),
+  leaderboardClub: (id: string) => request<Leaderboard>(`/v1/leaderboards/club/${encodeURIComponent(id)}`),
 
   events: () =>
     request<{

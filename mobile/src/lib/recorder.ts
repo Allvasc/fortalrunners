@@ -183,6 +183,7 @@ export type LiveStats = {
   elapsedS: number;
   paceS: number; // s/km em movimento
   points: GPSPoint[];
+  autoPaused: boolean; // parado há alguns segundos — o cronômetro de movimento congela
 };
 
 export function computeStats(points: GPSPoint[], startedAt: number): LiveStats {
@@ -199,12 +200,23 @@ export function computeStats(points: GPSPoint[], startedAt: number): LiveStats {
       if (d < 1 && dt < 1) continue;
       if (d / dt > 12) continue; // teleporte
       dist += d;
-      if (d / dt > 0.5) moving += dt;
+      if (d / dt > 0.5) moving += dt; // auto-pause: só conta tempo quando há deslocamento real
     }
     kept.push(p);
     prev = p;
   }
   const elapsedS = (Date.now() - startedAt) / 1000;
   const paceS = dist > 100 ? moving / (dist / 1000) : 0;
-  return { distanceM: dist, movingS: moving, elapsedS, paceS, points: kept };
+
+  // auto-pause: os últimos ~8 s de pontos ficaram num raio de ~6 m
+  let autoPaused = false;
+  if (kept.length >= 3) {
+    const now = kept[kept.length - 1].t;
+    const recent = kept.filter((p) => now - p.t <= 8000);
+    if (recent.length >= 3) {
+      const a = recent[0];
+      autoPaused = recent.every((p) => haversine(a, p) < 6);
+    }
+  }
+  return { distanceM: dist, movingS: moving, elapsedS, paceS, points: kept, autoPaused };
 }

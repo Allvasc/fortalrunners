@@ -113,6 +113,11 @@ h3 {
   font-size: 0.85rem;
   margin: 0;
 }
+.run-export {
+  display: flex;
+  gap: 8px;
+  padding: 8px 0 0;
+}
 
 /* --- controles --- */
 .btn {

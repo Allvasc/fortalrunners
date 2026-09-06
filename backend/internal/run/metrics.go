@@ -49,6 +49,7 @@ type Metrics struct {
 	BestKmPaceS   float64        `json:"best_km_pace_s"`
 	GradeAdjPaceS float64        `json:"grade_adjusted_pace_s"`
 	StepCount     int            `json:"step_count"`
+	CaloriesEst   int            `json:"calories_est"` // estimativa (massa padrão 70 kg) — marcado como estimado
 	BestEfforts   map[string]int `json:"best_efforts"` // distance_key -> segundos (ou metros p/ "1h")
 	HasAltitude   bool           `json:"has_altitude"`
 	HasCadence    bool           `json:"has_cadence"`
@@ -190,6 +191,11 @@ func computeMetrics(pts []Point, cadence, hr []Sample) Metrics {
 	m.AvgHRBPM, m.MaxHRBPM = meanMax(hr)
 	if m.HasCadence && totalMoving > 0 {
 		m.StepCount = int(math.Round(m.AvgCadenceSPM / 60.0 * totalMoving))
+	}
+	// Calorias — energia mecânica (custo de Minetti × distância, J/kg) × massa
+	// padrão 70 kg / 4184 J·kcal⁻¹. É estimativa; o campo é rotulado como tal.
+	if weightedCost > 0 {
+		m.CaloriesEst = int(math.Round(weightedCost * 70.0 / 4184.0))
 	}
 	m.BestEfforts = bestEfforts(pts)
 	return m

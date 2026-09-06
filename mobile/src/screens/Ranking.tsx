@@ -6,11 +6,13 @@ import { C } from "../theme";
 import { area } from "../format";
 
 // Ranking por área total coberta — território é permanente, sem reset (plano §2).
-type Tab = "global" | "friends" | "bairro";
+type Tab = "global" | "friends" | "bairro" | "clube";
 
 export function RankingScreen() {
   const [tab, setTab] = useState<Tab>("global");
   const cov = useQuery({ queryKey: ["coverage"], queryFn: api.coverage });
+  const clubs = useQuery({ queryKey: ["clubs"], queryFn: api.clubs, enabled: tab === "clube" });
+  const myClubs = useMemo(() => (clubs.data?.clubs ?? []).filter((c) => c.is_member), [clubs.data]);
 
   const bairros = useMemo(
     () => (cov.data?.neighborhoods ?? []).slice().sort((a, b) => b.pct - a.pct),
@@ -18,16 +20,20 @@ export function RankingScreen() {
   );
   const [nb, setNb] = useState<string | null>(null);
   const activeNb = nb ?? bairros[0]?.neighborhood_id ?? null;
+  const [club, setClub] = useState<string | null>(null);
+  const activeClub = club ?? myClubs[0]?.id ?? null;
 
   const board = useQuery({
-    queryKey: ["leaderboard", tab, activeNb],
+    queryKey: ["leaderboard", tab, activeNb, activeClub],
     queryFn: () =>
       tab === "global"
         ? api.leaderboardGlobal()
         : tab === "friends"
           ? api.leaderboardFriends()
-          : api.leaderboardNeighborhood(activeNb ?? ""),
-    enabled: tab !== "bairro" || !!activeNb,
+          : tab === "clube"
+            ? api.leaderboardClub(activeClub ?? "")
+            : api.leaderboardNeighborhood(activeNb ?? ""),
+    enabled: (tab !== "bairro" || !!activeNb) && (tab !== "clube" || !!activeClub),
   });
 
   const city = cov.data?.city;
@@ -51,14 +57,36 @@ export function RankingScreen() {
           </Text>
         )}
         <View style={s.tabs}>
-          {(["global", "friends", "bairro"] as Tab[]).map((t) => (
+          {(["global", "friends", "bairro", "clube"] as Tab[]).map((t) => (
             <TouchableOpacity key={t} style={[s.tab, tab === t && s.tabOn]} onPress={() => setTab(t)}>
               <Text style={[s.tabTxt, tab === t && s.tabTxtOn]}>
-                {t === "global" ? "Fortaleza" : t === "friends" ? "Amigos" : "Por bairro"}
+                {t === "global" ? "Fortaleza" : t === "friends" ? "Amigos" : t === "bairro" ? "Bairro" : "Clube"}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
+
+        {tab === "clube" && (
+          myClubs.length === 0 ? (
+            <Text style={s.city}>Entre num clube para ver o ranking dele.</Text>
+          ) : (
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={myClubs}
+              keyExtractor={(c) => c.id}
+              contentContainerStyle={{ gap: 6, paddingVertical: 8 }}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[s.chip, activeClub === item.id && s.chipOn]}
+                  onPress={() => setClub(item.id)}
+                >
+                  <Text style={[s.chipTxt, activeClub === item.id && s.chipTxtOn]}>{item.name}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          )
+        )}
 
         {tab === "bairro" && bairros.length > 0 && (
           <FlatList
