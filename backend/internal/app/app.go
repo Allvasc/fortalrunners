@@ -94,7 +94,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	safety.NewHandler(safety.NewService(pool)).Register(secured)
 	weather.NewHandler().Register(secured)
 	event.NewHandler(event.NewService(pool)).RegisterRoutes(secured)
-	qr.NewHandler(qr.NewService(pool)).RegisterRoutes(secured)
+	qr.NewHandler(qr.NewService(pool, cfg.JWTSecret)).RegisterRoutes(secured)
 	paymentH := payment.NewHandler(payment.NewService(pool, payment.Config{
 		AsaasAPIKey:        cfg.AsaasAPIKey,
 		AsaasWebhookSecret: cfg.AsaasWebhookSecret,

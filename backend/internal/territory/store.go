@@ -2,6 +2,7 @@ package territory
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
 	"github.com/jackc/pgx/v5"
@@ -188,4 +189,14 @@ func (s *store) autoCheckinLandmarks(ctx context.Context, userID, runID string) 
 	`
 	_, err := s.pool.Exec(ctx, q, userID, runID)
 	return err
+}
+
+// recordFeed publica um evento no feed de atividades (activity_events).
+// type ∈ run | claim | badge | checkin (enum activity_type).
+func (s *store) recordFeed(ctx context.Context, actorID, evType, subjectID string, payload map[string]any) {
+	pj, _ := json.Marshal(payload)
+	_, _ = s.pool.Exec(ctx, `
+		INSERT INTO activity_events (id, actor_id, type, subject_id, payload_jsonb, created_at)
+		VALUES (encode(gen_random_bytes(16), 'hex'), $1, $2::activity_type, $3, $4, now())`,
+		actorID, evType, subjectID, pj)
 }

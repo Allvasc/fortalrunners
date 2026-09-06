@@ -69,6 +69,11 @@ func (p *Processor) Process(ctx context.Context, runID string) {
 		log.Warn("territory: autoCheckinLandmarks falhou", "err", err)
 	}
 
+	// feed de atividades: conquista de território.
+	p.store.recordFeed(ctx, ri.UserID, "claim", terrID, map[string]any{
+		"run_id": runID, "area_m2": int(areaM2), "blocks": parts,
+	})
+
 	log.Info("território conquistado",
 		"territory_id", terrID, "area_m2", int(areaM2), "blocos", parts)
 }
