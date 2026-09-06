@@ -78,6 +78,16 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	secured.GET("/me", authH.MeHandler)
 	authH.RegisterSecured(secured) // /v1/auth/mfa/*
 
+	// cofre de campo (AES-256-GCM) — cifra segredos em repouso (TOTP, tokens, telefones).
+	box, err := crypto.NewBox(cfg.MFAEncKey)
+	if err != nil {
+		return nil, err
+	}
+	publicWebURL := ""
+	if len(cfg.CORSOrigins) > 0 {
+		publicWebURL = cfg.CORSOrigins[0]
+	}
+
 	shoeSvc := shoe.NewService(pool)
 	shoe.NewHandler(shoeSvc).Register(secured)
 	runSvc := run.NewService(pool, pub, shoeSvc)
@@ -91,7 +101,9 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	poi.NewHandler(poi.NewStore(pool)).Register(secured)
 	social.NewHandler(social.NewService(pool)).Register(secured)
 	club.NewHandler(club.NewService(pool)).Register(secured)
-	safety.NewHandler(safety.NewService(pool)).Register(secured)
+	safetyH := safety.NewHandler(safety.NewService(pool, box, publicWebURL, log))
+	safetyH.Register(secured)
+	safetyH.RegisterPublic(e)
 	weather.NewHandler().Register(secured)
 	event.NewHandler(event.NewService(pool)).RegisterRoutes(secured)
 	qr.NewHandler(qr.NewService(pool, cfg.JWTSecret)).RegisterRoutes(secured)
@@ -104,11 +116,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	ai.NewHandler(ai.NewService(pool)).RegisterRoutes(secured)
 	admin.NewHandler(pool, pub).Register(secured) // /v1/admin/* (role admin/moderator + 2FA)
 
-	// integrações (Strava). Reusa a chave de campo do 2FA como chave do cofre.
-	box, err := crypto.NewBox(cfg.MFAEncKey)
-	if err != nil {
-		return nil, err
-	}
+	// integrações (Strava) — reusa o mesmo cofre de campo.
 	integSvc := integration.NewService(pool, box, integration.Config{
 		JWTSecret: cfg.JWTSecret,
 		Strava: integration.StravaConfig{
