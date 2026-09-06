@@ -50,11 +50,9 @@ jobs:
           go-version: '1.26'
           cache-dependency-path: backend/go.sum
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: v1.64.8
-          working-directory: backend
-          args: --timeout=5m
+        run: |
+          cd backend
+          go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8 run --timeout=5m ./...
 
   web-tests:
     name: Web Frontend TypeScript Check
