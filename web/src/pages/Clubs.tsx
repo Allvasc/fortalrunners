@@ -161,7 +161,7 @@ export function ClubsPage() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.4rem" }}>
                 <h3 style={{ fontFamily: "var(--f-display)", fontSize: "1.2rem", margin: 0, fontWeight: 700 }}>{c.name}</h3>
                 <span style={{ fontSize: "0.75rem", fontFamily: "var(--f-mono)", background: "var(--line)", padding: "0.2rem 0.5rem", borderRadius: "999px" }}>
-                  {c.member_count} membros
+                  {c.member_count} {c.member_count === 1 ? "membro" : "membros"}
                 </span>
               </div>
               <p style={{ fontSize: "0.85rem", color: "var(--ink-soft)", margin: "0 0 1rem", lineHeight: 1.4 }}>
