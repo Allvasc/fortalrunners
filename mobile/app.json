@@ -4,6 +4,12 @@
     "slug": "fortalrunners",
     "scheme": "fortalrunners",
     "version": "0.1.0",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#06181A"
+    },
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
