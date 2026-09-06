@@ -36,6 +36,7 @@
     },
     "android": {
       "package": "com.allvasc.fortalrunners",
+      "versionCode": 1,
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",

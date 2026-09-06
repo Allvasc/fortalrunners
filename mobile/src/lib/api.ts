@@ -2,7 +2,11 @@
 import * as SecureStore from "expo-secure-store";
 import Constants from "expo-constants";
 
-const BASE: string = (Constants.expoConfig?.extra as { apiUrl?: string })?.apiUrl ?? "http://localhost:8080";
+// Ordem: env do build (EAS define via eas.json) → extra do app.json → localhost (dev).
+const BASE: string =
+  process.env.EXPO_PUBLIC_API_URL ||
+  (Constants.expoConfig?.extra as { apiUrl?: string })?.apiUrl ||
+  "http://localhost:8090";
 const KEY = "fr.tokens";
 
 export type Tokens = { access_token: string; refresh_token: string; expires_at: string };
