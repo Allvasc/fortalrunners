@@ -1,5 +1,9 @@
 // Paletas do manual de design — claro e escuro.
-import { Easing } from "react-native";
+// A paleta ativa (`C`) é resolvida uma vez na carga do módulo: preferência
+// salva do usuário (SecureStore, síncrono) ou, sem preferência, o tema do SO.
+// Trocar manualmente pede reabrir o app (os estilos são criados na carga).
+import { Appearance, Easing } from "react-native";
+import * as SecureStore from "expo-secure-store";
 
 export const light = {
   bg: "#F4F1E8",
@@ -36,9 +40,53 @@ export const dark: typeof light = {
 };
 
 export type Palette = typeof light;
+export type ThemePref = "system" | "light" | "dark";
 
-// `C` legado = paleta clara (uso fora de componentes). Em componentes, use useTheme().
-export const C = light;
+const PREF_KEY = "fr.theme";
+
+function readPref(): ThemePref {
+  try {
+    const v = SecureStore.getItem(PREF_KEY);
+    if (v === "light" || v === "dark" || v === "system") return v;
+  } catch {
+    // sem acesso ao cofre — cai no tema do SO
+  }
+  return "system";
+}
+
+function resolve(pref: ThemePref): Palette {
+  if (pref === "light") return light;
+  if (pref === "dark") return dark;
+  return Appearance.getColorScheme() === "dark" ? dark : light;
+}
+
+let activePref: ThemePref = readPref();
+let activeScheme: "light" | "dark" = resolve(activePref) === dark ? "dark" : "light";
+
+// `C` é uma cópia mutável — nunca a mesma referência de `light`/`dark`.
+export const C: Palette = { ...resolve(activePref) };
+
+export function themePref(): ThemePref {
+  return activePref;
+}
+
+export function activeThemeName(): "light" | "dark" {
+  return activeScheme;
+}
+
+// setThemePref salva a preferência e atualiza `C` no lugar. Os estilos já
+// criados só refletem 100% após reabrir o app — a UI deve avisar o usuário.
+export function setThemePref(pref: ThemePref) {
+  try {
+    SecureStore.setItem(PREF_KEY, pref);
+  } catch {
+    // ignora — a preferência não persiste, mas a sessão atual ainda muda
+  }
+  activePref = pref;
+  const next = resolve(pref);
+  activeScheme = next === dark ? "dark" : "light";
+  Object.assign(C, next);
+}
 
 // Movimento — manual de design §"Movimento & animação".
 export const DUR = { xs: 120, sm: 200, md: 300, lg: 450, xl: 900 };

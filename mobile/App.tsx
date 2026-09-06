@@ -16,7 +16,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, isAuthed } from "./src/lib/api";
-import { C } from "./src/theme";
+import { C, activeThemeName } from "./src/theme";
 import { cleanupStaleRecording } from "./src/lib/recorder";
 import { Splash } from "./src/screens/Splash";
 import { Auth } from "./src/screens/Auth";
@@ -73,6 +73,7 @@ SplashScreen.setOptions?.({ fade: true, duration: 300 });
 
 const navTheme = {
   ...DefaultTheme,
+  dark: activeThemeName() === "dark",
   colors: { ...DefaultTheme.colors, background: C.bg, card: C.bg, text: C.ink, border: C.line, primary: C.teal },
 };
 
@@ -80,7 +81,7 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={qc}>
-        <StatusBar style="dark" />
+        <StatusBar style={activeThemeName() === "dark" ? "light" : "dark"} />
         <Root />
       </QueryClientProvider>
     </GestureHandlerRootView>

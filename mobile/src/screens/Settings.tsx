@@ -3,9 +3,14 @@ import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View 
 import * as Location from "expo-location";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { C } from "../theme";
+import { C, setThemePref, themePref, type ThemePref } from "../theme";
 
 const KINDS = ["watch", "footpod", "hrm"] as const;
+const THEMES: { key: ThemePref; label: string }[] = [
+  { key: "system", label: "Sistema" },
+  { key: "light", label: "Claro" },
+  { key: "dark", label: "Escuro" },
+];
 
 export function SettingsScreen() {
   const qc = useQueryClient();
@@ -13,7 +18,15 @@ export function SettingsScreen() {
   const badges = useQuery({ queryKey: ["badges"], queryFn: api.badges });
   const sub = useQuery({ queryKey: ["subscription"], queryFn: api.subscription });
 
+  const [theme, setTheme] = useState<ThemePref>(themePref());
   const [kind, setKind] = useState<(typeof KINDS)[number]>("watch");
+
+  function pickTheme(t: ThemePref) {
+    if (t === theme) return;
+    setThemePref(t);
+    setTheme(t);
+    Alert.alert("Tema alterado", "Feche e reabra o app para aplicar em todas as telas.");
+  }
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
 
@@ -59,6 +72,18 @@ export function SettingsScreen() {
             {sub.data?.active ? "Cancelar" : "Assinar (sandbox)"}
           </Text>
         </TouchableOpacity>
+      </View>
+
+      <View style={s.card}>
+        <Text style={s.section}>Aparência</Text>
+        <Text style={s.meta}>Tema do app. "Sistema" acompanha o modo claro/escuro do celular.</Text>
+        <View style={s.kindRow}>
+          {THEMES.map((t) => (
+            <TouchableOpacity key={t.key} style={[s.chip, theme === t.key && s.chipOn]} onPress={() => pickTheme(t.key)}>
+              <Text style={[s.chipText, theme === t.key && s.chipTextOn]}>{t.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
       <View style={s.card}>
