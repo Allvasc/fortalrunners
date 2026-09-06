@@ -17,18 +17,25 @@ import (
 var (
 	ErrTooFewPoints = errors.New("traçado insuficiente para registrar a corrida")
 	ErrBadWindow    = errors.New("started_at/ended_at inválidos")
+	ErrShoeNotYours = errors.New("esse par de tênis não é seu")
 )
 
 // suspiciousPaceS: mais rápido que 2:30/km sustentado é sinalizado para revisão.
 const suspiciousPaceS = 150
 
+// ShoeChecker confirma a posse de um par de tênis (implementado por shoe.Service).
+type ShoeChecker interface {
+	OwnedBy(ctx context.Context, userID, shoeID string) (bool, error)
+}
+
 type Service struct {
 	store *store
 	pub   queue.Publisher
+	shoes ShoeChecker
 }
 
-func NewService(pool *pgxpool.Pool, pub queue.Publisher) *Service {
-	return &Service{store: newStore(pool), pub: pub}
+func NewService(pool *pgxpool.Pool, pub queue.Publisher, shoes ShoeChecker) *Service {
+	return &Service{store: newStore(pool), pub: pub, shoes: shoes}
 }
 
 // Ingest grava a corrida e publica run.uploaded.
@@ -38,6 +45,16 @@ func (s *Service) Ingest(ctx context.Context, userID string, in IngestInput) (Vi
 	}
 	if in.EndedAt.Sub(in.StartedAt) > 24*time.Hour {
 		return View{}, ErrBadWindow
+	}
+
+	if in.ShoeID != "" && s.shoes != nil {
+		ok, err := s.shoes.OwnedBy(ctx, userID, in.ShoeID)
+		if err != nil {
+			return View{}, err
+		}
+		if !ok {
+			return View{}, ErrShoeNotYours
+		}
 	}
 
 	c, ok := clean(in.Points)

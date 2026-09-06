@@ -45,17 +45,17 @@ func (s *store) create(ctx context.Context, a createArgs) (View, error) {
 	}
 
 	const insRun = `
-		INSERT INTO runs (id, user_id, started_at, ended_at, distance_m, moving_s, duration_s,
+		INSERT INTO runs (id, user_id, shoe_id, started_at, ended_at, distance_m, moving_s, duration_s,
 		                  avg_pace_s, elevation_gain_m, gnss_mode, avg_hdop, data_source,
 		                  weather_jsonb, fraud_score, status)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::run_source,$13,$14,$15::run_status)
+		VALUES ($1,$2,nullif($3,''),$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::run_source,$14,$15,$16::run_status)
 		RETURNING id, user_id, started_at, ended_at, distance_m, moving_s, duration_s,
 		          avg_pace_s, elevation_gain_m, data_source::text, territory_area_m2,
 		          new_blocks, status::text, created_at`
 	weather, _ := json.Marshal(a.In.Weather)
 	var v View
 	err = tx.QueryRow(ctx, insRun,
-		a.ID, a.UserID, a.In.StartedAt, a.In.EndedAt,
+		a.ID, a.UserID, a.In.ShoeID, a.In.StartedAt, a.In.EndedAt,
 		int(a.Clean.distM), int(a.Clean.movingS), int(a.Clean.durS),
 		pace, int(a.Clean.elevGain), nullStr(a.In.GNSSMode), a.In.AvgHDOP, src,
 		weather, a.FraudScore, a.Status,

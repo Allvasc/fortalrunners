@@ -59,6 +59,8 @@ func runErr(err error) error {
 		return echo.NewHTTPError(http.StatusNotFound, "corrida não encontrada")
 	case errors.Is(err, ErrTooFewPoints), errors.Is(err, ErrBadWindow):
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+	case errors.Is(err, ErrShoeNotYours):
+		return echo.NewHTTPError(http.StatusForbidden, err.Error())
 	default:
 		return echo.NewHTTPError(http.StatusInternalServerError, "erro interno")
 	}

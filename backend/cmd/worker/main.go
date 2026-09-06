@@ -16,6 +16,7 @@ import (
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/db"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/logging"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/queue"
+	"github.com/Allvasc/fortalrunners/backend/internal/stats"
 	"github.com/Allvasc/fortalrunners/backend/internal/territory"
 )
 
@@ -46,6 +47,7 @@ func main() {
 	defer nc.Drain()
 
 	proc := territory.NewProcessor(pool, log)
+	rollup := stats.NewRollup(pool, log)
 
 	sub, err := nc.QueueSubscribe(queue.SubjectRunUploaded, "territory-workers", func(m *nats.Msg) {
 		var ev struct {
@@ -55,7 +57,9 @@ func main() {
 			log.Warn("evento malformado", "subject", m.Subject)
 			return
 		}
-		proc.Process(context.Background(), ev.RunID)
+		ctx := context.Background()
+		proc.Process(ctx, ev.RunID) // território
+		rollup.Run(ctx, ev.RunID)   // tênis + acumulado + recordes
 	})
 	if err != nil {
 		log.Error("não foi possível assinar", "err", err)

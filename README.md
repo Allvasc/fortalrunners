@@ -65,7 +65,11 @@ Ver `docs/plano.html` § 16.
 - **Fase 1 — MVP jogável** 🚧 em andamento:
   - ✅ ingestão de corrida (`POST /v1/runs`), limpeza de GPS, `runs` + `run_tracks`
   - ✅ pipeline de território no worker: detecção de laço → polígono (PostGIS) → gate de zona de risco → gravação; `GET /v1/territories` (GeoJSON)
-  - ⬜ métricas de precisão, tênis, mapa de calor, ranking, integrações, 2FA, portal web, admin
+  - ✅ gestão de tênis (`/v1/shoes`), km/passos/horas/custo-por-km/vida-útil, corrida amarrada ao par
+  - ✅ rollup pós-corrida: `shoe_stats`, `lifetime_stats` (com streak), `personal_records`
+  - ✅ ranking (`/v1/leaderboards/global` e `/neighborhood/:id`), `/v1/me/lifetime`, `/v1/me/records`
+  - ⬜ métricas de precisão (splits, cadência), mapa de calor, fechamento de ciclo semanal + troféus,
+    integrações (Strava), 2FA, portal web (mapa MapLibre), painel de admin
 
 ## Convenções
 

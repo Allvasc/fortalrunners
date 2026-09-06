@@ -19,6 +19,7 @@ type IngestInput struct {
 	DataSource string    `json:"data_source"` // phone | watch | import
 	GNSSMode   string    `json:"gnss_mode"`
 	AvgHDOP    *float64  `json:"avg_hdop,omitempty"`
+	ShoeID     string    `json:"shoe_id,omitempty"`
 	Points     []Point   `json:"points"`
 	Weather    any       `json:"weather,omitempty"`
 }
