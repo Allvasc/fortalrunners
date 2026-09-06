@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 
 	"github.com/Allvasc/fortalrunners/backend/internal/app"
@@ -30,9 +31,17 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	pool, err := db.Open(ctx, cfg.DatabaseURL)
+	var pool *pgxpool.Pool
+	for attempts := 1; attempts <= 10; attempts++ {
+		pool, err = db.Open(ctx, cfg.DatabaseURL)
+		if err == nil {
+			break
+		}
+		log.Warn("aguardando banco de dados...", "tentativa", attempts, "err", err)
+		time.Sleep(3 * time.Second)
+	}
 	if err != nil {
-		log.Error("não foi possível abrir o banco", "err", err)
+		log.Error("não foi possível abrir o banco após várias tentativas", "err", err)
 		os.Exit(1)
 	}
 

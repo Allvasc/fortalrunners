@@ -47,7 +47,7 @@ type Config struct {
 func Load() (Config, error) {
 	c := Config{
 		Env:                      get("APP_ENV", "dev"),
-		HTTPAddr:                 get("HTTP_ADDR", ":8080"),
+		HTTPAddr:                 getHTTPAddr(),
 		LogLevel:                 get("LOG_LEVEL", "info"),
 		DatabaseURL:              os.Getenv("DATABASE_URL"),
 		RedisURL:                 get("REDIS_URL", "redis://localhost:6379/0"),
@@ -130,3 +130,14 @@ func dur(k string, def time.Duration) (time.Duration, error) {
 	}
 	return d, nil
 }
+
+func getHTTPAddr() string {
+	if p := os.Getenv("PORT"); p != "" {
+		if !strings.HasPrefix(p, ":") {
+			return ":" + p
+		}
+		return p
+	}
+	return get("HTTP_ADDR", ":8080")
+}
+
