@@ -79,10 +79,20 @@ CREATE TABLE sos_events (
 );
 
 -- --- SEED INICIAL ---
-INSERT INTO clubs (id, owner_id, name, description, color_hex) VALUES
-    ('clb_beiramar_runners', (SELECT id FROM users LIMIT 1), 'Beira-Mar Runners', 'Clube oficial de corredores do calçadão da Beira-Mar.', '#0E7C86'),
-    ('clb_coco_trail', (SELECT id FROM users LIMIT 1), 'Grupo Cocó Trail & Natureza', 'Grupo dedicado a corridas nas trilhas do Parque do Cocó.', '#2E8F63')
-ON CONFLICT (id) DO NOTHING;
+-- Só semeia os clubes de demonstração quando já existe um usuário para ser dono.
+-- Em um banco de produção novo (sem usuários) o bloco é ignorado.
+DO $$
+DECLARE seed_owner text;
+BEGIN
+    SELECT id INTO seed_owner FROM users LIMIT 1;
+    IF seed_owner IS NULL THEN
+        RETURN;
+    END IF;
+    INSERT INTO clubs (id, owner_id, name, description, color_hex) VALUES
+        ('clb_beiramar_runners', seed_owner, 'Beira-Mar Runners', 'Clube oficial de corredores do calçadão da Beira-Mar.', '#0E7C86'),
+        ('clb_coco_trail', seed_owner, 'Grupo Cocó Trail & Natureza', 'Grupo dedicado a corridas nas trilhas do Parque do Cocó.', '#2E8F63')
+    ON CONFLICT (id) DO NOTHING;
+END $$;
 
 -- +goose Down
 DROP TABLE IF EXISTS sos_events;

@@ -164,23 +164,34 @@ CREATE TABLE IF NOT EXISTS ai_interactions (
     created_at          timestamptz NOT NULL DEFAULT now()
 );
 
--- Seed de organizadores e eventos de Fortaleza
-INSERT INTO organizers (id, owner_id, name, kind, contact_email)
-VALUES 
-  ('org_fortal_marathon', '01H00000000000000000000001', 'Associação de Corredores de Fortaleza', 'race', 'contato@fortalmarathon.com.br')
-ON CONFLICT (id) DO NOTHING;
+-- Seed de organizadores e eventos de Fortaleza.
+-- Só roda quando já existe um usuário para ser dono do organizador.
+-- Em um banco de produção novo (sem usuários) o bloco é ignorado.
+DO $$
+DECLARE seed_owner text;
+BEGIN
+    SELECT id INTO seed_owner FROM users LIMIT 1;
+    IF seed_owner IS NULL THEN
+        RETURN;
+    END IF;
 
-INSERT INTO events (id, slug, organizer_id, title, description, type, starts_at, ends_at, location_name)
-VALUES
-  ('evt_beira_mar_night', 'beira-mar-night-run-2026', 'org_fortal_marathon', 'Beira Mar Night Run 2026', 'Corrida noturna de 5k e 10k ao longo do calçadão da Beira-Mar com hidratação e medalha.', 'race', now() + interval '7 days', now() + interval '7 days 4 hours', 'Beira-Mar, Fortaleza - CE'),
-  ('evt_desafio_praia_futuro', 'desafio-praia-do-futuro', 'org_fortal_marathon', 'Desafio Orla & Areia Praia do Futuro', 'Corrida rústica de praia com terreno misto e selos exclusivos.', 'challenge', now() + interval '21 days', now() + interval '21 days 5 hours', 'Praia do Futuro, Fortaleza - CE')
-ON CONFLICT (id) DO NOTHING;
+    INSERT INTO organizers (id, owner_id, name, kind, contact_email)
+    VALUES
+      ('org_fortal_marathon', seed_owner, 'Associação de Corredores de Fortaleza', 'race', 'contato@fortalmarathon.com.br')
+    ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO event_prices (id, event_id, name, category, amount_cents, quota)
-VALUES
-  ('prc_bm_5k', 'evt_beira_mar_night', 'Lote 1 - 5km', '5k', 4990, 200),
-  ('prc_bm_10k', 'evt_beira_mar_night', 'Lote 1 - 10km', '10k', 6990, 150)
-ON CONFLICT (id) DO NOTHING;
+    INSERT INTO events (id, slug, organizer_id, title, description, type, starts_at, ends_at, location_name)
+    VALUES
+      ('evt_beira_mar_night', 'beira-mar-night-run-2026', 'org_fortal_marathon', 'Beira Mar Night Run 2026', 'Corrida noturna de 5k e 10k ao longo do calçadão da Beira-Mar com hidratação e medalha.', 'race', now() + interval '7 days', now() + interval '7 days 4 hours', 'Beira-Mar, Fortaleza - CE'),
+      ('evt_desafio_praia_futuro', 'desafio-praia-do-futuro', 'org_fortal_marathon', 'Desafio Orla & Areia Praia do Futuro', 'Corrida rústica de praia com terreno misto e selos exclusivos.', 'challenge', now() + interval '21 days', now() + interval '21 days 5 hours', 'Praia do Futuro, Fortaleza - CE')
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO event_prices (id, event_id, name, category, amount_cents, quota)
+    VALUES
+      ('prc_bm_5k', 'evt_beira_mar_night', 'Lote 1 - 5km', '5k', 4990, 200),
+      ('prc_bm_10k', 'evt_beira_mar_night', 'Lote 1 - 10km', '10k', 6990, 150)
+    ON CONFLICT (id) DO NOTHING;
+END $$;
 
 -- +goose Down
 DROP TABLE IF EXISTS ai_interactions;
