@@ -17,6 +17,7 @@ type Deps struct {
 	AccessTTL  time.Duration
 	RefreshTTL time.Duration
 	MFAEncKey  string // base64 de 32 bytes (AES-256-GCM do segredo TOTP)
+	OAuth      OAuthConfig
 }
 
 type RegisterInput struct {
@@ -39,6 +40,10 @@ func (h *Handler) Register(g *echo.Group) {
 	a.POST("/refresh", h.refresh)
 	a.POST("/logout", h.logout)
 	a.POST("/mfa/verify", h.mfaVerify) // troca o desafio de login pelo par de tokens
+
+	a.GET("/oauth/:provider", h.oauthStart)
+	a.GET("/oauth/:provider/callback", h.oauthCallback)
+	a.POST("/oauth/:provider/callback", h.oauthCallback) // Apple usa form_post
 }
 
 // RegisterSecured monta as rotas de 2FA que exigem Bearer token.
@@ -92,6 +97,41 @@ func (h *Handler) mfaVerify(c echo.Context) error {
 	if err != nil {
 		return authErr(err)
 	}
+	return c.JSON(http.StatusOK, map[string]any{"user": publicUser(u), "tokens": tk})
+}
+
+// oauthStart redireciona o navegador para o provedor. ?mode=link (com Bearer)
+// para vincular à conta logada; senão login.
+func (h *Handler) oauthStart(c echo.Context) error {
+	mode := c.QueryParam("mode")
+	var uid string
+	if mode == "link" {
+		claims, err := h.svc.ParseAccess(strings.TrimPrefix(c.Request().Header.Get(echo.HeaderAuthorization), "Bearer "))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusUnauthorized, "token necessário para vincular")
+		}
+		uid = claims.Subject
+	}
+	url, err := h.svc.OAuthStart(c.Param("provider"), mode, uid)
+	if err != nil {
+		return authErr(err)
+	}
+	return c.Redirect(http.StatusFound, url)
+}
+
+// oauthCallback é o redirect de volta do provedor.
+func (h *Handler) oauthCallback(c echo.Context) error {
+	code := c.FormValue("code")
+	state := c.FormValue("state")
+	if code == "" || state == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "code e state obrigatórios")
+	}
+	u, tk, err := h.svc.OAuthCallback(c.Request().Context(), c.Param("provider"), code, state,
+		clientIP(c), c.Request().UserAgent())
+	if err != nil {
+		return authErr(err)
+	}
+	// TODO: em produção, 302 para o app com os tokens no fragmento da URL.
 	return c.JSON(http.StatusOK, map[string]any{"user": publicUser(u), "tokens": tk})
 }
 
@@ -254,6 +294,12 @@ func authErr(err error) error {
 		return echo.NewHTTPError(http.StatusConflict, err.Error())
 	case errors.Is(err, ErrMFANotPending), errors.Is(err, ErrMFANotEnabled):
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+	case errors.Is(err, ErrOAuthProvider):
+		return echo.NewHTTPError(http.StatusNotImplemented, err.Error())
+	case errors.Is(err, ErrOAuthState), errors.Is(err, ErrOAuthExchange):
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	case errors.Is(err, ErrIdentityLinked):
+		return echo.NewHTTPError(http.StatusConflict, err.Error())
 	case errors.Is(err, ErrWeakPassword):
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
 	default:

@@ -89,8 +89,12 @@ Ver `docs/plano.html` § 16.
   - ✅ **portal web** (`web/`): rota + shell, mapa MapLibre com território + camada
     de calor ligável, histórico com splits/GAP/cadência, ranking all-time, desafios,
     perfil com stats/recordes e gestão de 2FA, painel de admin (role-gated)
-  - ⬜ integrações (Strava, Health Connect), login Apple, style JSON próprio do mapa
-    (MapTiler/Protomaps), anti-fraude v1
+  - ✅ **login social** (`internal/auth/oauth.go`): Google (OIDC) + Apple Sign In
+    (client-secret JWT ES256 do .p8), state assinado anti-CSRF, adaptador por provedor;
+    `GET /v1/auth/oauth/:provider(/callback)`, `?mode=link` para vincular à conta logada;
+    provedor sem config → 501
+  - ⬜ integrações (Strava import + webhook, Health Connect), style JSON próprio do mapa
+    (MapTiler/Protomaps), gravação de corrida no mobile
 
 ## Convenções
 

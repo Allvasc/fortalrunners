@@ -29,6 +29,12 @@ type Config struct {
 	GoogleClientSecret string
 	GoogleRedirectURL  string
 
+	AppleClientID    string // Services ID (ex.: com.fortalrunners.app.web)
+	AppleTeamID      string
+	AppleKeyID       string
+	AppleP8Key       string // conteúdo do .p8 (PKCS8 EC) — do cofre
+	AppleRedirectURL string
+
 	CORSOrigins []string
 }
 
@@ -46,6 +52,11 @@ func Load() (Config, error) {
 		GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
 		GoogleRedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL"),
+		AppleClientID:      os.Getenv("APPLE_CLIENT_ID"),
+		AppleTeamID:        os.Getenv("APPLE_TEAM_ID"),
+		AppleKeyID:         os.Getenv("APPLE_KEY_ID"),
+		AppleP8Key:         os.Getenv("APPLE_P8_KEY"),
+		AppleRedirectURL:   os.Getenv("APPLE_REDIRECT_URL"),
 		CORSOrigins:        splitCSV(get("CORS_ORIGINS", "http://localhost:5173")),
 	}
 

@@ -47,6 +47,12 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 		AccessTTL:  cfg.AccessTokenTTL,
 		RefreshTTL: cfg.RefreshTokenTTL,
 		MFAEncKey:  cfg.MFAEncKey,
+		OAuth: auth.OAuthConfig{
+			GoogleClientID: cfg.GoogleClientID, GoogleClientSecret: cfg.GoogleClientSecret,
+			GoogleRedirectURL: cfg.GoogleRedirectURL,
+			AppleClientID:     cfg.AppleClientID, AppleTeamID: cfg.AppleTeamID, AppleKeyID: cfg.AppleKeyID,
+			AppleP8Key: cfg.AppleP8Key, AppleRedirectURL: cfg.AppleRedirectURL,
+		},
 	})
 	if err != nil {
 		return nil, err

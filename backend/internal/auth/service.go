@@ -5,6 +5,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"net/http"
 	"strings"
 	"time"
 
@@ -47,6 +48,8 @@ type Service struct {
 	store  *store
 	tokens tokenIssuer
 	box    secretBox
+	oauth  OAuthConfig
+	httpc  *http.Client
 }
 
 func NewService(deps Deps) (*Service, error) {
@@ -58,6 +61,8 @@ func NewService(deps Deps) (*Service, error) {
 		store:  newStore(deps.Pool),
 		tokens: newTokenIssuer(deps.JWTSecret, deps.AccessTTL, deps.RefreshTTL),
 		box:    box,
+		oauth:  deps.OAuth,
+		httpc:  &http.Client{Timeout: 10 * time.Second},
 	}, nil
 }
 

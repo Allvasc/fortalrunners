@@ -8,6 +8,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/Allvasc/fortalrunners/backend/internal/platform/id"
 )
 
 var errNotFound = errors.New("não encontrado")
@@ -50,6 +52,61 @@ func (s *store) userByID(ctx context.Context, id string) (User, error) {
 		SELECT id, athlete_id, username, email, password_hash, display_name, role, status
 		FROM users WHERE id = $1 AND deleted_at IS NULL`
 	return scanUser(s.pool.QueryRow(ctx, q, id))
+}
+
+// --- identidades sociais (OAuth) ---
+
+func (s *store) userIDByIdentity(ctx context.Context, provider, providerUID string) (string, error) {
+	var uid string
+	err := s.pool.QueryRow(ctx, `
+		SELECT i.user_id FROM identities i JOIN users u ON u.id = i.user_id
+		WHERE i.provider = $1::id_provider AND i.provider_uid = $2 AND u.deleted_at IS NULL`,
+		provider, providerUID).Scan(&uid)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", errNotFound
+	}
+	return uid, err
+}
+
+func (s *store) linkIdentity(ctx context.Context, idv, userID, provider, providerUID, email string) error {
+	_, err := s.pool.Exec(ctx, `
+		INSERT INTO identities (id, user_id, provider, provider_uid, email)
+		VALUES ($1, $2, $3::id_provider, $4, nullif($5,''))
+		ON CONFLICT (provider, provider_uid) DO NOTHING`,
+		idv, userID, provider, providerUID, email)
+	return err
+}
+
+func (s *store) usernameFree(ctx context.Context, username string) (bool, error) {
+	var exists bool
+	err := s.pool.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM users WHERE username = $1)`, username).Scan(&exists)
+	return !exists, err
+}
+
+// createOAuthUser cria a conta (sem senha) e a identidade numa transação.
+func (s *store) createOAuthUser(ctx context.Context, u User, provider, providerUID string, emailVerified bool) (User, error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return User{}, err
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	const q = `
+		INSERT INTO users (id, athlete_id, username, email, display_name, email_verified_at, role, status)
+		VALUES ($1, 'FR-' || lpad(nextval('athlete_id_seq')::text, 7, '0'), $2, $3, $4,
+		        CASE WHEN $5 THEN now() ELSE NULL END, 'runner', 'active')
+		RETURNING id, athlete_id, username, email, password_hash, display_name, role, status`
+	created, err := scanUser(tx.QueryRow(ctx, q, u.ID, u.Username, u.Email, u.DisplayName, emailVerified))
+	if err != nil {
+		return User{}, err
+	}
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO identities (id, user_id, provider, provider_uid, email)
+		VALUES ($1, $2, $3::id_provider, $4, nullif($5,''))`,
+		id.New(), created.ID, provider, providerUID, u.Email); err != nil {
+		return User{}, err
+	}
+	return created, tx.Commit(ctx)
 }
 
 // --- sessões ---
