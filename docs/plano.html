@@ -404,7 +404,7 @@
 
   <header class="hero">
     <canvas class="hero-grid" id="heroGrid" aria-hidden="true"></canvas>
-    <p class="eyebrow">Plano de produto · v0.18 · 06 set 2026</p>
+    <p class="eyebrow">Plano de produto · v0.19 · 06 set 2026</p>
     <h1>FortalRunners</h1>
     <p class="lede">Um app gamificado onde correr por Fortaleza conquista território. Feche o circuito de um quarteirão e ele passa a ser seu, pintado na sua cor. E por baixo do jogo, a ambição de ser o app de corrida mais completo do mercado: cada par de tênis rastreado, cada métrica medida com rigor de relógio de ponta.</p>
     <div class="meta-row">
@@ -1116,11 +1116,13 @@
             <tr><td>auth_sessions</td><td><code>id, user_id, refresh_token_hash, family_id, device_id, expires_at, revoked_at, mfa_verified</code></td><td>Refresh rotativo; <code>family_id</code> detecta reuso; <code>mfa_verified</code> vai no access token.</td></tr>
             <tr><td>mfa_recovery_codes</td><td><code>user_id, code_hash, used_at</code></td><td>Códigos de recuperação de 2FA, uso único (hash SHA-256).</td></tr>
             <tr><td>identities</td><td><code>id, user_id, provider, provider_uid, email, linked_at</code></td><td>Logins sociais ligados à conta. <code>provider</code>: google / apple / email.</td></tr>
-            <tr><td>integrations</td><td><code>id, user_id, provider, external_athlete_id, access_token_enc, refresh_token_enc, scopes, webhook_sub_id, last_sync_at, status</code></td><td>Strava, Garmin, Fitbit, Polar, Health Connect, Apple Health. Tokens criptografados no cofre.</td></tr>
+            <tr><td>integrations</td><td><code>id, user_id, provider, external_athlete_id, access_token_enc, refresh_token_enc, token_expires_at, scopes, webhook_sub_id, last_sync_at, status</code></td><td>Strava (Fase 1), depois Garmin/Fitbit/Polar/Health Connect/Apple Health. Tokens AES-256-GCM. <code>UQ(provider, external_athlete_id)</code>.</td></tr>
+            <tr><td>import_jobs</td><td><code>id, user_id, integration_id, kind, cursor, status, stats_jsonb</code></td><td>backfill / delta. Roda no scheduler; <code>stats_jsonb</code> = importadas/duplicadas/erros.</td></tr>
+            <tr><td>webhook_events</td><td><code>id, provider, external_id, event_type, payload_jsonb, signature_ok, processed_at</code></td><td>Idempotência de webhook. <code>UQ(provider, external_id)</code>.</td></tr>
             <tr><td>import_jobs</td><td><code>id, user_id, provider, kind, cursor, status, stats_jsonb</code></td><td>Backfill de histórico + fila de webhooks. <code>kind</code>: backfill / delta.</td></tr>
             <tr><td>friendships</td><td><code>user_id, friend_id, status</code></td><td>pending / accepted / blocked. Par simétrico.</td></tr>
             <tr><td>clubs / club_members</td><td><code>id, name, neighborhood, owner_id</code> · <code>club_id, user_id, role</code></td><td>Ranking e território somado por clube.</td></tr>
-            <tr><td>runs</td><td><code>id, user_id, shoe_id, device_id, started_at, ended_at, distance_m, moving_s, duration_s, elevation_gain_m, elev_loss_m, alt_min_m, alt_max_m, avg_pace_s, gap_pace_s, best_km_pace_s, avg_cadence_spm, max_cadence_spm, step_count, stride_len_m, avg_hr, max_hr, running_power_w, vert_osc_mm, ground_contact_ms, calories, gnss_mode, avg_hdop, signal_quality_pct, data_source, weather_jsonb, fraud_score, fraud_flags, status</code></td><td><code>status</code>: processing / valid / flagged / rejected (<code>fraud_score ≥ 0.5</code> → flagged). <code>fraud_flags</code>: sinais do anti-fraude v1. <code>gap_pace_s</code>: Minetti.</td></tr>
+            <tr><td>runs</td><td><code>id, user_id, shoe_id, device_id, started_at, ended_at, distance_m, moving_s, duration_s, elevation_gain_m, elev_loss_m, alt_min_m, alt_max_m, avg_pace_s, gap_pace_s, best_km_pace_s, avg_cadence_spm, max_cadence_spm, step_count, stride_len_m, avg_hr, max_hr, running_power_w, vert_osc_mm, ground_contact_ms, calories, gnss_mode, avg_hdop, signal_quality_pct, data_source, weather_jsonb, fraud_score, fraud_flags, import_ref, status</code></td><td><code>status</code>: processing/valid/flagged/rejected (<code>fraud_score ≥ 0.5</code> → flagged). <code>import_ref</code>: <code>&lt;provider&gt;:&lt;id&gt;</code> quando importada (dedup). <code>gap_pace_s</code>: Minetti.</td></tr>
             <tr><td>run_tracks</td><td><code>run_id, started_at, geom(LineStringZ,4326), points_jsonb, sensor_streams_jsonb, quality_segments_jsonb, splits_jsonb, best_efforts_jsonb</code></td><td>Traçado (com Z) + amostra bruta + splits por km + melhores esforços. Particionar por mês em <code>started_at</code>.</td></tr>
             <tr><td>shoes</td><td><code>id, user_id, brand, model, nickname, photo_url, purchased_at, purchase_price, initial_distance_m, lifespan_goal_m, surface_pref, status, retired_at</code></td><td><code>status</code>: active / rotation / retired.</td></tr>
             <tr><td>shoe_stats</td><td><code>shoe_id, total_distance_m, total_steps, total_moving_s, run_count, elevation_gain_m, avg_pace_s, cost_per_km, surface_breakdown_jsonb</code></td><td>Rollup mantido pelo worker a cada corrida.</td></tr>
@@ -1866,7 +1868,7 @@
   </main>
 
   <footer class="pg">
-    FortalRunners · plano de produto v0.18 · gerado 06 set 2026 · documento vivo, revisar a cada fase
+    FortalRunners · plano de produto v0.19 · gerado 06 set 2026 · documento vivo, revisar a cada fase
   </footer>
 </div>
 

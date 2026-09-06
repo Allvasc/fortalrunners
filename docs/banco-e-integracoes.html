@@ -129,7 +129,7 @@
 
 <div class="wrap">
   <header class="hero">
-    <p class="eyebrow">Referência técnica · v1.5 · 06 set 2026</p>
+    <p class="eyebrow">Referência técnica · v1.6 · 06 set 2026</p>
     <h1>Banco de dados &amp; Integrações</h1>
     <p class="lede">O modelo de dados completo — tabelas, tipos, chaves e relacionamentos — e o catálogo de serviços internos, data stores e integrações de terceiros. Consolida e detalha o que estava espalhado no plano.</p>
     <p class="backlink">← <a href="https://claude.ai/code/artifact/f171dbf5-8933-40a3-98ff-32f169ff869b">Plano de produto</a> · <a href="https://claude.ai/code/artifact/e662d35e-b65a-4f5c-a0ad-d2480c77f2ac">Manual de Design</a></p>
@@ -500,7 +500,8 @@
           <tr><td>data_source</td><td>enum run_source</td><td>phone / watch / import</td></tr>
           <tr><td>weather_jsonb</td><td>jsonb</td><td>temp, sensação, UV, vento</td></tr>
           <tr><td>fraud_score</td><td>numeric(4,3)</td><td>anti-fraude v1: física + sensores + sinais do device</td></tr>
-          <tr><td>fraud_flags</td><td>jsonb</td><td>lista de sinais (<code>mock_location</code>, <code>pace_impossible</code>, <code>teleport_jumps</code>, <code>stride_out_of_range</code>, <code>unnaturally_straight</code>, <code>no_attestation</code>) — o revisor vê o "por quê"</td></tr>
+          <tr><td>fraud_flags</td><td>jsonb</td><td>lista de sinais (<code>mock_location</code>, <code>pace_impossible</code>, <code>teleport_jumps</code>, <code>stride_out_of_range</code>, <code>unnaturally_straight</code>, <code>no_attestation</code>, <code>imported_unverified</code>) — o revisor vê o "por quê"</td></tr>
+          <tr><td>import_ref</td><td>text</td><td><span class="k uq">UQ</span> parcial — <code>&lt;provider&gt;:&lt;external_activity_id&gt;</code> quando importada; base do dedup</td></tr>
           <tr><td>status</td><td>enum run_status</td><td>processing / valid / flagged / rejected. <code>fraud_score ≥ 0.5</code> → flagged (revisão humana, nunca auto-rejeita)</td></tr>
           <tr><td>raw_gpx_key</td><td>text</td><td>bruto no object storage</td></tr>
         </tbody>
@@ -1190,6 +1191,7 @@
           <tr><td>ranking</td><td>Leaderboard acumulado por área coberta (all-time), por bairro/amigos/clube</td><td>Postgres (Redis quando escalar)</td></tr>
           <tr><td>challenge</td><td>Desafios recorrentes: matemática de período, placar por métrica, fechamento com prêmio</td><td>Postgres, scheduler</td></tr>
           <tr><td>heatmap</td><td>Serve o mapa de calor (<code>heat_agg</code> → GeoJSON) e mantém a agregação por job do scheduler. Fase 1: só pessoal</td><td>Postgres+PostGIS, scheduler</td></tr>
+          <tr><td>integration</td><td>Conectar Strava (OAuth), import de atividades pelo mesmo pipeline (<code>data_source=import</code>, dedup por <code>runs.import_ref</code> + janela de tempo), webhook idempotente (<code>webhook_events</code>), refresh de token. Jobs (<code>import_jobs</code>) rodam no scheduler</td><td>Strava, Postgres, scheduler, run</td></tr>
           <tr><td>social</td><td>Amizades, clubes, feed, bloqueio</td><td>Postgres, Redis pub/sub</td></tr>
           <tr><td>route</td><td>Rotas, avaliações, curadoria</td><td>Postgres+PostGIS</td></tr>
           <tr><td>gamification</td><td>Badges (conquistas permanentes), records, missões, check-in de marco</td><td>Postgres, object storage</td></tr>
@@ -1321,7 +1323,7 @@
   </main>
 
   <footer class="pg">
-    FortalRunners · banco de dados &amp; integrações v1.5 · 06 set 2026 · consolida o modelo de dados e o catálogo de serviços do plano de produto.
+    FortalRunners · banco de dados &amp; integrações v1.6 · 06 set 2026 · consolida o modelo de dados e o catálogo de serviços do plano de produto.
   </footer>
 </div>
 

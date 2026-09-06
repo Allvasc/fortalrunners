@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Allvasc/fortalrunners/backend/internal/platform/crypto"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/id"
 )
 
@@ -47,13 +48,13 @@ type LoginResult struct {
 type Service struct {
 	store  *store
 	tokens tokenIssuer
-	box    secretBox
+	box    crypto.Box
 	oauth  OAuthConfig
 	httpc  *http.Client
 }
 
 func NewService(deps Deps) (*Service, error) {
-	box, err := newSecretBox(deps.MFAEncKey)
+	box, err := crypto.NewBox(deps.MFAEncKey)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +186,7 @@ func (s *Service) checkSecondFactor(ctx context.Context, userID, code string) (b
 	if activatedAt == nil || len(enc) == 0 {
 		return false, ErrMFANotEnabled
 	}
-	secret, err := s.box.open(enc)
+	secret, err := s.box.Open(enc)
 	if err != nil {
 		return false, err
 	}
@@ -319,7 +320,7 @@ func (s *Service) SetupTOTP(ctx context.Context, userID string) (secret, otpauth
 	if err != nil {
 		return "", "", err
 	}
-	enc, err := s.box.seal(secret)
+	enc, err := s.box.Seal(secret)
 	if err != nil {
 		return "", "", err
 	}
@@ -342,7 +343,7 @@ func (s *Service) ActivateTOTP(ctx context.Context, userID, code string) ([]stri
 	if len(enc) == 0 {
 		return nil, ErrMFANotPending
 	}
-	secret, err := s.box.open(enc)
+	secret, err := s.box.Open(enc)
 	if err != nil {
 		return nil, err
 	}

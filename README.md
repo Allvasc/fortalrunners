@@ -93,7 +93,12 @@ Ver `docs/plano.html` § 16.
     (client-secret JWT ES256 do .p8), state assinado anti-CSRF, adaptador por provedor;
     `GET /v1/auth/oauth/:provider(/callback)`, `?mode=link` para vincular à conta logada;
     provedor sem config → 501
-  - ⬜ integrações (Strava import + webhook, Health Connect), style JSON próprio do mapa
+  - ✅ **integração Strava** (`internal/integration`): OAuth connect, import de atividades
+    (`data_source=import`, mesmo pipeline; dedup por `runs.import_ref` + janela de tempo),
+    webhook idempotente (`webhook_events`), refresh de token, jobs (`import_jobs`) no
+    `cmd/scheduler`; adaptador por provedor (Garmin/Fitbit/Polar depois). `crypto.Box`
+    (AES-256-GCM) para os tokens
+  - ⬜ Health Connect / Apple Health (ponte on-device), style JSON próprio do mapa
     (MapTiler/Protomaps), gravação de corrida no mobile
 
 ## Convenções

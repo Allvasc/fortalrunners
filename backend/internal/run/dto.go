@@ -28,6 +28,9 @@ type IngestInput struct {
 	// Sinais anti-fraude vindos do cliente.
 	MockLocation bool   `json:"mock_location,omitempty"` // flag de localização simulada do SO
 	Attestation  string `json:"attestation,omitempty"`   // token Play Integrity / App Attest
+
+	// Preenchido pelo importador (Strava, etc.): "<provider>:<external_activity_id>".
+	ImportRef string `json:"-"`
 }
 
 // MetricsView é a projeção de leitura de GET /v1/runs/:id/metrics.

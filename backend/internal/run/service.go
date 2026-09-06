@@ -18,6 +18,7 @@ var (
 	ErrTooFewPoints = errors.New("traçado insuficiente para registrar a corrida")
 	ErrBadWindow    = errors.New("started_at/ended_at inválidos")
 	ErrShoeNotYours = errors.New("esse par de tênis não é seu")
+	ErrDuplicateRun = errors.New("corrida duplicada (já importada ou já registrada nativamente)")
 )
 
 // ShoeChecker confirma a posse de um par de tênis (implementado por shoe.Service).
@@ -57,6 +58,18 @@ func (s *Service) Ingest(ctx context.Context, userID string, in IngestInput) (Vi
 	c, ok := clean(in.Points)
 	if !ok {
 		return View{}, ErrTooFewPoints
+	}
+
+	// Corrida importada: descarta se já existe (mesma ref) ou se colide no tempo
+	// com uma corrida nativa (mesma sessão gravada nos dois lugares).
+	if in.ImportRef != "" {
+		dup, err := s.store.duplicateImport(ctx, userID, in.ImportRef, in.StartedAt)
+		if err != nil {
+			return View{}, err
+		}
+		if dup {
+			return View{}, ErrDuplicateRun
+		}
 	}
 
 	metrics := computeMetrics(c.points, in.Cadence, in.HeartRate)

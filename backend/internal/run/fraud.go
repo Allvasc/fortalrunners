@@ -64,6 +64,11 @@ func scoreFraud(in IngestInput, c cleaned, m Metrics) fraudResult {
 		add(0.1, "no_attestation")
 	}
 
+	// 7. Importada de terceiro — sem device attestation, anti-fraude mais rígido (plano §7).
+	if in.DataSource == "import" {
+		add(0.15, "imported_unverified")
+	}
+
 	if r.Score > 1 {
 		r.Score = 1
 	}

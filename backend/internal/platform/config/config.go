@@ -35,29 +35,38 @@ type Config struct {
 	AppleP8Key       string // conteúdo do .p8 (PKCS8 EC) — do cofre
 	AppleRedirectURL string
 
+	StravaClientID           string
+	StravaClientSecret       string
+	StravaRedirectURL        string
+	StravaWebhookVerifyToken string
+
 	CORSOrigins []string
 }
 
 // Load lê o ambiente. Retorna erro quando falta algo obrigatório.
 func Load() (Config, error) {
 	c := Config{
-		Env:                get("APP_ENV", "dev"),
-		HTTPAddr:           get("HTTP_ADDR", ":8080"),
-		LogLevel:           get("LOG_LEVEL", "info"),
-		DatabaseURL:        os.Getenv("DATABASE_URL"),
-		RedisURL:           get("REDIS_URL", "redis://localhost:6379/0"),
-		NATSURL:            get("NATS_URL", "nats://localhost:4222"),
-		JWTSecret:          os.Getenv("JWT_SECRET"),
-		MFAEncKey:          os.Getenv("MFA_ENC_KEY"),
-		GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
-		GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-		GoogleRedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL"),
-		AppleClientID:      os.Getenv("APPLE_CLIENT_ID"),
-		AppleTeamID:        os.Getenv("APPLE_TEAM_ID"),
-		AppleKeyID:         os.Getenv("APPLE_KEY_ID"),
-		AppleP8Key:         os.Getenv("APPLE_P8_KEY"),
-		AppleRedirectURL:   os.Getenv("APPLE_REDIRECT_URL"),
-		CORSOrigins:        splitCSV(get("CORS_ORIGINS", "http://localhost:5173")),
+		Env:                      get("APP_ENV", "dev"),
+		HTTPAddr:                 get("HTTP_ADDR", ":8080"),
+		LogLevel:                 get("LOG_LEVEL", "info"),
+		DatabaseURL:              os.Getenv("DATABASE_URL"),
+		RedisURL:                 get("REDIS_URL", "redis://localhost:6379/0"),
+		NATSURL:                  get("NATS_URL", "nats://localhost:4222"),
+		JWTSecret:                os.Getenv("JWT_SECRET"),
+		MFAEncKey:                os.Getenv("MFA_ENC_KEY"),
+		GoogleClientID:           os.Getenv("GOOGLE_CLIENT_ID"),
+		GoogleClientSecret:       os.Getenv("GOOGLE_CLIENT_SECRET"),
+		GoogleRedirectURL:        os.Getenv("GOOGLE_REDIRECT_URL"),
+		AppleClientID:            os.Getenv("APPLE_CLIENT_ID"),
+		AppleTeamID:              os.Getenv("APPLE_TEAM_ID"),
+		AppleKeyID:               os.Getenv("APPLE_KEY_ID"),
+		AppleP8Key:               os.Getenv("APPLE_P8_KEY"),
+		AppleRedirectURL:         os.Getenv("APPLE_REDIRECT_URL"),
+		StravaClientID:           os.Getenv("STRAVA_CLIENT_ID"),
+		StravaClientSecret:       os.Getenv("STRAVA_CLIENT_SECRET"),
+		StravaRedirectURL:        os.Getenv("STRAVA_REDIRECT_URL"),
+		StravaWebhookVerifyToken: os.Getenv("STRAVA_WEBHOOK_VERIFY_TOKEN"),
+		CORSOrigins:              splitCSV(get("CORS_ORIGINS", "http://localhost:5173")),
 	}
 
 	var err error

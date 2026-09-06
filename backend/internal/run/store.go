@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -61,9 +62,9 @@ func (s *store) create(ctx context.Context, a createArgs) (View, error) {
 		INSERT INTO runs (id, user_id, shoe_id, started_at, ended_at, distance_m, moving_s, duration_s,
 		                  avg_pace_s, gap_pace_s, best_km_pace_s, elevation_gain_m, elev_loss_m, alt_min_m, alt_max_m,
 		                  avg_cadence_spm, max_cadence_spm, step_count, avg_hr, max_hr,
-		                  gnss_mode, avg_hdop, data_source, weather_jsonb, fraud_score, fraud_flags, status)
+		                  gnss_mode, avg_hdop, data_source, weather_jsonb, fraud_score, fraud_flags, import_ref, status)
 		VALUES ($1,$2,nullif($3,''),$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
-		        $21,$22,$23::run_source,$24,$25,$26,$27::run_status)
+		        $21,$22,$23::run_source,$24,$25,$26,nullif($27,''),$28::run_status)
 		RETURNING id, user_id, started_at, ended_at, distance_m, moving_s, duration_s,
 		          avg_pace_s, elevation_gain_m, data_source::text, territory_area_m2,
 		          new_blocks, status::text, created_at`
@@ -80,7 +81,7 @@ func (s *store) create(ctx context.Context, a createArgs) (View, error) {
 		int(math.Round(m.ElevGainM)), int(math.Round(m.ElevLossM)),
 		altPtr(m.HasAltitude, m.AltMinM), altPtr(m.HasAltitude, m.AltMaxM),
 		cadence, maxCad, steps, intPtr(m.HasHR, m.AvgHRBPM), intPtr(m.HasHR, m.MaxHRBPM),
-		nullStr(a.In.GNSSMode), a.In.AvgHDOP, src, weather, a.FraudScore, flags, a.Status,
+		nullStr(a.In.GNSSMode), a.In.AvgHDOP, src, weather, a.FraudScore, flags, a.In.ImportRef, a.Status,
 	).Scan(&v.ID, &v.UserID, &v.StartedAt, &v.EndedAt, &v.DistanceM, &v.MovingS, &v.DurationS,
 		&v.AvgPaceS, &v.ElevationGainM, &v.DataSource, &v.TerritoryAreaM2, &v.NewBlocks, &v.Status, &v.CreatedAt)
 	if err != nil {
@@ -163,6 +164,20 @@ func intPtr(ok bool, v float64) *int {
 	}
 	i := int(math.Round(v))
 	return &i
+}
+
+// duplicateImport: true se a corrida importada já existe (mesma ref) ou colide
+// no tempo (±5 min do início) com uma corrida nativa do mesmo usuário.
+func (s *store) duplicateImport(ctx context.Context, userID, importRef string, startedAt time.Time) (bool, error) {
+	var exists bool
+	err := s.pool.QueryRow(ctx, `
+		SELECT EXISTS(
+			SELECT 1 FROM runs
+			WHERE user_id = $1
+			  AND (import_ref = $2
+			       OR (import_ref IS NULL AND abs(extract(epoch FROM started_at - $3)) < 300))
+		)`, userID, importRef, startedAt).Scan(&exists)
+	return exists, err
 }
 
 func (s *store) get(ctx context.Context, id, userID string) (View, error) {

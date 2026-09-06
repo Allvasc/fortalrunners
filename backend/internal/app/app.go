@@ -13,7 +13,9 @@ import (
 	"github.com/Allvasc/fortalrunners/backend/internal/challenge"
 	"github.com/Allvasc/fortalrunners/backend/internal/health"
 	"github.com/Allvasc/fortalrunners/backend/internal/heatmap"
+	"github.com/Allvasc/fortalrunners/backend/internal/integration"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/config"
+	"github.com/Allvasc/fortalrunners/backend/internal/platform/crypto"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/httpx"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/queue"
 	"github.com/Allvasc/fortalrunners/backend/internal/ranking"
@@ -67,12 +69,29 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 
 	shoeSvc := shoe.NewService(pool)
 	shoe.NewHandler(shoeSvc).Register(secured)
-	run.NewHandler(run.NewService(pool, pub, shoeSvc)).Register(secured)
+	runSvc := run.NewService(pool, pub, shoeSvc)
+	run.NewHandler(runSvc).Register(secured)
 	territory.NewHandler(pool).Register(secured)
 	ranking.NewHandler(pool).Register(secured)
 	challenge.NewHandler(challenge.NewService(pool, log)).Register(secured)
 	heatmap.NewHandler(heatmap.NewService(pool, log)).Register(secured)
 	admin.NewHandler(pool, pub).Register(secured) // /v1/admin/* (role admin/moderator + 2FA)
+
+	// integrações (Strava). Reusa a chave de campo do 2FA como chave do cofre.
+	box, err := crypto.NewBox(cfg.MFAEncKey)
+	if err != nil {
+		return nil, err
+	}
+	integSvc := integration.NewService(pool, box, integration.Config{
+		JWTSecret: cfg.JWTSecret,
+		Strava: integration.StravaConfig{
+			ClientID: cfg.StravaClientID, ClientSecret: cfg.StravaClientSecret,
+			RedirectURL: cfg.StravaRedirectURL, WebhookVerifyToken: cfg.StravaWebhookVerifyToken,
+		},
+	}, runSvc, log)
+	integH := integration.NewHandler(integSvc)
+	integH.RegisterSecured(secured)
+	integH.RegisterPublic(v1)
 
 	return &API{Echo: e, Pool: pool, Queue: pub}, nil
 }

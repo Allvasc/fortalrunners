@@ -2,6 +2,8 @@ package auth
 
 import (
 	"encoding/base64"
+
+	"github.com/Allvasc/fortalrunners/backend/internal/platform/crypto"
 	"strings"
 	"testing"
 	"time"
@@ -60,19 +62,19 @@ func TestVerifyTOTPWindow(t *testing.T) {
 
 func TestSecretBoxRoundtrip(t *testing.T) {
 	key := base64.StdEncoding.EncodeToString([]byte("0123456789abcdef0123456789abcdef"))
-	box, err := newSecretBox(key)
+	box, err := crypto.NewBox(key)
 	if err != nil {
-		t.Fatalf("newSecretBox: %v", err)
+		t.Fatalf("crypto.NewBox: %v", err)
 	}
 	secret := "JBSWY3DPEHPK3PXP"
-	enc, err := box.seal(secret)
+	enc, err := box.Seal(secret)
 	if err != nil {
 		t.Fatalf("seal: %v", err)
 	}
 	if strings.Contains(string(enc), secret) {
 		t.Fatal("segredo aparece em claro no ciphertext")
 	}
-	got, err := box.open(enc)
+	got, err := box.Open(enc)
 	if err != nil {
 		t.Fatalf("open: %v", err)
 	}
@@ -81,12 +83,12 @@ func TestSecretBoxRoundtrip(t *testing.T) {
 	}
 
 	// chave de outro tamanho é recusada
-	if _, err := newSecretBox(base64.StdEncoding.EncodeToString([]byte("curta"))); err == nil {
+	if _, err := crypto.NewBox(base64.StdEncoding.EncodeToString([]byte("curta"))); err == nil {
 		t.Fatal("chave de 5 bytes deveria falhar")
 	}
 	// ciphertext adulterado não abre (GCM autentica)
 	enc[len(enc)-1] ^= 0xff
-	if _, err := box.open(enc); err == nil {
+	if _, err := box.Open(enc); err == nil {
 		t.Fatal("ciphertext adulterado abriu")
 	}
 }
