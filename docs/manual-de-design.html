@@ -344,7 +344,7 @@
 
 <div class="wrap">
   <header class="hero">
-    <p class="eyebrow">Sistema de design · v1.0 · 05 set 2026</p>
+    <p class="eyebrow">Sistema de design · v1.1 · 06 set 2026</p>
     <h1>Manual de Design</h1>
     <p class="lede">A linguagem visual do FortalRunners — cor, tipografia, ícones, movimento, componentes, selos, troféus e imagens. Tudo definido para modo claro e escuro, do jeito que deve chegar na tela.</p>
   </header>
@@ -415,7 +415,7 @@
         <div class="swatch"><div class="chip" style="background:var(--teal-strong)"></div><div class="meta"><span class="nm">--teal-strong</span><br><span class="hx">texto sobre claro</span></div></div>
         <div class="swatch"><div class="chip" style="background:var(--coral)"></div><div class="meta"><span class="nm">--coral</span><br><span class="hx">acento · "Iniciar corrida"</span></div></div>
         <div class="swatch"><div class="chip" style="background:var(--gold)"></div><div class="meta"><span class="nm">--gold</span><br><span class="hx">troféu, destaque</span></div></div>
-        <div class="swatch"><div class="chip" style="background:var(--violet)"></div><div class="meta"><span class="nm">--violet</span><br><span class="hx">selos, seasons</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--violet)"></div><div class="meta"><span class="nm">--violet</span><br><span class="hx">selos, desafios</span></div></div>
       </div>
       <p><strong>Uma ação primária por tela.</strong> Coral é o "vá correr" e aparece só uma vez. Teal é o resto da ação (salvar, confirmar, alternar). Nunca coral e teal disputando o mesmo espaço.</p>
 
@@ -851,7 +851,14 @@
     <!-- 11 -->
     <section id="trofeus">
       <h2><span class="h2n">11</span>Troféus</h2>
-      <p class="sub">Semanais, por bairro e de season. Tratamento metálico em bronze, prata e ouro — ajustado para o escuro.</p>
+      <p class="sub">Prêmios de <strong>desafio</strong> (semanal, quinzenal, mensal) e de <strong>marco pessoal</strong> — nunca zeram território. Tratamento metálico em bronze, prata e ouro, ajustado para o escuro.</p>
+
+      <div class="note" style="margin:0 0 1.4rem">
+        Território é permanente e pessoal — não há ciclo que apaga progresso nem disputa por sobreposição.
+        O que é cíclico são os <strong>desafios</strong>: competições com janela fechada (semana, quinzena, mês)
+        que premiam com badge e posição, e não tocam na área conquistada de ninguém. Um troféu de desafio
+        registra <em>aquele período</em>; um badge de marco registra um feito acumulado (1&nbsp;km², 50 quarteirões, 10 bairros).
+      </div>
 
       <h3>Medalhas</h3>
       <div class="spec">
@@ -861,30 +868,30 @@
       </div>
       <p class="caption">Gradiente radial (luz a 35%/28%), brilho interno no topo, sombra interna na base, ícone gravado a 40% de preto. No escuro os metais clareiam ~10% e reduzem contraste interno.</p>
 
-      <h3>Card de troféu semanal</h3>
+      <h3>Card de troféu de desafio</h3>
       <div class="spec">
         <div class="trophy-card">
           <div class="medal gold" style="margin:0 auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v3a5 5 0 0 1-10 0V4ZM9 20h6M12 15v5"/></svg></div>
           <h5>Conquistador da semana</h5>
-          <div class="wk">Semana 36 · 2026</div>
-          <div class="mv">+0,58 km²</div>
-          <span class="chip-c teal" style="margin-top:10px">1º de 214 em Fortaleza</span>
+          <div class="wk">Desafio semanal · período 36 · 2026</div>
+          <div class="mv">+0,58 km² de área nova</div>
+          <span class="chip-c teal" style="margin-top:10px">1º de 214 · top 3 premiado</span>
         </div>
         <div class="trophy-card">
           <div class="medal silver" style="margin:0 auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V6l8-3 8 3v14M4 13h16"/></svg></div>
-          <h5>Barão da Aldeota</h5>
-          <div class="wk">Semana 36 · 2026</div>
-          <div class="mv">0,42 km² no bairro</div>
-          <span class="chip-c" style="margin-top:10px">2º na Aldeota</span>
+          <h5>Explorador da quinzena</h5>
+          <div class="wk">Desafio quinzenal · período 18 · 2026</div>
+          <div class="mv">3 bairros novos</div>
+          <span class="chip-c" style="margin-top:10px">meta batida · badge concedido</span>
         </div>
       </div>
 
-      <h3>Sala de troféus &amp; season</h3>
+      <h3>Sala de troféus</h3>
       <ul>
-        <li><strong>Grade</strong> de medalhas com uma linha-prateleira sutil sob cada fileira, agrupada por season (colapsável).</li>
-        <li><strong>Troféu de season</strong> — maior, com uma forma de louro/estrela, cor da season, e o número da temporada gravado. Só um por trimestre.</li>
+        <li><strong>Grade</strong> de medalhas com uma linha-prateleira sutil sob cada fileira, agrupada por tipo de desafio (semanal / quinzenal / mensal / marco), colapsável.</li>
+        <li><strong>Badge de marco</strong> — maior, forma de louro/estrela, cor teal, com o valor gravado (1&nbsp;km², 50 quarteirões, 10 bairros). Permanente: não expira e não depende de ciclo.</li>
         <li>Troféu já conquistado nunca muda de forma nem de nome entre versões do app.</li>
-        <li>Toque abre o detalhe: critério, valor, data, e a posição de todos que ganharam aquele troféu naquele ciclo.</li>
+        <li>Toque abre o detalhe: critério, valor, data, e — para desafio — a posição de todos naquele período fechado.</li>
       </ul>
     </section>
 
@@ -911,26 +918,26 @@
     <!-- 13 -->
     <section id="territorio">
       <h2><span class="h2n">13</span>Território &amp; mapa</h2>
-      <p class="sub">A cor de corredor pinta o mapa. Regras de preenchimento, contorno, disputa e decaimento — e os quatro estilos de base.</p>
+      <p class="sub">A cor de corredor pinta o mapa. Território é permanente e pessoal — camadas se sobrepõem, não se disputam. Regras de preenchimento, contorno, sobreposição — e os quatro estilos de base.</p>
 
       <div class="spec">
         <svg viewBox="0 0 320 150" style="width:100%;max-width:360px;background:var(--sunken);border-radius:var(--r-md)">
           <g stroke="var(--surface-2)" stroke-width="4"><path d="M40 0V150M120 0V150M200 0V150M280 0V150M0 45H320M0 105H320"/></g>
           <rect x="40" y="45" width="80" height="60" fill="var(--r1)" fill-opacity=".24" stroke="var(--r1)" stroke-width="2.5"/>
           <rect x="120" y="45" width="80" height="60" fill="var(--r2)" fill-opacity=".24" stroke="var(--r2)" stroke-width="2.5"/>
-          <rect x="120" y="45" width="40" height="60" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="1" stroke-dasharray="3 3"/>
-          <rect x="200" y="45" width="80" height="60" fill="var(--r3)" fill-opacity=".08"/>
+          <rect x="150" y="45" width="80" height="60" fill="var(--r1)" fill-opacity=".24" stroke="var(--r1)" stroke-width="2.5"/>
+          <rect x="248" y="60" width="14" height="14" fill="var(--r3)" transform="rotate(45 255 67)"/>
         </svg>
       </div>
-      <p class="caption">Da esquerda: território seu · território de outro · faixa de disputa (hachura das duas cores + tracejado neutro, 24&nbsp;h) · borda decaída (8%, sem contorno).</p>
+      <p class="caption">Da esquerda: território seu · território de outro · <strong>sobreposição</strong> (as duas camadas coexistem, cada uma com seu contorno — sem hachura de disputa, sem quem-ganha) · marcador de selo de missão.</p>
 
       <div class="tw">
         <table>
           <thead><tr><th>Elemento</th><th>Preenchimento</th><th>Contorno</th></tr></thead>
           <tbody>
             <tr><td>Território ativo</td><td>cor do corredor · 22% (claro) / 26% (escuro)</td><td>cor sólida · 2.5px · <span class="mono">linejoin round</span></td></tr>
-            <tr><td>Zona de disputa</td><td>hachura 45° combinando as duas cores</td><td>tracejado <code>--ink-3</code> · 1px</td></tr>
-            <tr><td>Borda em decaimento</td><td>cor · 8%</td><td>nenhum</td></tr>
+            <tr><td>Sobreposição de camadas</td><td>cada camada mantém seu preenchimento e opacidade; empilham por ordem de seleção (a sua sempre no topo)</td><td>cada uma com seu contorno · 2.5px — sem marca de conflito</td></tr>
+            <tr><td>Território revogado (fraude)</td><td>cinza · 6% + rótulo "removido"</td><td>tracejado <code>--ink-3</code> · 1px</td></tr>
             <tr><td>Célula H3 (contagem)</td><td>quase invisível — só em barras de progresso de bairro</td><td>—</td></tr>
             <tr><td>Zona de risco</td><td>hachura <code>--crit</code> · 10% + rótulo "conquista indisponível"</td><td>tracejado <code>--crit</code></td></tr>
           </tbody>
@@ -1068,7 +1075,7 @@
   </main>
 
   <footer class="pg">
-    FortalRunners · manual de design v1.0 · 05 set 2026 · documento vivo — a fonte de verdade dos componentes passa a ser a biblioteca de código quando o app começar.
+    FortalRunners · manual de design v1.1 · 06 set 2026 · documento vivo — a fonte de verdade dos componentes passa a ser a biblioteca de código quando o app começar.
   </footer>
 </div>
 

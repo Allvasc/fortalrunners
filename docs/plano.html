@@ -404,7 +404,7 @@
 
   <header class="hero">
     <canvas class="hero-grid" id="heroGrid" aria-hidden="true"></canvas>
-    <p class="eyebrow">Plano de produto · v0.13 · 05 set 2026</p>
+    <p class="eyebrow">Plano de produto · v0.14 · 06 set 2026</p>
     <h1>FortalRunners</h1>
     <p class="lede">Um app gamificado onde correr por Fortaleza conquista território. Feche o circuito de um quarteirão e ele passa a ser seu, pintado na sua cor. E por baixo do jogo, a ambição de ser o app de corrida mais completo do mercado: cada par de tênis rastreado, cada métrica medida com rigor de relógio de ponta.</p>
     <div class="meta-row">
@@ -436,7 +436,7 @@
     <ol>
       <li><a href="#visao">Visão geral e loop central</a></li>
       <li><a href="#territorio">O território: como funciona</a></li>
-      <li><a href="#gamificacao">Gamificação, selos, eventos e troféus</a></li>
+      <li><a href="#gamificacao">Gamificação: cobertura, selos, eventos e desafios</a></li>
       <li><a href="#equipamento">Equipamento e métricas de precisão</a></li>
       <li><a href="#social">Amigos e avaliação de rotas</a></li>
       <li><a href="#seguranca-urbana">Segurança pessoal, clima e contexto urbano</a></li>
@@ -470,8 +470,8 @@
         <li><strong>Correr.</strong> O app grava o percurso com GPS de alta frequência, mesmo com a tela apagada.</li>
         <li><strong>Fechar território.</strong> Quando o traçado forma um laço (ou fecha contra ruas já dominadas), o polígono interno é preenchido com a cor do corredor.</li>
         <li><strong>Acumular.</strong> Área em m²/km², número de quarteirões, bairros tocados e percentual do mapa entram no perfil e no ranking.</li>
-        <li><strong>Comparar.</strong> O mapa mostra seus territórios e os dos amigos, cada um na sua cor, com zonas de disputa onde há sobreposição.</li>
-        <li><strong>Competir.</strong> Toda semana fecha um ciclo: quem mais conquistou leva troféu, e parte do território volta a ficar "neutro" para forçar reconquista.</li>
+        <li><strong>Comparar.</strong> O mapa mostra seus territórios e os dos amigos, cada um na sua cor, sobrepostos — sem conflito, cada um no seu mapa.</li>
+        <li><strong>Competir.</strong> O ranking é acumulado (quem cobre mais área, all-time) e os <strong>desafios recorrentes</strong> (semanal / quinzenal / mensal) rendem badges permanentes — nada zera o seu progresso.</li>
       </ol>
 
       <div class="callout teal">
@@ -485,7 +485,7 @@
       <h3>Não objetivos do MVP</h3>
       <ul class="tight">
         <li>Gravar corrida pelo navegador (o GPS mora no celular).</li>
-        <li>Ligas com promoção/rebaixamento, seasons completas.</li>
+        <li>Ligas com promoção/rebaixamento.</li>
         <li>Suporte a outras cidades além de Fortaleza.</li>
         <li>App de relógio standalone, integrações de parceria (Garmin/Coros).</li>
         <li>Coach IA conversacional e portal de organizadores (entram nas fases 2–3).</li>
@@ -563,56 +563,53 @@
         <li><strong>Snap às ruas (opcional, v1).</strong> Map-matching encaixa o traçado na malha viária do OpenStreetMap, então o território segue os quarteirões reais em vez do zigue-zague do GPS.</li>
       </ul>
 
-      <h3>Sobreposição e tomada de território</h3>
+      <h3>Território é permanente e pessoal</h3>
       <ul>
-        <li><strong>Área neutra:</strong> quem cerca primeiro, domina.</li>
-        <li><strong>Área de outro corredor:</strong> a conquista mais recente prevalece na porção sobreposta — o mapa do defensor perde aquele pedaço, que passa para o atacante. Área sobreposta vira <strong>zona de disputa</strong> visualmente (hachura nas duas cores) por 24 h antes de consolidar.</li>
-        <li><strong>Decaimento semanal:</strong> ao fechar o ciclo, todo território perde X% da borda (erosão) e volta a neutro; o núcleo permanece. Assim o mapa nunca "congela" e há sempre o que reconquistar.</li>
-        <li><strong>Bloqueio de amigos (config):</strong> por padrão você não toma território de quem está na sua lista de amigos — vira sobreposição amigável, sem perda.</li>
+        <li><strong>Ninguém apaga o seu progresso.</strong> Não há decaimento, não há ciclo que zera, não há tomada de território. O que você pintou fica pintado — para sempre.</li>
+        <li><strong>Sem disputa por sobreposição.</strong> Cada corredor tem o <em>seu</em> mapa. Dois corredores podem dominar o mesmo quarteirão, cada um no seu mapa. No modo "amigos"/"cidade" os territórios aparecem sobrepostos, cada um na sua cor — é camada, não conflito.</li>
+        <li><strong>A competição é acumulada:</strong> quem cobre <strong>mais área</strong> (all-time), no total, por bairro, entre amigos. Sem reset.</li>
+        <li><strong>Remoção só por fraude</strong> — um território anulado pela moderação vira <code>revoked</code>. É a única forma de perder área.</li>
       </ul>
 
       <h3>A meta: cobrir Fortaleza</h3>
-      <p>A área urbana de Fortaleza é dividida numa grade H3 (resolução ~9, célula de ~0,1 km²). O placar global mostra <code>% de células dominadas</code> por corredor, por bairro e no total da cidade. Bairros ganham barras de progresso; quando um bairro chega a 100% dominado por um único corredor, ele vira "Barão(esa) do bairro" — um selo permanente no perfil, com destaque no mapa.</p>
+      <p>A área urbana de Fortaleza é dividida numa grade H3 (resolução ~9). A cobertura é <strong>por corredor</strong>: o seu placar mostra <code>% de células que você já cobriu</code>, por bairro e no total — e o mesmo para os amigos, lado a lado. Quando você cobre 100% de um bairro, ganha o selo permanente "Barão(esa) do bairro" (vários corredores podem tê-lo). Objetivo individual: pintar o mapa inteiro; objetivo de disputa: cobrir mais que os outros.</p>
     </section>
 
     <section id="gamificacao">
-      <h2><span class="h2-num">03</span>Gamificação, selos, eventos e troféus</h2>
-      <p class="section-sub">O que mede progresso, o que leva o corredor a explorar a cidade e o que gera retorno para jogar amanhã.</p>
+      <h2><span class="h2-num">03</span>Gamificação: cobertura, selos, eventos e desafios</h2>
+      <p class="section-sub">O progresso de território é permanente e pessoal. A competição vem do ranking de área coberta (acumulado) e dos desafios recorrentes.</p>
 
       <div class="grid-2">
-        <div><h4>Território (m² / km²)</h4><p>Métrica principal. Soma da área dominada agora.</p></div>
-        <div><h4>Cobertura (%)</h4><p>Células H3 dominadas ÷ total da cidade ou do bairro.</p></div>
-        <div><h4>Conquistas da semana</h4><p>Área líquida ganha no ciclo atual — base dos troféus.</p></div>
+        <div><h4>Área coberta (m² / km²)</h4><p>Métrica principal do ranking. Soma de todo o território que você já conquistou — <strong>acumulada, nunca zera</strong>.</p></div>
+        <div><h4>Cobertura (%)</h4><p>Suas células H3 ÷ total da cidade ou do bairro. Também acumulada e pessoal.</p></div>
+        <div><h4>Quarteirões</h4><p>Número de laços fechados que viraram território seu.</p></div>
         <div><h4>XP e nível</h4><p>Ganho por km, por novo quarteirão, por bairro inédito, por streak.</p></div>
-        <div><h4>Streak</h4><p>Dias/semanas seguidos com pelo menos uma corrida válida.</p></div>
-        <div><h4>Defesa</h4><p>Território seu que sobreviveu à semana sem ser tomado.</p></div>
+        <div><h4>Streak</h4><p>Dias seguidos com pelo menos uma corrida válida.</p></div>
+        <div><h4>Progresso de desafio</h4><p>Seu valor na métrica do desafio ativo (semanal / quinzenal / mensal).</p></div>
       </div>
 
-      <h3>Rankings</h3>
+      <h3>Rankings — acumulados, sem reset</h3>
       <ul class="tight">
-        <li><strong>Global de Fortaleza</strong> — área total e % de cobertura.</li>
-        <li><strong>Por bairro</strong> — quem domina cada bairro (Aldeota, Meireles, Benfica, Messejana...).</li>
-        <li><strong>Semanal</strong> — só conquistas do ciclo, zera toda semana.</li>
-        <li><strong>Entre amigos</strong> — recorte da sua rede.</li>
+        <li><strong>Global de Fortaleza</strong> — área total coberta e % de cobertura, all-time.</li>
+        <li><strong>Por bairro</strong> — quem cobriu mais de cada bairro.</li>
+        <li><strong>Entre amigos</strong> e <strong>por clube</strong> — recortes da sua rede.</li>
         <li><strong>Ligas</strong> (futuro) — divisões por faixa, promoção/rebaixamento estilo esporte.</li>
       </ul>
 
-      <h3>Troféus semanais</h3>
-      <p>O ciclo fecha domingo 23h59 (horário de Fortaleza). O sistema calcula e congela os placares, distribui prêmios e envia push. Troféus previstos:</p>
+      <h3>Desafios recorrentes</h3>
+      <p>A "graça semanal" acontece nos <strong>desafios</strong> — competições com janela e recompensa própria que <strong>não mexem no território de ninguém</strong>. Cadências: <strong>semanal</strong>, <strong>quinzenal</strong>, <strong>mensal</strong> (e pontuais). Um <code>scheduler</code> abre o período corrente, e ao encerrar congela o placar e concede as badges — o território segue intocado.</p>
       <div class="table-scroll">
         <table>
-          <thead><tr><th>Troféu</th><th>Critério</th><th>Prêmio</th></tr></thead>
+          <thead><tr><th>Desafio</th><th>Cadência</th><th>Métrica (só no período)</th><th>Recompensa</th></tr></thead>
           <tbody>
-            <tr><td>Conquistador da semana</td><td>Maior área líquida ganha</td><td>Troféu de ouro no perfil + moldura sazonal + destaque no mapa</td></tr>
-            <tr><td>Barão(esa) do bairro</td><td>Maior área num único bairro</td><td>Selo do bairro (um por bairro)</td></tr>
-            <tr><td>Muralha</td><td>Maior % de território defendido</td><td>Selo de defesa</td></tr>
-            <tr><td>Desbravador</td><td>Mais quarteirões inéditos (nunca dominados por ninguém)</td><td>XP bônus + pin no mapa</td></tr>
-            <tr><td>Maratonista</td><td>Maior distância acumulada</td><td>Selo de volume</td></tr>
-            <tr><td>Podium do bairro</td><td>Top 3 de cada bairro</td><td>Medalha bronze/prata/ouro por bairro</td></tr>
+            <tr><td>Conquista da semana</td><td>semanal</td><td>Maior área nova conquistada</td><td>Badge "Conquistador da semana" (top 3)</td></tr>
+            <tr><td>Quinzena dos bairros</td><td>quinzenal</td><td>Cobrir 3 bairros pela 1ª vez</td><td>Badge "Explorador da quinzena" (quem bate a meta)</td></tr>
+            <tr><td>Mês maratonista</td><td>mensal</td><td>Maior distância acumulada</td><td>Badge "Maratonista do mês" (top 10)</td></tr>
+            <tr><td colspan="4"><em>Outras métricas possíveis:</em> quarteirões novos, ganho de elevação, streak, checkpoints de evento.</td></tr>
           </tbody>
         </table>
       </div>
-      <p>Histórico de troféus fica no perfil (estilo "sala de troféus"). Season de 13 semanas (~1 trimestre) com ranking acumulado e reset parcial de mapa ao final.</p>
+      <p>As <strong>badges são permanentes</strong> — ganhou, é seu para sempre. Ficam na "sala de troféus" do perfil com a data e o período. Além das de desafio, há badges de <strong>marco</strong> (100 km, orla completa, Barão do bairro, Cartógrafo 5%...) — conquistas de progresso, também permanentes.</p>
 
       <h3>Selos de missão — marcos de Fortaleza</h3>
       <p>Pontos de interesse com história — estátuas, fortes, faróis, praças, teatros. Chegar correndo até o marco e enviar uma foto no app rende um <strong>selo permanente</strong>. É o gancho que leva o corredor a explorar a cidade, não só o próprio bairro.</p>
@@ -927,7 +924,7 @@
               <text x="335" y="132" text-anchor="middle">auth · runs · territory</text>
               <text x="335" y="148" text-anchor="middle">social · leaderboard</text>
               <text x="335" y="164" text-anchor="middle">routes · admin</text>
-              <text x="335" y="184" text-anchor="middle">jobs (cron semanal)</text>
+              <text x="335" y="184" text-anchor="middle">scheduler (períodos, jobs)</text>
             </g>
 
             <!-- queue -->
@@ -1082,9 +1079,9 @@
         <li><strong>Detecção de laços.</strong> Encontra auto-interseções e pontos de fechamento (início↔fim &lt; 25 m). Constrói anéis fechados; poligoniza (<code>ST_Polygonize</code>).</li>
         <li><strong>Preenchimento.</strong> Para cada anel válido (área entre mín e máx), cria o polígono do território.</li>
         <li><strong>Gate de zona de risco.</strong> <code>territoryAllowedAt(geom)</code>: subtrai (<code>ST_Difference</code>) as zonas de risco ativas do polígono; recusa a conquista se a sobreposição &gt; X% ou o núcleo do laço cair em zona de severidade alta (ver seção 6). Flag <code>RISK_ZONE_BLOCKING</code>.</li>
-        <li><strong>Resolução de conflito.</strong> <code>ST_Difference</code> contra territórios existentes de outros; parte sobreposta vira disputa; consolida via job após 24 h.</li>
-        <li><strong>Indexação H3.</strong> <code>polyfill</code> do(s) polígono(s) em células res 9; upsert na tabela de posse de células.</li>
-        <li><strong>Métricas + eventos.</strong> Recalcula área total do corredor, XP, progresso de bairro; publica evento no feed e no WebSocket; atualiza rankings no Redis.</li>
+        <li><strong>Sem resolução de conflito entre corredores.</strong> Território é pessoal — o polígono é gravado como está (após o gate de risco). Sobreposição com o mapa de outro corredor é permitida e não gera disputa.</li>
+        <li><strong>Indexação H3.</strong> <code>polyfill</code> do(s) polígono(s) em células res 9; upsert em <code>h3_cells</code> com PK <code>(h3_index, owner_id)</code> — a cobertura é por corredor, sem conflito.</li>
+        <li><strong>Rollup + eventos.</strong> Atualiza <code>shoe_stats</code>, <code>lifetime_stats</code> (área acumulada, streak) e <code>personal_records</code>; publica no feed e no WebSocket. Ranking é agregação SQL (Redis quando o volume pedir).</li>
       </ol>
 
       <h3>Anti-fraude — camadas</h3>
@@ -1130,16 +1127,16 @@
             <tr><td>user_stride_calibration</td><td><code>user_id, stride_len_m, confidence, sample_count, updated_at</code></td><td>Aprende com o histórico; usada no dead reckoning.</td></tr>
             <tr><td>personal_records</td><td><code>id, user_id, distance_key, value_s, run_id, achieved_at</code></td><td>1k/5k/10k/21k/42k/1h/maior distância/etc.</td></tr>
             <tr><td>lifetime_stats</td><td><code>user_id, total_moving_s, total_distance_m, total_steps, run_count, elevation_gain_m, calories, active_days, longest_streak</code></td><td>Materializada; base das "horas de prática".</td></tr>
-            <tr><td>territories</td><td><code>id, user_id, run_id, geom(MultiPolygon,4326), area_m2, neighborhood_id, claimed_at, decays_at, status</code></td><td>Um registro por conquista. Estado atual = união dos ativos por usuário.</td></tr>
-            <tr><td>territory_disputes</td><td><code>id, geom, attacker_id, defender_id, opened_at, resolves_at</code></td><td>Sobreposição em janela de 24 h.</td></tr>
-            <tr><td>h3_cells</td><td><code>h3_index(bigint), owner_id, territory_id, neighborhood_id, claimed_at</code></td><td>Res 9. Base de % de cobertura. PK = h3_index.</td></tr>
+            <tr><td>territories</td><td><code>id, user_id, run_id, geom(MultiPolygon,4326), area_m2, neighborhood_id, claimed_at, status</code></td><td>Um registro por conquista. <strong>Permanente.</strong> <code>status</code>: active / revoked (só fraude).</td></tr>
+            <tr><td>h3_cells</td><td><code>h3_index(bigint), owner_id, territory_id, neighborhood_id, claimed_at</code></td><td>Res 9. Cobertura <strong>por corredor</strong>. PK = (h3_index, owner_id).</td></tr>
             <tr><td>heat_agg</td><td><code>h3_index(bigint), scope, period, activity, weight, runner_count, updated_at</code></td><td>Agregação de passagem para o mapa de calor. <code>scope</code>: user:&lt;id&gt; / club:&lt;id&gt; / city. Célula da cidade só servida com <code>runner_count ≥ N</code>.</td></tr>
             <tr><td>neighborhoods</td><td><code>id, name, geom(MultiPolygon), h3_total</code></td><td>Bairros oficiais de Fortaleza (seed via IBGE/prefeitura).</td></tr>
             <tr><td>routes</td><td><code>id, name, created_by, geom(LineString), distance_m, surface, is_official</code></td><td>Percursos nomeados.</td></tr>
             <tr><td>route_reviews</td><td><code>id, route_id, user_id, rating, tags_jsonb, body, status</code></td><td><code>status</code> p/ moderação.</td></tr>
-            <tr><td>seasons / weekly_cycles</td><td><code>id, starts_at, ends_at</code> · <code>id, season_id, week_no, closed_at</code></td><td>Ciclo semanal fecha domingo 23h59 America/Fortaleza.</td></tr>
-            <tr><td>trophies</td><td><code>id, cycle_id, user_id, type, neighborhood_id, rank, metric_value</code></td><td>Resultado congelado de cada ciclo.</td></tr>
-            <tr><td>badges / user_badges</td><td><code>code, name, criteria_jsonb</code> · <code>user_id, badge_code, earned_at</code></td><td>Conquistas permanentes (inclui selos de marco).</td></tr>
+            <tr><td>challenges</td><td><code>id, slug, title, cadence, metric, goal, reward_badge_code, reward_top_n, anchor_date, active</code></td><td><code>cadence</code>: weekly / biweekly / monthly / oneoff. <code>metric</code>: new_area_m2 / new_blocks / new_neighborhoods / distance_m / elevation_gain_m.</td></tr>
+            <tr><td>challenge_periods</td><td><code>id, challenge_id, period_no, starts_at, ends_at, closed_at</code></td><td>Uma instância concreta do desafio. Aberta/fechada pelo scheduler.</td></tr>
+            <tr><td>challenge_entries</td><td><code>period_id, user_id, metric_value, rank, completed, badge_awarded</code></td><td>Resultado por corredor num período. PK (period_id, user_id).</td></tr>
+            <tr><td>badges / user_badges</td><td><code>code, name, shape, type, criteria_jsonb</code> · <code>user_id, badge_code, source, challenge_period_id, earned_at</code></td><td>Conquistas <strong>permanentes</strong> — de desafio, de marco e de milestone.</td></tr>
             <tr><td>landmarks</td><td><code>id, name, badge_code, geom(Point,4326), radius_m, blurb, hero_photo_url, difficulty, requires_on_foot, quiz_jsonb, collection_id, active_from, active_to, status</code></td><td>Marcos históricos curados. Janela sazonal opcional.</td></tr>
             <tr><td>landmark_collections</td><td><code>id, name, description, badge_code, reward_xp</code></td><td>Circuitos (ex.: "Praia de Iracema").</td></tr>
             <tr><td>landmark_checkins</td><td><code>id, user_id, landmark_id, run_id, photo_key, taken_at, geom(Point), sensor_sig_jsonb, quiz_ok, status, moderated_by</code></td><td><code>status</code>: pending / approved / rejected. Foto no object storage.</td></tr>
@@ -1199,8 +1196,9 @@
             <tr><td>GET /v1/territories?bbox=&amp;scope=me|friends|all</td><td>GeoJSON dos territórios na área visível do mapa.</td></tr>
             <tr><td>GET /v1/coverage?scope=city|neighborhood:id</td><td>% de cobertura e ranking associado.</td></tr>
             <tr><td>GET /v1/heatmap?bbox=&amp;scope=me|friends|city&amp;period=&amp;activity=</td><td>Células de calor agregadas (nunca traçados). Cidade sujeita a k-anonimato.</td></tr>
-            <tr><td>GET /v1/leaderboards/:kind</td><td>global / weekly / neighborhood / friends / club.</td></tr>
-            <tr><td>GET /v1/trophies?cycle=current|:id</td><td>Troféus do ciclo.</td></tr>
+            <tr><td>GET /v1/leaderboards/global · /neighborhood/:id</td><td>Ranking acumulado por área coberta (all-time). friends / club depois.</td></tr>
+            <tr><td>GET /v1/challenges · GET /v1/challenges/:slug/leaderboard</td><td>Desafios ativos com meu standing; placar do período (ao vivo ou congelado).</td></tr>
+            <tr><td>GET /v1/me/lifetime · GET /v1/me/records · GET /v1/me/badges</td><td>Acumulado vitalício, recordes pessoais, conquistas.</td></tr>
             <tr><td>GET /v1/landmarks?bbox= · GET /v1/landmarks/:id</td><td>Marcos próximos, status por usuário, texto histórico.</td></tr>
             <tr><td>POST /v1/landmarks/:id/checkin</td><td>Multipart: foto + posição + <code>run_id</code> (+ respostas do quiz). Retorna selo ou pendência de moderação.</td></tr>
             <tr><td>GET /v1/events · GET /v1/events/:slug · POST /v1/events/:slug/join</td><td>Descobrir, ver e entrar em eventos.</td></tr>
@@ -1249,7 +1247,8 @@
         <div><h4>Detalhe da corrida</h4><p>Mapa com traçado + território daquela corrida, grade de métricas, pace por km, equipamento, clima na corrida, qualidade do sinal, exportar GPX/TCX.</p></div>
         <div><h4>Meus tênis</h4><p>Pares em rotação com barra de vida útil, km/passos/horas/custo por km, cadastrar e aposentar.</p></div>
         <div><h4>Estatísticas</h4><p>Horas de prática (rumo às 10.000 h), acumulado vitalício, recordes pessoais, mapa de calor anual, cargas de treino.</p></div>
-        <div><h4>Ranking</h4><p>Abas: semanal, global, bairro, amigos.</p></div>
+        <div><h4>Ranking</h4><p>Abas: global (área coberta all-time), bairro, amigos, clube.</p></div>
+        <div><h4>Desafios</h4><p>Desafios ativos (semanal / quinzenal / mensal) com o seu progresso, tempo restante, placar do período e badge em disputa.</p></div>
         <div><h4>Perfil</h4><p>Cor, área total, % da cidade, sala de troféus, badges, histórico.</p></div>
         <div><h4>Amigos / Feed</h4><p>Atividades, reações, buscar e adicionar.</p></div>
         <div><h4>Rotas</h4><p>Explorar, filtrar por bairro/superfície, avaliar.</p></div>
@@ -1270,7 +1269,7 @@
         <li><strong>Login / cadastro:</strong> e-mail+senha, Google, Apple. Recuperação de senha, verificação de e-mail, 2FA opcional (TOTP).</li>
         <li><strong>Dashboard:</strong> mapa grande de territórios (meu / amigos / cidade), cards de área total, % de cobertura, posição nos rankings, streak.</li>
         <li><strong>Histórico de corridas:</strong> lista + detalhe (mapa, splits, elevação, cadência, FC, par de tênis, qualidade de sinal, território daquela corrida). Exportar GPX/TCX.</li>
-        <li><strong>Evolução:</strong> gráficos de área dominada, km por semana, bairros conquistados, troféus por season, horas de prática acumuladas, cargas de treino.</li>
+        <li><strong>Evolução:</strong> gráficos de área coberta ao longo do tempo, km por semana, bairros cobertos, badges, desafios vencidos, horas de prática, cargas de treino.</li>
         <li><strong>Tênis:</strong> painel de quilometragem por par, custo por km, curva de vida útil, histórico de aposentados, comparação com a durabilidade média do modelo.</li>
         <li><strong>Amigos:</strong> comparar mapas lado a lado, ver ranking da rede, gerenciar convites.</li>
         <li><strong>Rotas:</strong> navegar, criar rota desenhando no mapa, ler e escrever avaliações.</li>
@@ -1313,9 +1312,9 @@
         <div><h4>Marcos históricos</h4><p>Editor de ponto, raio, texto, foto de referência, quiz, coleção e janela sazonal. Fila de moderação de check-ins (ver foto + GPS, aprovar/rejeitar). Marcar "pioneiro".</p></div>
         <div><h4>Eventos e organizadores</h4><p>Aprovar/suspender eventos e contas de organizador, gerenciar planos e faturamento, moderar identidade visual, kill switch de evento.</p></div>
         <div><h4>Identidade e QR</h4><p>Buscar por <code>athlete_id</code>, reemitir ID, revogar QR comprometido, ver e auditar todas as leituras de um atleta, resolver contestações, marcar fraude de scan.</p></div>
-        <div><h4>Ciclos e troféus</h4><p>Ver status do ciclo, disparar fechamento manual, recalcular, revogar/conceder troféu, ajustar datas de season.</p></div>
+        <div><h4>Desafios</h4><p>Criar/editar desafios e cadências, ver status dos períodos, disparar fechamento manual, recalcular placar, revogar/conceder badge.</p></div>
         <div><h4>Bairros / geodados</h4><p>Importar limites de bairro, ajustar grade H3, recalcular totais.</p></div>
-        <div><h4>Config do jogo</h4><p>Feature flags e parâmetros: raio de fechamento, área mín/máx, % de decaimento semanal, tetos de pace, XP por ação, <code>RISK_ZONE_BLOCKING</code>.</p></div>
+        <div><h4>Config do jogo</h4><p>Feature flags e parâmetros: raio de fechamento, área mín/máx, tetos de pace, XP por ação, <code>RISK_ZONE_BLOCKING</code>.</p></div>
         <div><h4>Catálogo de tênis</h4><p>Base global de marca/modelo que o usuário seleciona, vida útil padrão por modelo, aprovar submissões da comunidade, ver durabilidade real agregada.</p></div>
         <div><h4>Precisão e devices</h4><p>Perfis de erro por modelo de celular, parâmetros de fusão/auto-pause, homologar integrações de relógio, reprocessar corridas com sinal ruim.</p></div>
         <div><h4>Integrações</h4><p>Chaves OAuth de Strava/Garmin/Fitbit/Polar, saúde dos webhooks, filas de import, taxa de erro por provedor, forçar re-sync de um usuário.</p></div>
@@ -1548,7 +1547,7 @@
         <table>
           <thead><tr><th>Nível</th><th>Objetivo</th><th>Exemplos no FortalRunners</th></tr></thead>
           <tbody>
-            <tr><td>Unitário</td><td>Regras de domínio isoladas</td><td>Fechamento de laço, área mín/máx, decaimento semanal, cálculo de split, política de reembolso</td></tr>
+            <tr><td>Unitário</td><td>Regras de domínio isoladas</td><td>Fechamento de laço, área mín/máx, janela de período de desafio, cálculo de split, política de reembolso</td></tr>
             <tr><td>Integração</td><td>Banco, fila, serviços</td><td>PostGIS (ST_Difference/polyfill), fila, Asaas sandbox, OSRM</td></tr>
             <tr><td>Contrato</td><td>Compatibilidade API ↔ apps e webhooks</td><td>Schema de <code>POST /v1/runs</code>, payload do webhook Asaas</td></tr>
             <tr><td>E2E</td><td>Fluxos completos</td><td>Cadastro → corrida → território; inscrição paga → peito + QR; SOS → contato</td></tr>
@@ -1611,7 +1610,7 @@
             <li>Integração com Strava (import + webhook) e Apple Health / Health Connect; deduplicação de corridas.</li>
             <li>Login Apple (requisito da App Store).</li>
             <li>2FA (TOTP) para todos os perfis; obrigatório para admin/moderator.</li>
-            <li>Ranking global e semanal + fechamento de ciclo + 3 troféus.</li>
+            <li>Ranking acumulado (área coberta) + desafios recorrentes (semanal/quinzenal/mensal) com scheduler e badges permanentes.</li>
             <li>Perfil, resumo pós-corrida, badges básicos.</li>
             <li>Portal web de acompanhamento.</li>
             <li>Painel de admin: usuários, corridas suspeitas, config do jogo, ciclos.</li>
@@ -1621,12 +1620,12 @@
         </div>
       </div>
       <div class="phase">
-        <span class="phase-tag">Fase 2 — Social e disputa</span>
+        <span class="phase-tag">Fase 2 — Social e profundidade</span>
         <div>
           <h4>Semanas 13–20</h4>
           <ul class="tight">
             <li>Amigos, feed, mapa compartilhado, clubes.</li>
-            <li>Tomada de território, zonas de disputa, decaimento semanal.</li>
+            <li>Cobertura H3 por corredor + % da cidade; mapa de amigos sobreposto; mais desafios e badges de marco.</li>
             <li>Rotas + avaliações + moderação.</li>
             <li>Card de condições do dia (clima, sensação térmica, UV, sol, melhor janela); contatos de emergência + SOS + beacon ao vivo; camada de bebedouros e banheiros.</li>
             <li>Map-matching (territórios grudados nas ruas).</li>
@@ -1641,7 +1640,7 @@
             <li>Mapa de calor de amigos/clube e da cidade (opt-in, k-anonimato).</li>
             <li>Inscrição paga em eventos via Asaas (PIX + cartão + boleto), split para o organizador, cupons, reembolso, conciliação.</li>
             <li>Assinatura premium recorrente; pentest antes do lançamento público.</li>
-            <li>Troféus completos por bairro, seasons.</li>
+            <li>Mais métricas de desafio, badges de marco/milestone, sala de troféus.</li>
             <li>Lançamento público em Fortaleza.</li>
           </ul>
         </div>
@@ -1668,7 +1667,7 @@
         <li><strong>Fortalezas</strong> — dominar o mesmo quarteirão N semanas seguidas cria um ponto fortificado, mais difícil de tomar.</li>
         <li><strong>Modo captura da bandeira</strong> — pontos de interesse (praças, faróis) que valem bônus enquanto dominados.</li>
         <li><strong>Territórios 3D / elevação</strong> — bônus por ladeira, "rei da colina" real.</li>
-        <li><strong>Decaimento inteligente</strong> — território que você revisita não decai; abandonado decai mais rápido.</li>
+        <li><strong>Selo "revisitado"</strong> — quarteirões que você repisa com frequência ganham um brilho; nada decai, é só reconhecimento de consistência.</li>
         <li><strong>Missões diárias/semanais</strong> — "corra por 3 bairros diferentes", "feche 5 quarteirões".</li>
         <li><strong>Temporadas temáticas</strong> — mapa e cores especiais no Ceará Natal de Luz, São João, réveillon da Beira-Mar.</li>
         <li><strong>Névoa de guerra</strong> — modo exploração: o mapa começa escuro e você revela o que corre.</li>
@@ -1832,7 +1831,8 @@
             <tr><td>Custo geoprocessamento</td><td>PostGIS pode ficar caro em escala.</td><td>Processar incremental por bairro; cache agressivo; considerar Tile38/pré-agregação.</td></tr>
             <tr><td>Trapaça</td><td>Spoofing de GPS é o maior risco de reputação.</td><td>Device attestation obrigatória + sensores + revisão humana + shadow-ban.</td></tr>
             <tr><td>Segurança física</td><td>O jogo não pode empurrar ninguém para área de risco.</td><td><strong>Gate booleano <code>territoryAllowedAt()</code> / <code>missionAllowedAt()</code></strong>: zona de risco = sem território e sem selo (subtrai ou recusa a conquista). Flag <code>RISK_ZONE_BLOCKING</code>, curadoria por bairro, rotas e modo noturno evitam as zonas. Reavaliar quando houver mecanismo seguro.</td></tr>
-            <tr><td>"Mapa cheio"</td><td>O que acontece quando a cidade é 100% dominada?</td><td>Decaimento semanal garante que nunca fecha de vez; seasons resetam parcialmente.</td></tr>
+            <tr><td>"Mapa cheio"</td><td>O que acontece quando alguém cobre 100% da cidade?</td><td>Vira uma conquista histórica (badge "Cidadão de Fortaleza"). A disputa continua: cobrir 100% mais rápido, e os desafios recorrentes seguem. Território de outros não é afetado.</td></tr>
+            <tr><td>Falta de tensão sem tomada</td><td>Sem PvP direto, o mapa pode parecer solitário.</td><td>Desafios recorrentes, ranking acumulado visível, mapa de amigos sobreposto, ligas (futuro) e guerras de clube (futuro) dão a competição.</td></tr>
             <tr><td>Mecânica de cerco</td><td>Snap às ruas agora ou depois?</td><td>MVP sem snap (polígono do traçado); map-matching na Fase 2.</td></tr>
             <tr><td>Monetização</td><td>Como pagar a conta sem quebrar o jogo?</td><td>Premium cosmético/analítico + patrocínio de bairro + afiliados de equipamento + planos para organizadores de evento e wellness corporativo + campanhas de marca; ranking de uso/nota nunca pago; nunca pay-to-win.</td></tr>
             <tr><td>Afiliados × confiança</td><td>Vitrine comissionada pode parecer propaganda disfarçada.</td><td>Ranking por uso real e nota, separado e não vendável; rótulo claro de "link patrocinado"; sem pop-ups.</td></tr>
@@ -1864,7 +1864,7 @@
   </main>
 
   <footer class="pg">
-    FortalRunners · plano de produto v0.13 · gerado 05 set 2026 · documento vivo, revisar a cada fase
+    FortalRunners · plano de produto v0.14 · gerado 06 set 2026 · documento vivo, revisar a cada fase
   </footer>
 </div>
 

@@ -129,7 +129,7 @@
 
 <div class="wrap">
   <header class="hero">
-    <p class="eyebrow">Referência técnica · v1.0 · 05 set 2026</p>
+    <p class="eyebrow">Referência técnica · v1.1 · 06 set 2026</p>
     <h1>Banco de dados &amp; Integrações</h1>
     <p class="lede">O modelo de dados completo — tabelas, tipos, chaves e relacionamentos — e o catálogo de serviços internos, data stores e integrações de terceiros. Consolida e detalha o que estava espalhado no plano.</p>
     <p class="backlink">← <a href="https://claude.ai/code/artifact/f171dbf5-8933-40a3-98ff-32f169ff869b">Plano de produto</a> · <a href="https://claude.ai/code/artifact/e662d35e-b65a-4f5c-a0ad-d2480c77f2ac">Manual de Design</a></p>
@@ -215,8 +215,8 @@
               <text x="52" y="98">safety_contacts</text>
 
               <text x="342" y="44" fill="var(--ink)" font-weight="700">Gamificação</text>
-              <text x="342" y="61">seasons · weekly_cycles</text>
-              <text x="342" y="76">trophies · badges · user_badges</text>
+              <text x="342" y="61">challenges · challenge_periods</text>
+              <text x="342" y="76">challenge_entries · badges · user_badges</text>
               <text x="342" y="91">personal_records · landmarks</text>
 
               <text x="632" y="50" fill="var(--ink)" font-weight="700">Social &amp; conteúdo</text>
@@ -248,7 +248,7 @@
 
               <text x="32" y="240" fill="var(--ink)" font-weight="700">Corrida &amp; território</text>
               <text x="32" y="258">runs · run_tracks</text>
-              <text x="32" y="273">territories · territory_disputes</text>
+              <text x="32" y="273">territories (permanente)</text>
               <text x="32" y="288">h3_cells · heat_agg</text>
               <text x="32" y="303">shoes · shoe_stats</text>
               <text x="32" y="318">neighborhoods</text>
@@ -505,7 +505,7 @@
       </table></div>
 
       <h4>territories <span class="pk">1:N de users / runs</span></h4>
-      <p>Uma linha por conquista. O estado atual do corredor = união dos ativos.</p>
+      <p>Uma linha por conquista. <strong>Permanente e pessoal</strong> — nenhum outro corredor apaga ou disputa. Sem decaimento, sem ciclo que zera.</p>
       <div class="tw"><table class="t-col">
         <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
         <tbody>
@@ -513,35 +513,22 @@
           <tr><td>user_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k ix">IX</span></td></tr>
           <tr><td>run_id</td><td>ulid</td><td><span class="k fk">FK</span> runs</td></tr>
           <tr><td>neighborhood_id</td><td>ulid</td><td><span class="k fk">FK</span> neighborhoods (nullable)</td></tr>
-          <tr><td>geom</td><td>geometry(MultiPolygon,4326)</td><td><span class="k gx">GIST</span> após <code>ST_Difference</code> de risco/outros</td></tr>
+          <tr><td>geom</td><td>geometry(MultiPolygon,4326)</td><td><span class="k gx">GIST</span> após <code>ST_Difference</code> das zonas de risco</td></tr>
           <tr><td>area_m2</td><td>numeric(12,2)</td><td>—</td></tr>
-          <tr><td>claimed_at / decays_at</td><td>timestamptz</td><td>—</td></tr>
-          <tr><td>status</td><td>enum terr_status</td><td>active / contested / decayed / revoked</td></tr>
+          <tr><td>claimed_at</td><td>timestamptz</td><td><span class="k ix">IX</span> (usado nas métricas de desafio por janela)</td></tr>
+          <tr><td>status</td><td>enum terr_status</td><td><strong>active / revoked</strong> (revoked = anulado por fraude)</td></tr>
         </tbody>
       </table></div>
 
-      <h4>territory_disputes <span class="pk">N:N users via geom</span></h4>
+      <h4>h3_cells <span class="pk">cobertura por corredor</span></h4>
+      <p>Célula H3 res 9 coberta por um corredor. Base do "% de Fortaleza" — <strong>por pessoa</strong>, sobreposição livre.</p>
       <div class="tw"><table class="t-col">
         <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
         <tbody>
-          <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
-          <tr><td>geom</td><td>geometry(MultiPolygon,4326)</td><td><span class="k gx">GIST</span> parte sobreposta</td></tr>
-          <tr><td>attacker_id / defender_id</td><td>ulid</td><td><span class="k fk">FK</span> users</td></tr>
-          <tr><td>attacker_run_id</td><td>ulid</td><td><span class="k fk">FK</span> runs</td></tr>
-          <tr><td>opened_at / resolves_at</td><td>timestamptz</td><td>janela de 24h</td></tr>
-          <tr><td>status</td><td>enum dispute_status</td><td>open / consolidated / reverted</td></tr>
-        </tbody>
-      </table></div>
-
-      <h4>h3_cells <span class="pk">unidade de contagem</span></h4>
-      <p>Posse por célula H3 res 9. Base de "% de Fortaleza dominado".</p>
-      <div class="tw"><table class="t-col">
-        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
-        <tbody>
-          <tr><td>h3_index</td><td>bigint</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>h3_index</td><td>bigint</td><td>parte da <span class="k pk">PK</span> composta</td></tr>
+          <tr><td>owner_id</td><td>ulid</td><td><span class="k pk">PK</span> · <span class="k fk">FK</span> users (NOT NULL)</td></tr>
           <tr><td>city_id</td><td>text</td><td><span class="k ix">IX</span></td></tr>
           <tr><td>neighborhood_id</td><td>ulid</td><td><span class="k fk">FK</span> neighborhoods · <span class="k ix">IX</span></td></tr>
-          <tr><td>owner_id</td><td>ulid</td><td><span class="k fk">FK</span> users (nullable = neutro) · <span class="k ix">IX</span></td></tr>
           <tr><td>territory_id</td><td>ulid</td><td><span class="k fk">FK</span> territories</td></tr>
           <tr><td>claimed_at</td><td>timestamptz</td><td>—</td></tr>
         </tbody>
@@ -582,32 +569,34 @@
     <section id="gamificacao">
       <h2><span class="h2n">05</span>Gamificação</h2>
 
-      <h4>seasons <span class="pk">referência</span> · weekly_cycles <span class="pk">1:N de seasons</span></h4>
-      <div class="tw"><table class="t-col">
-        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
-        <tbody>
-          <tr><td>seasons.id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
-          <tr><td>seasons.name / starts_at / ends_at</td><td>text / timestamptz</td><td>~13 semanas</td></tr>
-          <tr><td>weekly_cycles.id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
-          <tr><td>weekly_cycles.season_id</td><td>ulid</td><td><span class="k fk">FK</span> seasons · <span class="k ix">IX</span></td></tr>
-          <tr><td>weekly_cycles.week_no / starts_at / ends_at</td><td>int / timestamptz</td><td>fecha dom 23h59 America/Fortaleza</td></tr>
-          <tr><td>weekly_cycles.closed_at</td><td>timestamptz</td><td>null enquanto aberto</td></tr>
-        </tbody>
-      </table></div>
+      <div class="note"><b>Sem ciclo que zera</b>Não há <code>seasons</code>, <code>weekly_cycles</code> nem <code>trophies</code> por ciclo. Ranking = agregação acumulada de <code>territories.area_m2</code> (all-time). A recorrência mora em <code>challenges</code>, que não tocam o território.</div>
 
-      <h4>trophies <span class="pk">N:N users × weekly_cycles</span></h4>
-      <p>Resultado congelado de cada ciclo.</p>
+      <h4>challenges <span class="pk">referência — desafios recorrentes</span></h4>
       <div class="tw"><table class="t-col">
         <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
         <tbody>
           <tr><td>id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
-          <tr><td>cycle_id</td><td>ulid</td><td><span class="k fk">FK</span> weekly_cycles · <span class="k ix">IX</span></td></tr>
-          <tr><td>user_id</td><td>ulid</td><td><span class="k fk">FK</span> users · <span class="k ix">IX</span></td></tr>
-          <tr><td>type</td><td>enum trophy_type</td><td>conquistador / barao_bairro / muralha / desbravador / maratonista / podio_bairro</td></tr>
-          <tr><td>neighborhood_id</td><td>ulid</td><td><span class="k fk">FK</span> neighborhoods (nullable)</td></tr>
-          <tr><td>rank</td><td>smallint</td><td>1 / 2 / 3</td></tr>
-          <tr><td>metric_value</td><td>numeric</td><td>—</td></tr>
-          <tr><td>awarded_at</td><td>timestamptz</td><td>—</td></tr>
+          <tr><td>slug</td><td>text</td><td><span class="k uq">UQ</span></td></tr>
+          <tr><td>title / description</td><td>text</td><td>—</td></tr>
+          <tr><td>cadence</td><td>enum challenge_cadence</td><td>weekly / biweekly / monthly / oneoff</td></tr>
+          <tr><td>metric</td><td>enum challenge_metric</td><td>new_area_m2 / new_blocks / new_neighborhoods / distance_m / elevation_gain_m</td></tr>
+          <tr><td>goal</td><td>numeric</td><td>alvo para "completar"; null = ranking puro</td></tr>
+          <tr><td>reward_badge_code</td><td>text</td><td><span class="k fk">FK</span> badges (nullable)</td></tr>
+          <tr><td>reward_top_n</td><td>int</td><td>top N ganham a badge; null = quem bate o goal</td></tr>
+          <tr><td>anchor_date</td><td>date</td><td>âncora dos períodos quinzenais</td></tr>
+          <tr><td>active</td><td>bool</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>challenge_periods <span class="pk">1:N de challenges</span> · challenge_entries <span class="pk">N:N users × periods</span></h4>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>challenge_periods.id</td><td>ulid</td><td><span class="k pk">PK</span></td></tr>
+          <tr><td>challenge_periods.challenge_id</td><td>ulid</td><td><span class="k fk">FK</span> challenges · <span class="k uq">UQ</span>(challenge_id, period_no)</td></tr>
+          <tr><td>challenge_periods.period_no / starts_at / ends_at / closed_at</td><td>int / timestamptz</td><td>o scheduler abre e fecha</td></tr>
+          <tr><td>challenge_entries.period_id / user_id</td><td>ulid</td><td><span class="k pk">PK</span> · <span class="k fk">FK</span></td></tr>
+          <tr><td>challenge_entries.metric_value / rank / completed / badge_awarded</td><td>numeric / int / bool</td><td>congelado ao fechar</td></tr>
         </tbody>
       </table></div>
 
@@ -618,12 +607,12 @@
         <tbody>
           <tr><td>badges.code</td><td>text</td><td><span class="k pk">PK</span></td></tr>
           <tr><td>badges.name / description / shape</td><td>text</td><td>shape: circle / hex / shield</td></tr>
-          <tr><td>badges.type</td><td>enum badge_type</td><td>landmark / collection / coverage / activity / seasonal</td></tr>
+          <tr><td>badges.type</td><td>text</td><td>challenge / landmark / collection / coverage / activity / milestone</td></tr>
           <tr><td>badges.criteria_jsonb</td><td>jsonb</td><td>regra de concessão</td></tr>
-          <tr><td>badges.collection_id</td><td>ulid</td><td><span class="k fk">FK</span> landmark_collections (nullable)</td></tr>
           <tr><td>user_badges.user_id</td><td>ulid</td><td><span class="k pk">PK</span> <span class="k fk">FK</span> users</td></tr>
           <tr><td>user_badges.badge_code</td><td>text</td><td><span class="k pk">PK</span> <span class="k fk">FK</span> badges</td></tr>
-          <tr><td>user_badges.checkin_id</td><td>ulid</td><td><span class="k fk">FK</span> landmark_checkins (nullable)</td></tr>
+          <tr><td>user_badges.source</td><td>text</td><td>milestone / challenge / manual</td></tr>
+          <tr><td>user_badges.challenge_period_id</td><td>text</td><td>origem, quando <code>source=challenge</code></td></tr>
           <tr><td>user_badges.tier</td><td>text</td><td>bronze / prata / ouro (badges graduadas)</td></tr>
           <tr><td>user_badges.earned_at</td><td>timestamptz</td><td>—</td></tr>
         </tbody>
@@ -1048,12 +1037,12 @@
           <tr><td>device_kind</td><td>phone · watch · footpod · hrm</td></tr>
           <tr><td>run_source</td><td>phone · watch · import</td></tr>
           <tr><td>run_status</td><td>processing · valid · flagged · rejected</td></tr>
-          <tr><td>terr_status</td><td>active · contested · decayed · revoked</td></tr>
-          <tr><td>dispute_status</td><td>open · consolidated · reverted</td></tr>
+          <tr><td>terr_status</td><td>active · revoked</td></tr>
+          <tr><td>challenge_cadence</td><td>weekly · biweekly · monthly · oneoff</td></tr>
+          <tr><td>challenge_metric</td><td>new_area_m2 · new_blocks · new_neighborhoods · distance_m · elevation_gain_m</td></tr>
           <tr><td>shoe_status</td><td>active · rotation · retired</td></tr>
           <tr><td>risk_source</td><td>admin · hazard_cluster · public_data</td></tr>
-          <tr><td>trophy_type</td><td>conquistador · barao_bairro · muralha · desbravador · maratonista · podio_bairro</td></tr>
-          <tr><td>badge_type</td><td>landmark · collection · coverage · activity · seasonal</td></tr>
+          <tr><td>badge type</td><td>challenge · landmark · collection · coverage · activity · milestone</td></tr>
           <tr><td>checkin_status</td><td>pending · approved · rejected</td></tr>
           <tr><td>activity_type</td><td>run · claim · trophy · badge · invasion · comment · checkin</td></tr>
           <tr><td>visibility</td><td>public · friends · private</td></tr>
@@ -1079,7 +1068,7 @@
       <ul>
         <li><strong>Geoespaciais (GIST):</strong> <code>run_tracks.geom</code>, <code>territories.geom</code>, <code>h3_cells</code> (B-tree em <code>h3_index</code>), <code>neighborhoods.geom</code>, <code>risk_zones.geom</code>, <code>landmarks.geom</code>, <code>hazard_reports.geom</code>, <code>map_pois.geom</code>, <code>events.area_geom</code>, <code>event_stations.geom</code>.</li>
         <li><strong>Particionamento:</strong> <code>run_tracks</code> e <code>activity_events</code> por mês (<code>RANGE</code> em <code>started_at</code>/<code>created_at</code>); <code>ai_interactions</code> e <code>audit_log</code> por mês; <code>scan_events</code> por evento quando alto volume.</li>
-        <li><strong>Ranking:</strong> agregados de área e cobertura em <strong>Redis sorted sets</strong> (global, semanal, por bairro, por clube, entre amigos) — recalculados de forma incremental, nunca varrendo a cidade a cada corrida. Snapshot semanal em <code>trophies</code>.</li>
+        <li><strong>Ranking:</strong> acumulado por área coberta, all-time. Fase 1 agrega em SQL; <strong>Redis sorted sets</strong> (global, por bairro, por clube, entre amigos) quando o volume pedir — recalculo incremental, nunca varrendo a cidade a cada corrida. Placar de desafio: janela por <code>claimed_at</code>/<code>started_at</code>, congelado em <code>challenge_entries</code> ao fechar.</li>
         <li><strong>Composite IX comuns:</strong> <code>runs(user_id, started_at desc)</code>, <code>territories(user_id, status)</code>, <code>h3_cells(owner_id)</code>, <code>activity_events(actor_id, created_at desc)</code>, <code>scan_events(athlete_id, scanned_at)</code>, <code>ai_interactions(user_id, created_at)</code>.</li>
         <li><strong>Busca textual:</strong> <code>pg_trgm</code> em <code>users.username</code>, <code>routes.name</code>, <code>events.title</code>, <code>shoe_catalog(brand,model)</code>.</li>
         <li><strong>Grandes polígonos:</strong> <code>ST_Subdivide</code> nas geometrias de bairro/risco para acelerar <code>ST_Intersects</code>/<code>ST_Difference</code>.</li>
@@ -1110,18 +1099,13 @@
           <tr><td>territories</td><td>N:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
           <tr><td>territories</td><td>N:1</td><td>runs</td><td>run_id</td><td>set null</td></tr>
           <tr><td>territories</td><td>N:1</td><td>neighborhoods</td><td>neighborhood_id</td><td>set null</td></tr>
-          <tr><td>territory_disputes</td><td>N:1 ×2</td><td>users</td><td>attacker_id / defender_id</td><td>cascade</td></tr>
-          <tr><td>h3_cells</td><td>N:1</td><td>users</td><td>owner_id</td><td>set null</td></tr>
-          <tr><td>h3_cells</td><td>N:1</td><td>territories</td><td>territory_id</td><td>set null</td></tr>
-          <tr><td>h3_cells</td><td>N:1</td><td>neighborhoods</td><td>neighborhood_id</td><td>restrict</td></tr>
-          <tr><td>weekly_cycles</td><td>N:1</td><td>seasons</td><td>season_id</td><td>restrict</td></tr>
-          <tr><td>trophies</td><td>N:1</td><td>weekly_cycles</td><td>cycle_id</td><td>cascade</td></tr>
-          <tr><td>trophies</td><td>N:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
-          <tr><td>trophies</td><td>N:1</td><td>neighborhoods</td><td>neighborhood_id</td><td>set null</td></tr>
+          <tr><td>h3_cells</td><td>N:1</td><td>users</td><td>owner_id (NOT NULL)</td><td>cascade</td></tr>
+          <tr><td>h3_cells</td><td>N:1</td><td>territories / neighborhoods</td><td>territory_id / neighborhood_id</td><td>set null</td></tr>
+          <tr><td>challenge_periods</td><td>N:1</td><td>challenges</td><td>challenge_id</td><td>cascade</td></tr>
+          <tr><td>challenge_entries</td><td>N:1 ×2</td><td>challenge_periods / users</td><td>period_id / user_id</td><td>cascade</td></tr>
+          <tr><td>challenges</td><td>N:1</td><td>badges</td><td>reward_badge_code</td><td>set null</td></tr>
           <tr><td>user_badges</td><td>N:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
           <tr><td>user_badges</td><td>N:1</td><td>badges</td><td>badge_code</td><td>restrict</td></tr>
-          <tr><td>user_badges</td><td>N:1</td><td>landmark_checkins</td><td>checkin_id</td><td>set null</td></tr>
-          <tr><td>badges</td><td>N:1</td><td>landmark_collections</td><td>collection_id</td><td>set null</td></tr>
           <tr><td>personal_records</td><td>N:1</td><td>users / runs</td><td>user_id / run_id</td><td>cascade / set null</td></tr>
           <tr><td>lifetime_stats</td><td>1:1</td><td>users</td><td>user_id</td><td>cascade</td></tr>
           <tr><td>landmarks</td><td>N:1</td><td>landmark_collections</td><td>collection_id</td><td>set null</td></tr>
@@ -1156,7 +1140,7 @@
           <tr><td>hazard_reports</td><td>N:1</td><td>users</td><td>reporter_id</td><td>set null</td></tr>
         </tbody>
       </table></div>
-      <div class="note"><b>N:N via join table</b><code>friendships</code> (users×users) · <code>club_members</code> (clubs×users) · <code>user_badges</code> (users×badges) · <code>trophies</code> (users×weekly_cycles) · <code>event_participants</code> (users×events) · <code>territory_disputes</code> (users×users, por geometria).</div>
+      <div class="note"><b>N:N via join table</b><code>friendships</code> (users×users) · <code>club_members</code> (clubs×users) · <code>user_badges</code> (users×badges) · <code>challenge_entries</code> (users×challenge_periods) · <code>event_participants</code> (users×events).</div>
     </section>
 
     <section id="servicos">
@@ -1169,10 +1153,11 @@
           <tr><td>auth</td><td>Registro, login, OAuth, refresh rotativo, 2FA, sessões</td><td>Postgres, Redis, Google/Apple</td></tr>
           <tr><td>run</td><td>Ingestão de corrida, validação, enfileiramento</td><td>Postgres, object storage, fila</td></tr>
           <tr><td><strong>territory-worker</strong> <em>(binário próprio)</em></td><td>Limpeza, map-matching, detecção de laço, preenchimento, gate de risco, resolução de conflito, H3, anti-fraude, rollups</td><td>Postgres+PostGIS, OSRM, fila, Redis</td></tr>
-          <tr><td>leaderboard</td><td>Sorted sets de ranking, fechamento de ciclo semanal, decaimento</td><td>Redis, Postgres, jobs</td></tr>
+          <tr><td>ranking</td><td>Leaderboard acumulado por área coberta (all-time), por bairro/amigos/clube</td><td>Postgres (Redis quando escalar)</td></tr>
+          <tr><td>challenge</td><td>Desafios recorrentes: matemática de período, placar por métrica, fechamento com prêmio</td><td>Postgres, scheduler</td></tr>
           <tr><td>social</td><td>Amizades, clubes, feed, bloqueio</td><td>Postgres, Redis pub/sub</td></tr>
           <tr><td>route</td><td>Rotas, avaliações, curadoria</td><td>Postgres+PostGIS</td></tr>
-          <tr><td>gamification</td><td>Selos, troféus, badges, records, missões, check-in de marco</td><td>Postgres, object storage</td></tr>
+          <tr><td>gamification</td><td>Badges (conquistas permanentes), records, missões, check-in de marco</td><td>Postgres, object storage</td></tr>
           <tr><td>event</td><td>Eventos, lotes, estações, credenciais de scanner, participantes</td><td>Postgres, payments</td></tr>
           <tr><td>identity-qr</td><td>QR rotativo, leitura, handshake, fila offline de scan</td><td>Postgres, Redis</td></tr>
           <tr><td>payments</td><td>Pedidos, checkout, split, reembolso, assinatura, conciliação — atrás de <code>PaymentProvider</code></td><td>Asaas, Postgres, jobs</td></tr>
@@ -1180,7 +1165,7 @@
           <tr><td>safety</td><td>Contatos de emergência, SOS, beacon, camada de alertas da via, zonas de risco, POIs, condições (clima/maré)</td><td>Postgres+PostGIS, provedores de clima</td></tr>
           <tr><td>notifications</td><td>Push, e-mail transacional, central de preferências</td><td>FCM/APNs, provedor de e-mail</td></tr>
           <tr><td>admin</td><td>Namespace isolado — usuários, moderação, financeiro, config do jogo, auditoria, zonas de risco</td><td>todos</td></tr>
-          <tr><td>jobs / scheduler</td><td>Cron: fechar ciclo (dom 23h59), decaimento semanal, conciliação Asaas, refresh de <code>heat_agg</code>, reconstrução de <code>risk_zones</code> a partir de clusters, expiração de tokens, backfill de integrações, rollup de <code>shoe_catalog</code></td><td>Postgres, Redis, Asaas</td></tr>
+          <tr><td>jobs / scheduler <em>(binário próprio: <code>cmd/scheduler</code>)</em></td><td>Cron: <strong>abrir e fechar períodos de desafio</strong> (com prêmio em badge), conciliação Asaas, refresh de <code>heat_agg</code>, reconstrução de <code>risk_zones</code> a partir de clusters, expiração de tokens, backfill de integrações, rollup de <code>shoe_catalog</code></td><td>Postgres, Redis, Asaas</td></tr>
         </tbody>
       </table></div>
     </section>
@@ -1301,7 +1286,7 @@
   </main>
 
   <footer class="pg">
-    FortalRunners · banco de dados &amp; integrações v1.0 · 05 set 2026 · consolida o modelo de dados e o catálogo de serviços do plano de produto.
+    FortalRunners · banco de dados &amp; integrações v1.1 · 06 set 2026 · consolida o modelo de dados e o catálogo de serviços do plano de produto.
   </footer>
 </div>
 
