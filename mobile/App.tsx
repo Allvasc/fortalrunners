@@ -10,7 +10,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { isAuthed } from "./src/lib/api";
 import { C } from "./src/theme";
-import { Boot } from "./src/screens/Boot";
 import { Auth } from "./src/screens/Auth";
 import { Home } from "./src/screens/Home";
 import { Map } from "./src/screens/Map";
@@ -56,6 +55,7 @@ const Tab = createBottomTabNavigator<RootStack>();
 const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+SplashScreen.setOptions?.({ fade: true, duration: 300 });
 
 const navTheme = {
   ...DefaultTheme,
@@ -82,10 +82,18 @@ function Root() {
     SplashScreen.hideAsync().catch(() => {});
   }, []);
 
-  if (authed.isLoading) return <Boot />;
+  // A splash nativa (assets/splash.png) cobre a tela até o login ser conferido.
+  useEffect(() => {
+    if (!authed.isLoading) {
+      const id = setTimeout(onReady, 120);
+      return () => clearTimeout(id);
+    }
+  }, [authed.isLoading, onReady]);
+
+  if (authed.isLoading) return <View style={{ flex: 1, backgroundColor: C.bg }} />;
   if (!authed.data) {
     return (
-      <View style={{ flex: 1 }} onLayout={onReady}>
+      <View style={{ flex: 1 }}>
         <Auth />
       </View>
     );
