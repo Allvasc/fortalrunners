@@ -9,25 +9,25 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/Allvasc/fortalrunners/backend/internal/admin"
+	"github.com/Allvasc/fortalrunners/backend/internal/ai"
 	"github.com/Allvasc/fortalrunners/backend/internal/auth"
 	"github.com/Allvasc/fortalrunners/backend/internal/challenge"
+	"github.com/Allvasc/fortalrunners/backend/internal/club"
+	"github.com/Allvasc/fortalrunners/backend/internal/event"
 	"github.com/Allvasc/fortalrunners/backend/internal/health"
 	"github.com/Allvasc/fortalrunners/backend/internal/heatmap"
 	"github.com/Allvasc/fortalrunners/backend/internal/integration"
-	"github.com/Allvasc/fortalrunners/backend/internal/club"
 	"github.com/Allvasc/fortalrunners/backend/internal/landmark"
+	"github.com/Allvasc/fortalrunners/backend/internal/payment"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/config"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/crypto"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/httpx"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/queue"
 	"github.com/Allvasc/fortalrunners/backend/internal/poi"
+	"github.com/Allvasc/fortalrunners/backend/internal/qr"
 	"github.com/Allvasc/fortalrunners/backend/internal/ranking"
 	"github.com/Allvasc/fortalrunners/backend/internal/route"
 	"github.com/Allvasc/fortalrunners/backend/internal/run"
-	"github.com/Allvasc/fortalrunners/backend/internal/ai"
-	"github.com/Allvasc/fortalrunners/backend/internal/event"
-	"github.com/Allvasc/fortalrunners/backend/internal/payment"
-	"github.com/Allvasc/fortalrunners/backend/internal/qr"
 	"github.com/Allvasc/fortalrunners/backend/internal/safety"
 	"github.com/Allvasc/fortalrunners/backend/internal/shoe"
 	"github.com/Allvasc/fortalrunners/backend/internal/social"
@@ -95,7 +95,12 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	weather.NewHandler().Register(secured)
 	event.NewHandler(event.NewService(pool)).RegisterRoutes(secured)
 	qr.NewHandler(qr.NewService(pool)).RegisterRoutes(secured)
-	payment.NewHandler(payment.NewService(pool)).RegisterRoutes(secured)
+	paymentH := payment.NewHandler(payment.NewService(pool, payment.Config{
+		AsaasAPIKey:        cfg.AsaasAPIKey,
+		AsaasWebhookSecret: cfg.AsaasWebhookSecret,
+	}))
+	paymentH.RegisterSecured(secured)
+	paymentH.RegisterPublic(v1)
 	ai.NewHandler(ai.NewService(pool)).RegisterRoutes(secured)
 	admin.NewHandler(pool, pub).Register(secured) // /v1/admin/* (role admin/moderator + 2FA)
 

@@ -2,12 +2,15 @@ package event
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"time"
 
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/id"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+// ErrPaidEvent: o evento tem lote pago — a inscrição precisa passar pelo checkout.
+var ErrPaidEvent = errors.New("evento pago: use o checkout")
 
 type Store struct {
 	pool *pgxpool.Pool
@@ -70,8 +73,25 @@ func (s *Store) GetEvent(ctx context.Context, eventID, userID string) (*Event, e
 	return &ev, nil
 }
 
+// RegisterParticipant inscreve o corredor num evento GRATUITO. Eventos com lote
+// pago (event_prices.amount_cents > 0) precisam passar por POST /v1/payments/checkout
+// — a inscrição só é emitida quando o pagamento confirma (payment.confirmParticipant).
 func (s *Store) RegisterParticipant(ctx context.Context, userID, eventID, category, shirtSize string) (*Participant, error) {
-	bib := fmt.Sprintf("%04d", time.Now().Unix()%10000)
+	// resolve slug → id e checa se há lote pago, numa query só.
+	var realID string
+	var hasPaid bool
+	err := s.pool.QueryRow(ctx, `
+		SELECT e.id, EXISTS(SELECT 1 FROM event_prices p WHERE p.event_id = e.id AND p.amount_cents > 0)
+		FROM events e WHERE e.id = $1 OR e.slug = $1`, eventID).Scan(&realID, &hasPaid)
+	if err != nil {
+		return nil, fmt.Errorf("resolve event: %w", err)
+	}
+	if hasPaid {
+		return nil, ErrPaidEvent
+	}
+
+	pid := id.New()
+	bib := fmt.Sprintf("FR-%s", pid[len(pid)-6:])
 	query := `
 		INSERT INTO event_participants (event_id, user_id, bib_number, category, shirt_size)
 		VALUES ($1, $2, $3, $4, $5)
@@ -79,21 +99,10 @@ func (s *Store) RegisterParticipant(ctx context.Context, userID, eventID, catego
 		RETURNING event_id, user_id, bib_number, category, shirt_size, joined_at
 	`
 	var p Participant
-	err := s.pool.QueryRow(ctx, query, eventID, userID, bib, category, shirtSize).Scan(
+	if err := s.pool.QueryRow(ctx, query, realID, userID, bib, category, shirtSize).Scan(
 		&p.EventID, &p.UserID, &p.BibNumber, &p.Category, &p.ShirtSize, &p.JoinedAt,
-	)
-	if err != nil {
+	); err != nil {
 		return nil, fmt.Errorf("register participant: %w", err)
 	}
-
-	// Insere também QR Token para a inscrição
-	qrID := id.New()
-	sig := fmt.Sprintf("SIG_%s_%s", eventID, userID)
-	qrQuery := `
-		INSERT INTO qr_tokens (id, user_id, kind, payload_sig, event_id, expires_at)
-		VALUES ($1, $2, 'rotating', $3, $4, now() + interval '30 days')
-	`
-	_, _ = s.pool.Exec(ctx, qrQuery, qrID, userID, sig, eventID)
-
 	return &p, nil
 }

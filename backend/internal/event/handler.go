@@ -1,6 +1,7 @@
 package event
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/Allvasc/fortalrunners/backend/internal/auth"
@@ -25,7 +26,7 @@ func (h *Handler) ListEvents(c echo.Context) error {
 	userID := auth.UserID(c)
 	events, err := h.svc.ListEvents(c.Request().Context(), userID)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return echo.NewHTTPError(http.StatusInternalServerError, "erro interno")
 	}
 	return c.JSON(http.StatusOK, map[string]any{"events": events})
 }
@@ -54,8 +55,11 @@ func (h *Handler) RegisterParticipant(c echo.Context) error {
 		req.ShirtSize = "M"
 	}
 	p, err := h.svc.RegisterParticipant(c.Request().Context(), userID, eventID, req.Category, req.ShirtSize)
+	if errors.Is(err, ErrPaidEvent) {
+		return echo.NewHTTPError(http.StatusConflict, "evento pago — finalize pelo checkout")
+	}
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return echo.NewHTTPError(http.StatusInternalServerError, "erro ao inscrever")
 	}
 	return c.JSON(http.StatusOK, map[string]any{"participant": p, "message": "Inscrição confirmada!"})
 }

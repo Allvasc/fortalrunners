@@ -415,10 +415,12 @@ export const api = {
     }),
 
   // --- pagamentos ---
-  checkout: (kind: string, amount_cents: number, method = "pix") =>
+  // O valor é definido no servidor a partir do lote (price_id); o cliente nunca informa preço.
+  checkout: (price_id: string, method = "pix") =>
     request<{ order: PaymentOrder }>("/v1/payments/checkout", {
       method: "POST",
-      body: JSON.stringify({ kind, amount_cents, method }),
+      headers: { "Idempotency-Key": crypto.randomUUID() },
+      body: JSON.stringify({ price_id, method }),
     }),
 
   // --- IA coach ---

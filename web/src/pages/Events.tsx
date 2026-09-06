@@ -43,9 +43,13 @@ export const EventsPage: React.FC = () => {
     }
   }
 
-  async function handleCheckout(amountCents: number) {
+  async function handleCheckout(priceId: string) {
+    if (!priceId) {
+      setMsg("Este evento ainda não tem lote de inscrição aberto.");
+      return;
+    }
     try {
-      const res = await api.checkout("event_registration", amountCents, "pix");
+      const res = await api.checkout(priceId, "pix");
       setOrder(res.order);
     } catch (e: any) {
       setMsg(e.message || "Erro no pagamento");
@@ -111,11 +115,13 @@ export const EventsPage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => {
-                      handleCheckout(4990);
+                      handleCheckout(ev.prices?.[0]?.id ?? "");
                     }}
                     className="text-xs bg-teal-800 hover:bg-teal-900 text-white px-3 py-2 rounded-lg font-medium"
                   >
-                    Pay via PIX (R$ 49,90)
+                    {ev.prices?.[0]
+                      ? `Pagar via PIX (R$ ${(ev.prices[0].amount_cents / 100).toFixed(2)})`
+                      : "Inscrição paga"}
                   </button>
                 </div>
               )}

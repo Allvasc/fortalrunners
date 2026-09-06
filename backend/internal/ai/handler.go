@@ -30,9 +30,12 @@ func (h *Handler) AskCoach(c echo.Context) error {
 		req.Prompt = "Qual a melhor dica para meu treino em Fortaleza hoje?"
 	}
 
+	if len(req.Prompt) > 1000 {
+		req.Prompt = req.Prompt[:1000]
+	}
 	res, err := h.svc.AskCoach(c.Request().Context(), userID, req.Prompt)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return echo.NewHTTPError(http.StatusInternalServerError, "coach indisponível no momento")
 	}
 	return c.JSON(http.StatusOK, map[string]any{"coach": res})
 }

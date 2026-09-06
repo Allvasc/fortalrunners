@@ -11,11 +11,11 @@ import (
 )
 
 type CoachResponse struct {
-	ID        string   `json:"id"`
-	Message   string   `json:"message"`
-	Tips      []string `json:"tips"`
-	Advice    string   `json:"advice"`
-	Weather   string   `json:"weather"`
+	ID        string    `json:"id"`
+	Message   string    `json:"message"`
+	Tips      []string  `json:"tips"`
+	Advice    string    `json:"advice"`
+	Weather   string    `json:"weather"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -29,7 +29,7 @@ func NewService(pool *pgxpool.Pool) *Service {
 
 func (s *Service) AskCoach(ctx context.Context, userID, prompt string) (*CoachResponse, error) {
 	promptLower := strings.ToLower(prompt)
-	
+
 	var advice, weatherMsg string
 	tips := []string{
 		"Hidrate-se com água e água de coco antes e depois da corrida na orla.",

@@ -31,11 +31,11 @@ type Price struct {
 }
 
 type Participant struct {
-	EventID    string     `json:"event_id"`
-	UserID     string     `json:"user_id"`
-	UserHandle string     `json:"user_handle,omitempty"`
-	BibNumber  string     `json:"bib_number,omitempty"`
-	Category   string     `json:"category"`
-	ShirtSize  string     `json:"shirt_size"`
-	JoinedAt   time.Time  `json:"joined_at"`
+	EventID    string    `json:"event_id"`
+	UserID     string    `json:"user_id"`
+	UserHandle string    `json:"user_handle,omitempty"`
+	BibNumber  string    `json:"bib_number,omitempty"`
+	Category   string    `json:"category"`
+	ShirtSize  string    `json:"shirt_size"`
+	JoinedAt   time.Time `json:"joined_at"`
 }

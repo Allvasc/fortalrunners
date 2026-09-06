@@ -40,6 +40,9 @@ type Config struct {
 	StravaRedirectURL        string
 	StravaWebhookVerifyToken string
 
+	AsaasAPIKey        string // chave do Asaas (cofre) — vazio = modo sandbox/manual
+	AsaasWebhookSecret string // segredo HMAC do webhook do Asaas
+
 	CORSOrigins []string
 }
 
@@ -66,6 +69,8 @@ func Load() (Config, error) {
 		StravaClientSecret:       os.Getenv("STRAVA_CLIENT_SECRET"),
 		StravaRedirectURL:        os.Getenv("STRAVA_REDIRECT_URL"),
 		StravaWebhookVerifyToken: os.Getenv("STRAVA_WEBHOOK_VERIFY_TOKEN"),
+		AsaasAPIKey:              os.Getenv("ASAAS_API_KEY"),
+		AsaasWebhookSecret:       os.Getenv("ASAAS_WEBHOOK_SECRET"),
 		CORSOrigins:              splitCSV(get("CORS_ORIGINS", "http://localhost:5173")),
 	}
 
@@ -136,4 +141,3 @@ func getHTTPAddr() string {
 	}
 	return get("HTTP_ADDR", ":8080")
 }
-

@@ -1,10 +1,13 @@
 package payment
 
 import (
+	"errors"
+	"io"
 	"net/http"
 
-	"github.com/Allvasc/fortalrunners/backend/internal/auth"
 	"github.com/labstack/echo/v4"
+
+	"github.com/Allvasc/fortalrunners/backend/internal/auth"
 )
 
 type Handler struct {
@@ -15,50 +18,57 @@ func NewHandler(svc *Service) *Handler {
 	return &Handler{svc: svc}
 }
 
-func (h *Handler) RegisterRoutes(g *echo.Group) {
-	g.POST("/payments/checkout", h.Checkout)
-	g.POST("/payments/webhook", h.Webhook)
+// RegisterSecured monta as rotas autenticadas sob /v1.
+func (h *Handler) RegisterSecured(g *echo.Group) {
+	g.POST("/payments/checkout", h.checkout)
 }
 
-type CheckoutReq struct {
-	Kind        string `json:"kind"`
-	AmountCents int    `json:"amount_cents"`
-	Method      string `json:"method"`
+// RegisterPublic monta o receptor de webhook do Asaas (assinatura própria, sem Bearer).
+func (h *Handler) RegisterPublic(g *echo.Group) {
+	g.POST("/webhooks/asaas", h.webhook)
 }
 
-func (h *Handler) Checkout(c echo.Context) error {
-	userID := auth.UserID(c)
-	var req CheckoutReq
-	if err := c.Bind(&req); err != nil || req.AmountCents <= 0 {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "parâmetros de checkout inválidos"})
-	}
-	if req.Kind == "" {
-		req.Kind = "event_registration"
-	}
-	if req.Method == "" {
-		req.Method = "pix"
+type checkoutReq struct {
+	PriceID string `json:"price_id"`
+	Method  string `json:"method"`
+}
+
+func (h *Handler) checkout(c echo.Context) error {
+	var req checkoutReq
+	if err := c.Bind(&req); err != nil || req.PriceID == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "price_id obrigatório")
 	}
 
-	ord, err := h.svc.Checkout(c.Request().Context(), userID, req.Kind, req.AmountCents, req.Method)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	ord, err := h.svc.Checkout(
+		c.Request().Context(), auth.UserID(c), req.PriceID, req.Method,
+		c.Request().Header.Get("Idempotency-Key"),
+	)
+	switch {
+	case errors.Is(err, ErrPriceNotFound):
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	case errors.Is(err, ErrLotClosed), errors.Is(err, ErrLotSoldOut), errors.Is(err, ErrAlreadyOrdered):
+		return echo.NewHTTPError(http.StatusConflict, err.Error())
+	case err != nil:
+		return echo.NewHTTPError(http.StatusInternalServerError, "erro ao criar cobrança")
 	}
 	return c.JSON(http.StatusOK, map[string]any{"order": ord})
 }
 
-type WebhookReq struct {
-	Event   string `json:"event"`
-	Payment struct {
-		ID     string `json:"id"`
-		Status string `json:"status"`
-	} `json:"payment"`
-}
-
-func (h *Handler) Webhook(c echo.Context) error {
-	var req WebhookReq
-	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid payload"})
+func (h *Handler) webhook(c echo.Context) error {
+	body, err := io.ReadAll(io.LimitReader(c.Request().Body, 1<<20))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "corpo inválido")
 	}
-	_ = h.svc.ProcessWebhook(c.Request().Context(), req.Payment.ID, req.Payment.Status)
-	return c.JSON(http.StatusOK, map[string]string{"status": "received"})
+	sig := c.Request().Header.Get("asaas-access-token")
+	if sig == "" {
+		sig = c.Request().Header.Get("X-Signature")
+	}
+
+	if err := h.svc.HandleWebhook(c.Request().Context(), body, sig); err != nil {
+		if errors.Is(err, ErrBadSignature) {
+			return echo.NewHTTPError(http.StatusUnauthorized, "assinatura inválida")
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, "erro ao processar")
+	}
+	return c.NoContent(http.StatusOK)
 }

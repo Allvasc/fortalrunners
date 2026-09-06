@@ -4,20 +4,20 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/labstack/echo/v4"
 	"github.com/Allvasc/fortalrunners/backend/internal/auth"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/id"
+	"github.com/labstack/echo/v4"
 )
 
 type HealthSyncReq struct {
-	Provider    string    `json:"provider"` // apple_health | health_connect
-	ExternalID  string    `json:"external_id"`
-	DistanceM   float64   `json:"distance_m"`
-	MovingS     int       `json:"moving_s"`
-	StartedAt   time.Time `json:"started_at"`
-	EndedAt     time.Time `json:"ended_at"`
-	StepsCount  int       `json:"steps_count"`
-	CaloriesBurned int    `json:"calories_burned"`
+	Provider       string    `json:"provider"` // apple_health | health_connect
+	ExternalID     string    `json:"external_id"`
+	DistanceM      float64   `json:"distance_m"`
+	MovingS        int       `json:"moving_s"`
+	StartedAt      time.Time `json:"started_at"`
+	EndedAt        time.Time `json:"ended_at"`
+	StepsCount     int       `json:"steps_count"`
+	CaloriesBurned int       `json:"calories_burned"`
 }
 
 func (h *Handler) syncHealthData(c echo.Context) error {

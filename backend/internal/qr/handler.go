@@ -25,7 +25,7 @@ func (h *Handler) GetToken(c echo.Context) error {
 	eventID := c.QueryParam("event_id")
 	tok, err := h.svc.GetToken(c.Request().Context(), userID, eventID)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return echo.NewHTTPError(http.StatusInternalServerError, "erro interno")
 	}
 	return c.JSON(http.StatusOK, map[string]any{"qr": tok})
 }
@@ -43,7 +43,7 @@ func (h *Handler) ScanToken(c echo.Context) error {
 	}
 	res, err := h.svc.ScanToken(c.Request().Context(), userID, req.TokenSig, req.Kind)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return echo.NewHTTPError(http.StatusInternalServerError, "erro interno")
 	}
 	return c.JSON(http.StatusOK, map[string]any{"scan": res, "message": "Leitura registrada com sucesso!"})
 }
