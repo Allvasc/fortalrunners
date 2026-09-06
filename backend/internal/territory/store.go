@@ -7,6 +7,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/Allvasc/fortalrunners/backend/internal/platform/h3grid"
 )
 
 type store struct{ pool *pgxpool.Pool }
@@ -122,31 +124,46 @@ func (s *store) insertTerritory(ctx context.Context, id, userID, runID string, w
 	return err
 }
 
-// coverageCellDeg = ~155 m — grade stand-in ~60 m até o H3 real.
-const coverageCellDeg = 0.00055
-
-// polyfillCells preenche h3_cells com as células da grade cujo centro cai dentro
-// do território. Cobertura é por corredor (PK composta), sobreposição livre.
+// polyfillCells preenche h3_cells com as células da grade de cobertura
+// (h3grid.Coverage) cujo centro cai dentro do território. As células candidatas
+// da caixa envolvente vêm do Go (H3 real ou grade stand-in); o filtro pelo
+// polígono real e o bairro ficam no SQL. Cobertura é por corredor (PK composta),
+// sobreposição livre.
 func (s *store) polyfillCells(ctx context.Context, territoryID, ownerID string) error {
+	var minLat, minLng, maxLat, maxLng float64
+	err := s.pool.QueryRow(ctx, `
+		SELECT ST_YMin(geom), ST_XMin(geom), ST_YMax(geom), ST_XMax(geom)
+		FROM territories WHERE id = $1`, territoryID).Scan(&minLat, &minLng, &maxLat, &maxLng)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	cells := h3grid.Coverage.CellsInBBox(minLat, minLng, maxLat, maxLng)
+	if len(cells) == 0 {
+		return nil
+	}
+	ids := make([]string, len(cells))
+	lats := make([]float64, len(cells))
+	lngs := make([]float64, len(cells))
+	for i, c := range cells {
+		ids[i], lats[i], lngs[i] = c.ID, c.CenterLat, c.CenterLng
+	}
+
 	const q = `
-		WITH t AS (
-			SELECT geom, ST_XMin(geom) x0, ST_XMax(geom) x1, ST_YMin(geom) y0, ST_YMax(geom) y1
-			FROM territories WHERE id = $1
-		),
-		cells AS (
-			SELECT gx, gy, ST_SetSRID(ST_Point((gx + 0.5) * $3, (gy + 0.5) * $3), 4326) AS c
-			FROM t,
-			     generate_series(floor(t.x0 / $3)::int, ceil(t.x1 / $3)::int) gx,
-			     generate_series(floor(t.y0 / $3)::int, ceil(t.y1 / $3)::int) gy
-		)
 		INSERT INTO h3_cells (h3_index, city_id, neighborhood_id, owner_id, territory_id)
-		SELECT gy::bigint * 10000000 + (gx + 5000000), 'fortaleza',
-		       (SELECT n.id FROM neighborhoods n WHERE ST_Contains(n.geom, cells.c) LIMIT 1),
+		SELECT c.id, 'fortaleza',
+		       (SELECT n.id FROM neighborhoods n
+		        WHERE ST_Contains(n.geom, ST_SetSRID(ST_Point(c.lng, c.lat), 4326)) LIMIT 1),
 		       $2, $1
-		FROM cells, t
-		WHERE ST_Contains(t.geom, cells.c)
+		FROM territories t
+		JOIN unnest($3::text[], $4::float8[], $5::float8[]) AS c(id, lat, lng)
+		  ON ST_Contains(t.geom, ST_SetSRID(ST_Point(c.lng, c.lat), 4326))
+		WHERE t.id = $1
 		ON CONFLICT (h3_index, owner_id) DO NOTHING`
-	_, err := s.pool.Exec(ctx, q, territoryID, ownerID, coverageCellDeg)
+	_, err = s.pool.Exec(ctx, q, territoryID, ownerID, ids, lats, lngs)
 	return err
 }
 

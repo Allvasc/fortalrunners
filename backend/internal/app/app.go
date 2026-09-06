@@ -117,6 +117,9 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	runSvc := run.NewService(pool, pub, shoeSvc, mapmatch.New(cfg.OSRMURL))
 	run.NewHandler(runSvc).Register(secured)
 	territory.NewHandler(pool).Register(secured)
+	if err := territory.EnsureCoverageGrid(ctx, pool, log); err != nil {
+		log.Error("EnsureCoverageGrid falhou (cobertura pode ficar defasada)", "err", err)
+	}
 	ranking.NewHandler(pool).Register(secured)
 	challenge.NewHandler(challenge.NewService(pool, log)).Register(secured)
 	heatmap.NewHandler(heatmap.NewService(pool, log)).Register(secured)

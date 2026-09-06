@@ -13,6 +13,7 @@ require (
 	github.com/nats-io/nats.go v1.53.1
 	github.com/oklog/ulid/v2 v2.1.2
 	github.com/pressly/goose/v3 v3.28.0
+	github.com/uber/h3-go/v4 v4.5.0
 )
 
 require (
