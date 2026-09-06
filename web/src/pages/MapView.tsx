@@ -40,6 +40,14 @@ const RUNNER = "#08a6a0";
 const EMPTY = { type: "FeatureCollection", features: [] } as FeatureCollection;
 const EMPTY_GJ = { type: "FeatureCollection", features: [] } as GeoJSON.FeatureCollection;
 
+// Backend em Go serializa slice vazio como `null`. Normaliza qualquer
+// FeatureCollection para ter `features: []` antes de ir pro maplibre.
+function fcSafe<T extends { features?: unknown }>(fc: T | undefined | null): T {
+  if (!fc) return { type: "FeatureCollection", features: [] } as unknown as T;
+  if (!Array.isArray(fc.features)) return { ...fc, features: [] };
+  return fc;
+}
+
 type LayerKey = "heat" | "landmarks" | "routes" | "pois" | "risk" | "hazards";
 
 export function MapView() {
@@ -65,7 +73,7 @@ export function MapView() {
   const haz = useQuery({ queryKey: ["hazards"], queryFn: () => api.hazards(), enabled: on.hazards });
   const weather = useQuery({ queryKey: ["weather"], queryFn: () => api.weather() });
 
-  const fc = terr.data ?? EMPTY;
+  const fc = fcSafe(terr.data ?? EMPTY);
 
   // --- init ---
   useEffect(() => {
@@ -154,12 +162,12 @@ export function MapView() {
     vis(["routes-line"], on.routes);
     vis(["hazards-pt"], on.hazards);
 
-    if (heat.data) setData("heatmap", heat.data);
-    if (risk.data) setData("risk", risk.data);
+    if (heat.data) setData("heatmap", fcSafe(heat.data));
+    if (risk.data) setData("risk", fcSafe(risk.data));
     if (haz.data) {
       setData("hazards", {
         type: "FeatureCollection",
-        features: haz.data.hazards.map((h) => ({
+        features: (haz.data.hazards ?? []).map((h) => ({
           type: "Feature",
           geometry: { type: "Point", coordinates: [h.lng, h.lat] },
           properties: { type: h.type, note: h.note ?? "" },
@@ -169,7 +177,7 @@ export function MapView() {
     if (routes.data) {
       setData("routes", {
         type: "FeatureCollection",
-        features: routes.data.routes
+        features: (routes.data.routes ?? [])
           .filter((r) => !!r.geojson)
           .map((r) => ({ type: "Feature", geometry: JSON.parse(r.geojson), properties: { name: r.name } })),
       });
@@ -185,7 +193,7 @@ export function MapView() {
     markersRef.current = [];
 
     if (on.landmarks && lmk.data) {
-      lmk.data.landmarks.forEach((l) => {
+      (lmk.data.landmarks ?? []).forEach((l) => {
         const el = pin(l.checked_in ? "★" : "📍", l.checked_in ? "var(--good)" : "var(--coral)");
         markersRef.current.push(
           new maplibregl.Marker({ element: el })
@@ -196,7 +204,7 @@ export function MapView() {
       });
     }
     if (on.pois && poi.data) {
-      poi.data.amenities.forEach((p) => {
+      (poi.data.amenities ?? []).forEach((p) => {
         const el = pin(p.category === "bebedouro" ? "💧" : "🚾", "var(--teal)");
         markersRef.current.push(
           new maplibregl.Marker({ element: el })

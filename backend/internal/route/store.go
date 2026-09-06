@@ -84,6 +84,9 @@ func (s *Store) ListRoutes(ctx context.Context, limit int, bbox [4]float64) ([]R
 		r.CreatedBy = createdBy
 		routes = append(routes, r)
 	}
+	if routes == nil {
+		routes = []Route{}
+	}
 	return routes, nil
 }
 

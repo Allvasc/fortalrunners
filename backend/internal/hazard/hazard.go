@@ -68,6 +68,9 @@ func (s *Service) List(ctx context.Context, bbox [4]float64) ([]Hazard, error) {
 		}
 		out = append(out, h)
 	}
+	if out == nil {
+		out = []Hazard{}
+	}
 	return out, nil
 }
 

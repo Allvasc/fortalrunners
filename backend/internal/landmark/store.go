@@ -105,6 +105,9 @@ func (s *Store) ListLandmarks(ctx context.Context, userID string) ([]Landmark, e
 		lm.CheckedInAt = takenAt
 		landmarks = append(landmarks, lm)
 	}
+	if landmarks == nil {
+		landmarks = []Landmark{}
+	}
 	return landmarks, nil
 }
 

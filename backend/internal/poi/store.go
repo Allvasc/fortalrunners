@@ -46,5 +46,8 @@ func (s *Store) ListPOIs(ctx context.Context, cityID string, category string) ([
 		}
 		pois = append(pois, p)
 	}
+	if pois == nil {
+		pois = []POI{}
+	}
 	return pois, nil
 }
