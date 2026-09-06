@@ -73,6 +73,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 		MFAEncKey:  cfg.MFAEncKey,
 		WebBaseURL: firstOrigin(cfg.CORSOrigins),
 		Log:        log,
+		Mailer:     auth.NewMailer(cfg.ResendAPIKey, cfg.EmailFrom),
 		OAuth: auth.OAuthConfig{
 			GoogleClientID: cfg.GoogleClientID, GoogleClientSecret: cfg.GoogleClientSecret,
 			GoogleRedirectURL: cfg.GoogleRedirectURL,

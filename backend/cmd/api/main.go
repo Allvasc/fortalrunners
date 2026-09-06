@@ -17,6 +17,7 @@ import (
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/config"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/db"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/logging"
+	"github.com/Allvasc/fortalrunners/backend/internal/platform/obs"
 )
 
 func main() {
@@ -27,6 +28,9 @@ func main() {
 		panic(err)
 	}
 	log := logging.New(cfg.LogLevel, cfg.Env)
+
+	flushSentry := obs.InitSentry(cfg.SentryDSN, cfg.Env, os.Getenv("RENDER_GIT_COMMIT"), log)
+	defer flushSentry()
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()

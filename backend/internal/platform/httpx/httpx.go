@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -80,6 +81,14 @@ func errorHandler(log *slog.Logger) echo.HTTPErrorHandler {
 		if code >= 500 {
 			log.Error("http erro", "err", err, "path", c.Path())
 			msg = "erro interno"
+			if hub := sentry.CurrentHub(); hub != nil && hub.Client() != nil {
+				hub.WithScope(func(scope *sentry.Scope) {
+					scope.SetTag("path", c.Path())
+					scope.SetTag("method", c.Request().Method)
+					scope.SetTag("request_id", c.Response().Header().Get(echo.HeaderXRequestID))
+					hub.CaptureException(err)
+				})
+			}
 		}
 		_ = c.JSON(code, map[string]any{"error": msg})
 	}

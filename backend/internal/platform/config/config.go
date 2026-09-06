@@ -49,6 +49,11 @@ type Config struct {
 
 	OSRMURL string // base de um servidor OSRM (ex.: https://osrm.exemplo.com) — vazio = sem map-matching
 
+	ResendAPIKey string // chave da Resend p/ e-mail transacional — vazio = só loga o link
+	EmailFrom    string // remetente verificado (ex.: "FortalRunners <nao-responda@dominio>")
+
+	SentryDSN string // DSN do Sentry — vazio = sem captura de erros remota
+
 	CORSOrigins []string
 }
 
@@ -81,6 +86,9 @@ func Load() (Config, error) {
 		AIModel:                  get("AI_MODEL", "claude-sonnet-5"),
 		WeatherAPIKey:            os.Getenv("WEATHER_API_KEY"),
 		OSRMURL:                  os.Getenv("OSRM_URL"),
+		ResendAPIKey:             os.Getenv("RESEND_API_KEY"),
+		EmailFrom:                os.Getenv("EMAIL_FROM"),
+		SentryDSN:                os.Getenv("SENTRY_DSN"),
 		CORSOrigins:              splitCSV(get("CORS_ORIGINS", "http://localhost:5173")),
 	}
 

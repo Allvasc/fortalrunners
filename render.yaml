@@ -69,6 +69,11 @@ services:
       # base de um servidor OSRM p/ map-matching do traçado — vazio = desligado
       - key: OSRM_URL
         sync: false
+      # e-mail transacional (Resend) — vazio = só registra o link no log
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
 
   # 2. Web Frontend Portal (Gratuito)
   - type: web
