@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -56,17 +57,19 @@ func ordered(a, b string) (string, string) {
 	return a, b
 }
 
-func (s *Store) SendRequest(ctx context.Context, userID, targetID string) error {
-	if userID == targetID {
-		return ErrCannotFriendSelf
-	}
-	var exists bool
+func (s *Store) SendRequest(ctx context.Context, userID, rawTarget string) error {
+	// aceita tanto o id (ULID) quanto o athlete_id (FR-0001234, case-insensitive).
+	var targetID string
 	if err := s.pool.QueryRow(ctx,
-		`SELECT true FROM users WHERE id = $1 AND status = 'active'`, targetID,
-	).Scan(&exists); errors.Is(err, pgx.ErrNoRows) {
+		`SELECT id FROM users WHERE (id = $1 OR upper(athlete_id) = upper($1)) AND status = 'active'`,
+		strings.TrimSpace(rawTarget),
+	).Scan(&targetID); errors.Is(err, pgx.ErrNoRows) {
 		return ErrTargetNotFound
 	} else if err != nil {
 		return err
+	}
+	if userID == targetID {
+		return ErrCannotFriendSelf
 	}
 
 	u1, u2 := ordered(userID, targetID)

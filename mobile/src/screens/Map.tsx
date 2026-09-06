@@ -1,79 +1,343 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useMemo, useState } from "react";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import {
   Camera,
+  CircleLayer,
   FillLayer,
+  HeatmapLayer,
   LineLayer,
-  MapView,
+  MapView as MLRNMapView,
+  RasterLayer,
+  RasterSource,
   ShapeSource,
+  UserLocation,
 } from "@maplibre/maplibre-react-native";
 import { useQuery } from "@tanstack/react-query";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { api } from "../lib/api";
+import { api, type GeoFC } from "../lib/api";
 import { C } from "../theme";
+import { area } from "../format";
 import type { RootStack } from "../../App";
 
 type Props = NativeStackScreenProps<RootStack, "Map">;
 
-// Estilo demo do MapLibre (OSM, sem chave). Trocar pelo style JSON próprio
-// (MapTiler/Protomaps) quando a chave de produção estiver configurada.
-const STYLE = "https://demotiles.maplibre.org/style.json";
 const FORTALEZA: [number, number] = [-38.523, -3.731];
+const RUNNER = "#08a6a0";
+const EMPTY: GeoFC = { type: "FeatureCollection", features: [] };
+
+// Style vazio; as fontes raster (OSM / Esri) entram como componentes <RasterSource>.
+const BASE_STYLE = {
+  version: 8,
+  sources: {},
+  layers: [{ id: "bg", type: "background", paint: { "background-color": "#e9e4d8" } }],
+} as const;
+
+type LKey = "heat" | "landmarks" | "routes" | "pois" | "risk" | "hazards";
 
 export function Map({ navigation }: Props) {
-  const terr = useQuery({
-    queryKey: ["territories"],
-    queryFn: api.territories,
+  const [collapsed, setCollapsed] = useState(false);
+  const [base, setBase] = useState<"osm" | "sat">("osm");
+  const [scope, setScope] = useState<"me" | "friends">("me");
+  const [heatScope, setHeatScope] = useState<"me" | "friends" | "city">("me");
+  const [follow, setFollow] = useState(false);
+  const [on, setOn] = useState<Record<LKey, boolean>>({
+    heat: false, landmarks: false, routes: false, pois: false, risk: true, hazards: false,
   });
-  const fc = terr.data ?? { type: "FeatureCollection" as const, features: [] };
+  const toggle = (k: LKey) => setOn((s) => ({ ...s, [k]: !s[k] }));
+
+  const terr = useQuery({ queryKey: ["territories", scope], queryFn: () => api.territoriesScope(scope) });
+  const heat = useQuery({ queryKey: ["heatmap", heatScope], queryFn: () => api.heatmap(heatScope), enabled: on.heat });
+  const lmk = useQuery({ queryKey: ["landmarks"], queryFn: api.landmarksProgress, enabled: on.landmarks });
+  const poi = useQuery({ queryKey: ["amenities"], queryFn: api.amenities, enabled: on.pois });
+  const routes = useQuery({ queryKey: ["routesGeo"], queryFn: api.routes, enabled: on.routes });
+  const risk = useQuery({ queryKey: ["riskZones"], queryFn: api.riskZones, enabled: on.risk });
+  const haz = useQuery({ queryKey: ["hazards"], queryFn: () => api.hazards(), enabled: on.hazards });
+  const weather = useQuery({ queryKey: ["weather"], queryFn: api.weather });
+
+  const fc = (terr.data && Array.isArray(terr.data.features) ? terr.data : EMPTY) as GeoFC;
+
+  const landmarksFC = useMemo<GeoFC>(() => ({
+    type: "FeatureCollection",
+    features: (lmk.data?.landmarks ?? []).map((l) => ({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [l.lng, l.lat] },
+      properties: { name: l.name, done: l.checked_in ? 1 : 0 },
+    })),
+  }), [lmk.data]);
+
+  const poisFC = useMemo<GeoFC>(() => ({
+    type: "FeatureCollection",
+    features: (poi.data?.amenities ?? []).map((p) => ({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [p.lng, p.lat] },
+      properties: { name: p.name, cat: p.category },
+    })),
+  }), [poi.data]);
+
+  const routesFC = useMemo<GeoFC>(() => ({
+    type: "FeatureCollection",
+    features: (routes.data?.routes ?? [])
+      .filter((r) => !!r.geojson)
+      .map((r) => ({ type: "Feature", geometry: JSON.parse(r.geojson as string), properties: { name: r.name } })),
+  }), [routes.data]);
+
+  const hazFC = useMemo<GeoFC>(() => ({
+    type: "FeatureCollection",
+    features: (haz.data?.hazards ?? []).map((h) => ({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [h.lng, h.lat] },
+      properties: { type: h.type },
+    })),
+  }), [haz.data]);
+
+  const safe = (g?: GeoFC): GeoFC => (g && Array.isArray(g.features) ? g : EMPTY);
+  const count = fc.features.length;
+  const totalArea = fc.features.reduce((s, f) => s + Number((f.properties as any)?.area_m2 ?? 0), 0);
 
   return (
     <View style={s.wrap}>
-      <MapView style={s.map} mapStyle={STYLE} logoEnabled={false} attributionEnabled compassEnabled={false}>
-        <Camera defaultSettings={{ centerCoordinate: FORTALEZA, zoomLevel: 12 }} />
-        <ShapeSource id="territories" shape={fc as GeoJSON.FeatureCollection}>
-          <FillLayer id="terr-fill" style={{ fillColor: C.runner, fillOpacity: 0.22 }} />
-          <LineLayer id="terr-line" style={{ lineColor: C.runner, lineWidth: 2.5 }} />
-        </ShapeSource>
-      </MapView>
+      <MLRNMapView style={s.map} mapStyle={BASE_STYLE} logoEnabled={false} attributionEnabled compassEnabled={false}>
+        <Camera
+          defaultSettings={{ centerCoordinate: FORTALEZA, zoomLevel: 11.5 }}
+          followUserLocation={follow}
+          followZoomLevel={15}
+        />
+        <UserLocation visible androidRenderMode="compass" />
 
-      <View style={s.overlay}>
-        <Text style={s.stat}>{fc.features.length} quarteirões seus</Text>
-        {fc.features.length === 0 && (
-          <Text style={s.hint}>Corra em circuito para pintar o primeiro.</Text>
+        {/* base raster */}
+        <RasterSource
+          id="osm"
+          tileUrlTemplates={["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"]}
+          tileSize={256}
+          maxZoomLevel={19}
+        >
+          <RasterLayer id="osm-l" style={{ visibility: base === "osm" ? "visible" : "none" }} />
+        </RasterSource>
+        <RasterSource
+          id="sat"
+          tileUrlTemplates={["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"]}
+          tileSize={256}
+          maxZoomLevel={19}
+        >
+          <RasterLayer id="sat-l" style={{ visibility: base === "sat" ? "visible" : "none" }} />
+        </RasterSource>
+
+        {/* zonas de risco */}
+        {on.risk && (
+          <ShapeSource id="risk" shape={safe(risk.data)}>
+            <FillLayer id="risk-fill" style={{ fillColor: "#c7402b", fillOpacity: 0.16 }} />
+            <LineLayer id="risk-line" style={{ lineColor: "#c7402b", lineWidth: 1.4, lineDasharray: [2, 2] }} />
+          </ShapeSource>
         )}
-      </View>
 
-      <TouchableOpacity style={s.fab} onPress={() => navigation.navigate("Recording")}>
-        <Text style={s.fabText}>Iniciar corrida</Text>
+        {/* mapa de calor */}
+        {on.heat && (
+          <ShapeSource id="heat" shape={safe(heat.data)}>
+            <HeatmapLayer id="heat-l" style={{ heatmapRadius: 22, heatmapOpacity: 0.75 }} />
+          </ShapeSource>
+        )}
+
+        {/* rotas */}
+        {on.routes && (
+          <ShapeSource id="routes" shape={routesFC}>
+            <LineLayer id="routes-l" style={{ lineColor: "#6E5AA6", lineWidth: 3, lineCap: "round" }} />
+          </ShapeSource>
+        )}
+
+        {/* território */}
+        <ShapeSource id="terr" shape={fc}>
+          <FillLayer id="terr-fill" style={{ fillColor: ["coalesce", ["get", "color_hex"], RUNNER], fillOpacity: 0.22 }} />
+          <LineLayer id="terr-line" style={{ lineColor: ["coalesce", ["get", "color_hex"], RUNNER], lineWidth: 2.5 }} />
+        </ShapeSource>
+
+        {/* marcos */}
+        {on.landmarks && (
+          <ShapeSource id="lmk" shape={landmarksFC}>
+            <CircleLayer
+              id="lmk-l"
+              style={{
+                circleRadius: 6,
+                circleColor: ["case", ["==", ["get", "done"], 1], C.good, C.coral],
+                circleStrokeColor: "#fff",
+                circleStrokeWidth: 2,
+              }}
+            />
+          </ShapeSource>
+        )}
+
+        {/* pontos de apoio */}
+        {on.pois && (
+          <ShapeSource id="pois" shape={poisFC}>
+            <CircleLayer id="pois-l" style={{ circleRadius: 5, circleColor: C.teal, circleStrokeColor: "#fff", circleStrokeWidth: 2 }} />
+          </ShapeSource>
+        )}
+
+        {/* alertas na via */}
+        {on.hazards && (
+          <ShapeSource id="haz" shape={hazFC}>
+            <CircleLayer id="haz-l" style={{ circleRadius: 6, circleColor: "#C98F2E", circleStrokeColor: "#fff", circleStrokeWidth: 2 }} />
+          </ShapeSource>
+        )}
+      </MLRNMapView>
+
+      {/* botão GPS */}
+      <TouchableOpacity style={s.gps} onPress={() => setFollow((f) => !f)}>
+        <Text style={[s.gpsIcon, follow && { color: C.teal }]}>◎</Text>
+      </TouchableOpacity>
+
+      {collapsed ? (
+        <TouchableOpacity style={s.fab} onPress={() => setCollapsed(false)}>
+          <Text style={s.fabIcon}>▨</Text>
+        </TouchableOpacity>
+      ) : (
+        <View style={s.panel}>
+          <View style={s.panelHead}>
+            <Text style={s.panelStat}>
+              <Text style={{ fontWeight: "800" }}>{count}</Text> quart. ·{" "}
+              <Text style={{ fontWeight: "800" }}>{area(totalArea)}</Text>
+            </Text>
+            <TouchableOpacity onPress={() => setCollapsed(true)} hitSlop={10}>
+              <Text style={s.min}>–</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={{ maxHeight: 320 }} showsVerticalScrollIndicator={false}>
+            <Text style={s.sec}>Base</Text>
+            <View style={s.row}>
+              <Seg label="Mapa" active={base === "osm"} onPress={() => setBase("osm")} />
+              <Seg label="Satélite" active={base === "sat"} onPress={() => setBase("sat")} />
+            </View>
+
+            <Text style={s.sec}>Território</Text>
+            <View style={s.row}>
+              <Seg label="Meu" active={scope === "me"} onPress={() => setScope("me")} />
+              <Seg label="Amigos" active={scope === "friends"} onPress={() => setScope("friends")} />
+            </View>
+
+            <Text style={s.sec}>Camadas</Text>
+            <Layer label="Mapa de calor" active={on.heat} onPress={() => toggle("heat")} />
+            {on.heat && (
+              <View style={[s.row, { marginTop: 4 }]}>
+                {(["me", "friends", "city"] as const).map((v) => (
+                  <Seg key={v} label={v === "me" ? "eu" : v === "friends" ? "rede" : "cidade"} active={heatScope === v} onPress={() => setHeatScope(v)} />
+                ))}
+              </View>
+            )}
+            <Layer label="Marcos" active={on.landmarks} onPress={() => toggle("landmarks")} />
+            <Layer label="Rotas" active={on.routes} onPress={() => toggle("routes")} />
+            <Layer label="Bebedouros / banheiros" active={on.pois} onPress={() => toggle("pois")} />
+            <Layer label="Zonas de risco" active={on.risk} onPress={() => toggle("risk")} />
+            <Layer label="Alertas na via" active={on.hazards} onPress={() => toggle("hazards")} />
+
+            {weather.data && (
+              <View style={s.weather}>
+                <Text style={s.wTitle}>
+                  {weather.data.city} · {weather.data.temp_c}°C
+                </Text>
+                <Text style={s.wSub}>
+                  Sensação {weather.data.feels_like_c}° · UV {weather.data.uv_index} · Vento {weather.data.wind_kmh} km/h
+                </Text>
+              </View>
+            )}
+
+            {count === 0 && !terr.isLoading && (
+              <Text style={s.hint}>Mapa em branco — corra em circuito para pintar o primeiro quarteirão.</Text>
+            )}
+          </ScrollView>
+        </View>
+      )}
+
+      <TouchableOpacity style={s.run} onPress={() => navigation.navigate("Recording")}>
+        <Text style={s.runText}>Iniciar corrida</Text>
       </TouchableOpacity>
     </View>
+  );
+}
+
+function Seg({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  return (
+    <TouchableOpacity style={[s.seg, active && s.segOn]} onPress={onPress}>
+      <Text style={[s.segTxt, active && s.segTxtOn]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function Layer({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  return (
+    <TouchableOpacity style={s.layer} onPress={onPress}>
+      <View style={[s.dot, active && s.dotOn]} />
+      <Text style={[s.layerTxt, active && { color: C.ink, fontWeight: "700" }]}>{label}</Text>
+    </TouchableOpacity>
   );
 }
 
 const s = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: C.bg },
   map: { flex: 1 },
-  overlay: {
+  gps: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: C.surface,
+    borderWidth: 1,
+    borderColor: C.line,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  gpsIcon: { fontSize: 22, color: C.ink3 },
+  fab: {
+    position: "absolute",
+    left: 16,
+    bottom: 96,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: C.surface,
+    borderWidth: 1,
+    borderColor: C.line,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  fabIcon: { fontSize: 22, color: C.ink },
+  panel: {
     position: "absolute",
     top: 16,
     left: 16,
+    width: 250,
     backgroundColor: C.surface,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: C.line,
     padding: 12,
-    gap: 4,
   },
-  stat: { fontWeight: "800", color: C.ink },
-  hint: { color: C.ink3, fontSize: 12, maxWidth: 200 },
-  fab: {
+  panelHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
+  panelStat: { fontSize: 13, color: C.ink2 },
+  min: { fontSize: 20, color: C.ink3, paddingHorizontal: 6, lineHeight: 20 },
+  sec: { fontSize: 10, fontWeight: "800", letterSpacing: 0.5, textTransform: "uppercase", color: C.ink3, marginTop: 10, marginBottom: 4 },
+  row: { flexDirection: "row", gap: 5 },
+  seg: { flex: 1, paddingVertical: 6, borderRadius: 7, backgroundColor: C.sunken, alignItems: "center" },
+  segOn: { backgroundColor: C.coral },
+  segTxt: { fontSize: 11, fontWeight: "700", color: C.ink2 },
+  segTxtOn: { color: "#fff" },
+  layer: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 6 },
+  dot: { width: 12, height: 12, borderRadius: 6, borderWidth: 1.5, borderColor: C.line, backgroundColor: "transparent" },
+  dotOn: { backgroundColor: C.teal, borderColor: C.teal },
+  layerTxt: { fontSize: 13, color: C.ink3 },
+  weather: { marginTop: 10, backgroundColor: C.sunken, borderRadius: 8, padding: 8 },
+  wTitle: { fontSize: 12, fontWeight: "800", color: C.tealDeep },
+  wSub: { fontSize: 11, color: C.ink3, marginTop: 2 },
+  hint: { fontSize: 11, color: C.ink3, marginTop: 10, lineHeight: 15 },
+  run: {
     position: "absolute",
-    bottom: 28,
+    bottom: 24,
     alignSelf: "center",
     backgroundColor: C.coral,
     paddingHorizontal: 28,
-    paddingVertical: 16,
+    paddingVertical: 15,
     borderRadius: 999,
   },
-  fabText: { color: "#fff", fontWeight: "800", fontSize: 16 },
+  runText: { color: "#fff", fontWeight: "800", fontSize: 16 },
 });

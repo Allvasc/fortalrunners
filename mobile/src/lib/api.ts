@@ -12,6 +12,38 @@ const KEY = "fr.tokens";
 export type Tokens = { access_token: string; refresh_token: string; expires_at: string };
 export type PublicUser = { id: string; athlete_id: string; username: string; email: string; role: string };
 
+export type GeoFC = { type: "FeatureCollection"; features: GeoJSON.Feature[] };
+
+export type POI = {
+  id: string;
+  name: string;
+  category: "bebedouro" | "banheiro" | "hidratacao" | "emergencia" | "sombra";
+  lat: number;
+  lng: number;
+  note?: string;
+};
+
+export type WeatherReport = {
+  city: string;
+  temp_c: number;
+  feels_like_c: number;
+  humidity_pct: number;
+  uv_index: number;
+  wind_kmh: number;
+  best_windows: string[];
+  advice: string;
+};
+
+export type Friend = {
+  id: string;
+  athlete_id: string;
+  username: string;
+  name: string;
+  status: "pending" | "accepted" | "blocked";
+  incoming: boolean;
+  since: string;
+};
+
 export type RunPoint = { lat: number; lon: number; alt?: number; t: number; acc?: number; spd?: number };
 export type RunView = {
   id: string;
@@ -196,7 +228,7 @@ export const api = {
   runs: (limit = 15) => request<{ runs: RunView[] }>(`/v1/runs?limit=${limit}`),
   lifetime: () => request<Lifetime>("/v1/me/lifetime"),
   territories: () =>
-    request<{ type: "FeatureCollection"; features: unknown[] }>("/v1/territories?scope=me"),
+    request<GeoFC>("/v1/territories?scope=me"),
   coverage: () =>
     request<{
       city: { pct: number; covered_cells: number; total_cells: number };
@@ -227,12 +259,22 @@ export const api = {
       unlocked_count: number;
       landmarks: {
         id: string;
+        collection_id?: string;
         name: string;
         radius_m: number;
         blurb?: string;
         lat: number;
         lng: number;
         checked_in: boolean;
+        checked_in_at?: string;
+      }[];
+      collections: {
+        id: string;
+        name: string;
+        description?: string;
+        reward_xp: number;
+        total: number;
+        unlocked: number;
       }[];
     }>("/v1/landmarks"),
 
@@ -260,8 +302,49 @@ export const api = {
         surface: string;
         is_official: boolean;
         avg_rating: number;
+        review_count?: number;
+        geojson?: string;
       }[];
     }>("/v1/routes"),
+  route: (id: string) =>
+    request<{
+      route: {
+        id: string;
+        name: string;
+        description?: string;
+        distance_m: number;
+        surface: string;
+        is_official: boolean;
+        avg_rating: number;
+      };
+      reviews: { id: string; user_name: string; rating: number; body?: string; tags?: string[]; created_at: string }[];
+    }>(`/v1/routes/${encodeURIComponent(id)}`),
+  addRouteReview: (id: string, rating: number, body: string, tags: string[] = []) =>
+    request<unknown>(`/v1/routes/${encodeURIComponent(id)}/reviews`, {
+      method: "POST",
+      body: JSON.stringify({ rating, body, tags }),
+    }),
+
+  // --- camadas do mapa ---
+  amenities: () => request<{ amenities: POI[] }>("/v1/amenities"),
+  riskZones: () => request<GeoFC>("/v1/risk-zones"),
+  heatmap: (scope: "me" | "friends" | "city" = "me") => request<GeoFC>(`/v1/heatmap?scope=${scope}`),
+  weather: () => request<WeatherReport>("/v1/weather/current"),
+
+  // --- social: amigos ---
+  friends: () => request<{ friends: Friend[] }>("/v1/friends"),
+  sendFriendRequest: (target_id: string) =>
+    request<{ status: string }>("/v1/friends/request", { method: "POST", body: JSON.stringify({ target_id }) }),
+  acceptFriendRequest: (target_id: string) =>
+    request<{ status: string }>("/v1/friends/accept", { method: "POST", body: JSON.stringify({ target_id }) }),
+  removeFriend: (id: string) => request<void>(`/v1/friends/${encodeURIComponent(id)}`, { method: "DELETE" }),
+
+  // --- clubes: criar ---
+  createClub: (name: string, description: string, color_hex: string) =>
+    request<{ id: string }>("/v1/clubs", {
+      method: "POST",
+      body: JSON.stringify({ name, description, color_hex }),
+    }),
 
   feed: () =>
     request<{
@@ -366,10 +449,7 @@ export const api = {
   exportMyData: () => request<Record<string, unknown>>("/v1/me/export"),
   deleteAccount: () =>
     request<void>("/v1/me", { method: "DELETE", body: JSON.stringify({ confirm: "EXCLUIR" }) }),
-  territoriesScope: (scope: "me" | "friends") =>
-    request<{ type: "FeatureCollection"; features: unknown[] }>(`/v1/territories?scope=${scope}`),
-  heatmapScope: (scope: "me" | "friends" | "city") =>
-    request<{ type: "FeatureCollection"; features: unknown[] }>(`/v1/heatmap?scope=${scope}`),
+  territoriesScope: (scope: "me" | "friends") => request<GeoFC>(`/v1/territories?scope=${scope}`),
   leaderboardFriends: () => request<Leaderboard>("/v1/leaderboards/friends"),
 
   events: () =>

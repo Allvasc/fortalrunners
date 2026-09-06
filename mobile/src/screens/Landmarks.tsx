@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import * as ImagePicker from "expo-image-picker";
@@ -9,6 +9,7 @@ import { C } from "../theme";
 export function Landmarks() {
   const lmkQuery = useQuery({ queryKey: ["landmarks"], queryFn: api.landmarksProgress });
   const [checkingId, setCheckingId] = useState<string | null>(null);
+  const [col, setCol] = useState<string | null>(null);
 
   const handleCheckin = async (id: string, name: string) => {
     setCheckingId(id);
@@ -55,10 +56,28 @@ export function Landmarks() {
             <View style={[s.progressBarFill, { width: `${pct}%` }]} />
           </View>
         </View>
+
+        {!!data?.collections?.length && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 6, paddingTop: 12 }}
+          >
+            <Chip label="Todos" active={col === null} onPress={() => setCol(null)} />
+            {data.collections.map((c) => (
+              <Chip
+                key={c.id}
+                label={`${c.name} ${c.unlocked}/${c.total}`}
+                active={col === c.id}
+                onPress={() => setCol(c.id)}
+              />
+            ))}
+          </ScrollView>
+        )}
       </View>
 
       <FlatList
-        data={data?.landmarks ?? []}
+        data={(data?.landmarks ?? []).filter((l) => (col ? l.collection_id === col : true))}
         keyExtractor={(item) => item.id}
         contentContainerStyle={s.list}
         renderItem={({ item }) => (
@@ -90,6 +109,21 @@ export function Landmarks() {
     </View>
   );
 }
+
+function Chip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  return (
+    <TouchableOpacity style={[cs.chip, active && cs.chipOn]} onPress={onPress}>
+      <Text style={[cs.chipTxt, active && cs.chipTxtOn]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+const cs = StyleSheet.create({
+  chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, backgroundColor: C.sunken },
+  chipOn: { backgroundColor: C.teal },
+  chipTxt: { fontSize: 12, color: C.ink2, fontWeight: "600" },
+  chipTxtOn: { color: "#fff" },
+});
 
 const s = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: C.bg },

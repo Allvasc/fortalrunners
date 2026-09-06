@@ -23,7 +23,9 @@
           "cameraPermission": "Para a foto do check-in de marco histórico, tirada só pela câmera do app.",
           "microphonePermission": false
         }
-      ]
+      ],
+      "expo-asset",
+      "expo-font"
     ],
     "ios": {
       "supportsTablet": false,
