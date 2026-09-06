@@ -740,26 +740,57 @@ table.splits .bar-cell {
   .app {
     grid-template-columns: 1fr;
   }
+  /* rail vira uma barra fixa no topo com nav em rolagem horizontal */
   .rail {
-    position: static;
+    position: sticky;
+    top: 0;
+    z-index: 20;
     height: auto;
+    padding: 8px 10px;
+    gap: 10px;
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     border-right: 0;
     border-bottom: 1px solid var(--line);
+    background: var(--surface-2);
+  }
+  .rail .brand {
+    flex-shrink: 0;
+    font-size: 0;
+    gap: 0;
   }
   .rail nav {
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .rail nav::-webkit-scrollbar {
+    display: none;
+  }
+  .rail nav a {
+    white-space: nowrap;
+    padding: 7px 10px;
+    font-size: 0.85rem;
   }
   .rail-foot {
-    margin: 0 0 0 auto;
+    margin: 0;
+    flex-shrink: 0;
     flex-direction: row;
     align-items: center;
+    gap: 8px;
+  }
+  .rail-foot .who {
+    display: none;
   }
   .map-page {
-    height: calc(100vh - 120px);
+    height: calc(100vh - 53px);
+  }
+  .page {
+    padding: 18px 16px;
   }
 }
 

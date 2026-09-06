@@ -6,9 +6,22 @@ import { api, type FeatureCollection } from "../lib/api";
 import { area } from "../lib/format";
 
 const FORTALEZA: [number, number] = [-38.523, -3.731];
-// Estilo demo do MapLibre (OSM, sem chave). Trocar pelo style JSON próprio
-// (MapTiler/Protomaps) quando a chave de produção estiver configurada.
-const STYLE = "https://demotiles.maplibre.org/style.json";
+// Raster do OpenStreetMap, sem chave — mostra ruas de verdade. Provisório: trocar
+// pelo style JSON vetorial próprio (MapTiler/Protomaps) quando a chave entrar
+// (plano §7). O demotiles.maplibre.org não tem ruas, só o contorno do mundo.
+const STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    osm: {
+      type: "raster",
+      tiles: ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: "© OpenStreetMap",
+    },
+  },
+  layers: [{ id: "osm", type: "raster", source: "osm" }],
+};
 const RUNNER = "#08a6a0";
 const EMPTY = { type: "FeatureCollection", features: [] } as FeatureCollection;
 const EMPTY_HEAT = { type: "FeatureCollection", features: [] } as GeoJSON.FeatureCollection;
