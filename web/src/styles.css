@@ -118,6 +118,26 @@ h3 {
   gap: 8px;
   padding: 8px 0 0;
 }
+.mod-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.86rem;
+}
+.mod-row:last-child { border-bottom: 0; }
+.mod-row > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.mod-actions { display: flex; gap: 6px; flex: none; }
+.sw-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.86rem;
+  margin: 6px 0 12px;
+}
+.btn.sm { height: 30px; padding: 0 10px; font-size: 0.78rem; }
 
 /* --- controles --- */
 .btn {

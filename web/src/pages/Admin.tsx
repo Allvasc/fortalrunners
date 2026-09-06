@@ -29,10 +29,154 @@ export function Admin() {
         </p>
       </header>
       <FlaggedRuns />
+      <Moderation />
+      <Financeiro />
+      <RiskZones />
       <Users />
       <GameConfig />
       <Audit />
     </div>
+  );
+}
+
+function Moderation() {
+  const qc = useQueryClient();
+  const checkins = useQuery({ queryKey: ["adm", "checkins"], queryFn: api.adminPendingCheckins });
+  const reviews = useQuery({ queryKey: ["adm", "reviews"], queryFn: api.adminPendingReviews });
+  const reports = useQuery({ queryKey: ["adm", "reports"], queryFn: api.adminReports });
+  const hazards = useQuery({ queryKey: ["adm", "hazards"], queryFn: api.adminHazards });
+
+  const inval = () => qc.invalidateQueries({ queryKey: ["adm"] });
+  const mCheckin = useMutation({ mutationFn: (v: { id: string; d: "approve" | "reject" }) => api.adminModerateCheckin(v.id, v.d), onSuccess: inval });
+  const mReview = useMutation({ mutationFn: (v: { id: string; d: "approve" | "reject" }) => api.adminModerateReview(v.id, v.d), onSuccess: inval });
+  const mReport = useMutation({ mutationFn: (v: { id: string; o: "actioned" | "dismissed" }) => api.adminResolveReport(v.id, v.o), onSuccess: inval });
+  const mHazard = useMutation({ mutationFn: (id: string) => api.adminRemoveHazard(id), onSuccess: inval });
+
+  const cn = checkins.data?.checkins ?? [];
+  const rv = reviews.data?.reviews ?? [];
+  const rp = reports.data?.reports ?? [];
+  const hz = (hazards.data?.hazards ?? []).filter((h) => h.status === "active");
+
+  return (
+    <section>
+      <h2>Moderação</h2>
+
+      <h3 className="muted small">Check-ins de marco ({cn.length})</h3>
+      {cn.length === 0 && <p className="muted">Fila vazia.</p>}
+      {cn.map((c) => (
+        <div className="mod-row" key={c.id}>
+          <span>
+            <strong>{c.landmark_name}</strong> · {c.username} · {date(c.taken_at)}
+          </span>
+          <span className="mod-actions">
+            <button className="btn sm primary" onClick={() => mCheckin.mutate({ id: c.id, d: "approve" })}>Aprovar</button>
+            <button className="btn sm" onClick={() => mCheckin.mutate({ id: c.id, d: "reject" })}>Rejeitar</button>
+          </span>
+        </div>
+      ))}
+
+      <h3 className="muted small">Avaliações de rota ({rv.length})</h3>
+      {rv.length === 0 && <p className="muted">Fila vazia.</p>}
+      {rv.map((r) => (
+        <div className="mod-row" key={r.id}>
+          <span>
+            <strong>{r.route_name}</strong> · {r.username} · ⭐{r.rating} · {r.body || "(sem texto)"}
+          </span>
+          <span className="mod-actions">
+            <button className="btn sm primary" onClick={() => mReview.mutate({ id: r.id, d: "approve" })}>Aprovar</button>
+            <button className="btn sm" onClick={() => mReview.mutate({ id: r.id, d: "reject" })}>Rejeitar</button>
+          </span>
+        </div>
+      ))}
+
+      <h3 className="muted small">Denúncias ({rp.length})</h3>
+      {rp.length === 0 && <p className="muted">Nenhuma denúncia aberta.</p>}
+      {rp.map((r) => (
+        <div className="mod-row" key={r.id}>
+          <span>
+            <code>{r.target_type}</code> {r.target_id} · {r.reason} {r.detail && `— ${r.detail}`}
+          </span>
+          <span className="mod-actions">
+            <button className="btn sm primary" onClick={() => mReport.mutate({ id: r.id, o: "actioned" })}>Tratada</button>
+            <button className="btn sm" onClick={() => mReport.mutate({ id: r.id, o: "dismissed" })}>Descartar</button>
+          </span>
+        </div>
+      ))}
+
+      <h3 className="muted small">Marcações da via ativas ({hz.length})</h3>
+      {hz.length === 0 && <p className="muted">Nenhuma.</p>}
+      {hz.map((h) => (
+        <div className="mod-row" key={h.id}>
+          <span>
+            <code>{h.type}</code> sev.{h.severity} · 👍{h.confirms} 👎{h.disputes} · {h.note || "(sem nota)"}
+          </span>
+          <span className="mod-actions">
+            <button className="btn sm" onClick={() => mHazard.mutate(h.id)}>Remover</button>
+          </span>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function Financeiro() {
+  const refunds = useQuery({ queryKey: ["adm", "refunds"], queryFn: api.adminRefunds });
+  const m = useMutation({
+    mutationFn: (v: { id: string; d: "approve" | "deny" }) => api.adminDecideRefund(v.id, v.d),
+    onSuccess: () => refunds.refetch(),
+  });
+  const list = refunds.data?.refunds ?? [];
+  return (
+    <section>
+      <h2>Financeiro — reembolsos</h2>
+      {list.length === 0 && <p className="muted">Nenhum reembolso solicitado.</p>}
+      {list.map((r) => (
+        <div className="mod-row" key={r.id}>
+          <span>
+            pedido <code>{r.order_id}</code> · R$ {(r.amount_cents / 100).toFixed(2)} · {r.reason || "sem motivo"} · {date(r.created_at)}
+          </span>
+          <span className="mod-actions">
+            <button className="btn sm primary" disabled={m.isPending} onClick={() => m.mutate({ id: r.id, d: "approve" })}>Aprovar</button>
+            <button className="btn sm" disabled={m.isPending} onClick={() => m.mutate({ id: r.id, d: "deny" })}>Negar</button>
+          </span>
+        </div>
+      ))}
+      
+    </section>
+  );
+}
+
+function RiskZones() {
+  const zones = useQuery({ queryKey: ["adm", "zones"], queryFn: api.adminRiskZones });
+  const cfg = useQuery({ queryKey: ["adm", "config"], queryFn: api.adminConfig });
+  const del = useMutation({ mutationFn: (id: string) => api.adminDeleteRiskZone(id), onSuccess: () => zones.refetch() });
+  const setFlag = useMutation({
+    mutationFn: (on: boolean) => api.adminSetConfig("risk_zone_blocking", on),
+    onSuccess: () => cfg.refetch(),
+  });
+  const list = zones.data?.features?.map((f) => f.properties) ?? [];
+  const blocking = cfg.data?.risk_zone_blocking !== false;
+  return (
+    <section>
+      <h2>Zonas de risco</h2>
+      <label className="sw-row">
+        <input type="checkbox" checked={blocking} onChange={(e) => setFlag.mutate(e.target.checked)} />
+        <span>
+          <code>RISK_ZONE_BLOCKING</code> — subtrair/recusar conquista em zona de risco
+        </span>
+      </label>
+      {list.length === 0 && <p className="muted">Nenhuma zona ativa. (O CRUD completo — desenhar polígono — ainda é via API.)</p>}
+      {list.map((z) => (
+        <div className="mod-row" key={z.id}>
+          <span>
+            <code>{z.id.slice(0, 8)}</code> · severidade {z.severity} · {z.note || "(sem nota)"}
+          </span>
+          <span className="mod-actions">
+            <button className="btn sm" onClick={() => del.mutate(z.id)}>Remover</button>
+          </span>
+        </div>
+      ))}
+    </section>
   );
 }
 

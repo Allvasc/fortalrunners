@@ -427,6 +427,46 @@ export const api = {
     }),
   adminAudit: () => request<{ entries: AuditEntry[] }>("/v1/admin/audit?limit=50"),
 
+  // --- admin: moderação ---
+  adminPendingCheckins: () =>
+    request<{ checkins: { id: string; landmark_name: string; username: string; photo_key?: string; lat: number; lng: number; taken_at: string }[] }>(
+      "/v1/admin/landmark-checkins",
+    ),
+  adminModerateCheckin: (id: string, decision: "approve" | "reject") =>
+    request<void>(`/v1/admin/landmark-checkins/${id}/moderate`, { method: "POST", body: JSON.stringify({ decision }) }),
+  adminPendingReviews: () =>
+    request<{ reviews: { id: string; route_name: string; username: string; rating: number; body: string; created_at: string }[] }>(
+      "/v1/admin/route-reviews",
+    ),
+  adminModerateReview: (id: string, decision: "approve" | "reject") =>
+    request<void>(`/v1/admin/route-reviews/${id}/moderate`, { method: "POST", body: JSON.stringify({ decision }) }),
+  adminReports: () =>
+    request<{ reports: { id: string; target_type: string; target_id: string; reason: string; detail: string; created_at: string }[] }>(
+      "/v1/admin/reports",
+    ),
+  adminResolveReport: (id: string, outcome: "actioned" | "dismissed") =>
+    request<void>(`/v1/admin/reports/${id}/resolve`, { method: "POST", body: JSON.stringify({ outcome }) }),
+  adminHazards: () =>
+    request<{ hazards: { id: string; type: string; lat: number; lng: number; severity: number; note: string; confirms: number; disputes: number; status: string }[] }>(
+      "/v1/admin/hazards",
+    ),
+  adminRemoveHazard: (id: string) => request<void>(`/v1/admin/hazards/${id}/remove`, { method: "POST" }),
+
+  // --- admin: financeiro ---
+  adminRefunds: () =>
+    request<{ refunds: { id: string; order_id: string; amount_cents: number; reason: string; status: string; created_at: string }[] }>(
+      "/v1/admin/refunds",
+    ),
+  adminDecideRefund: (id: string, decision: "approve" | "deny") =>
+    request<void>(`/v1/admin/refunds/${id}/decide`, { method: "POST", body: JSON.stringify({ decision }) }),
+
+  // --- admin: zonas de risco (GeoJSON FeatureCollection) ---
+  adminRiskZones: () =>
+    request<{
+      features: { properties: { id: string; severity: number; note?: string } }[];
+    }>("/v1/admin/risk-zones"),
+  adminDeleteRiskZone: (id: string) => request<void>(`/v1/admin/risk-zones/${id}`, { method: "DELETE" }),
+
   mfaStatus: () => request<MFAStatus>("/v1/auth/mfa"),
   mfaSetup: () => request<{ secret: string; otpauth_url: string }>("/v1/auth/mfa/setup", { method: "POST" }),
   mfaActivate: (code: string) =>
