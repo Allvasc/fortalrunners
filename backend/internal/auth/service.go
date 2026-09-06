@@ -126,8 +126,22 @@ func (s *Service) Login(ctx context.Context, email, password, ip, ua string) (Lo
 		return LoginResult{MFARequired: true, MFAToken: ch}, nil
 	}
 
-	tk, err := s.issue(ctx, u, "", ip, ua, true)
+	// Conta privilegiada sem 2FA: entra, mas a sessão NÃO é "verificada" —
+	// fica sem acesso a rotas privilegiadas até ativar o 2FA (plano §13).
+	tk, err := s.issue(ctx, u, "", ip, ua, !privilegedNoMFA(u.Role, activatedAt))
 	return LoginResult{User: u, Tokens: tk}, err
+}
+
+// privilegedNoMFA: role admin/moderator/organizer que ainda não ativou o TOTP.
+func privilegedNoMFA(role string, totpActivatedAt *time.Time) bool {
+	if totpActivatedAt != nil {
+		return false
+	}
+	switch role {
+	case "admin", "moderator", "organizer":
+		return true
+	}
+	return false
 }
 
 // VerifyMFA troca o token de desafio + código (TOTP ou recuperação) pelos tokens.
@@ -200,8 +214,15 @@ func (s *Service) Refresh(ctx context.Context, refreshToken, ip, ua string) (Tok
 	if err := s.store.revokeSession(ctx, sess.ID); err != nil {
 		return Tokens{}, err
 	}
-	// O refresh preserva o estado de 2FA da família de sessão.
-	return s.issue(ctx, u, sess.FamilyID, ip, ua, sess.MFAVerified)
+	// O refresh preserva o estado de 2FA da sessão, mas rebaixa se a conta virou
+	// privilegiada e ainda não tem 2FA (ex.: runner promovido a moderator).
+	verified := sess.MFAVerified
+	if verified {
+		if _, activatedAt, e := s.store.mfaState(ctx, u.ID); e == nil && privilegedNoMFA(u.Role, activatedAt) {
+			verified = false
+		}
+	}
+	return s.issue(ctx, u, sess.FamilyID, ip, ua, verified)
 }
 
 // Logout revoga a sessão do refresh apresentado.

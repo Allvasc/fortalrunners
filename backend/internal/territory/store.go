@@ -13,11 +13,26 @@ type store struct{ pool *pgxpool.Pool }
 func newStore(pool *pgxpool.Pool) *store { return &store{pool: pool} }
 
 const (
-	minPolyM2   = 500.0     // ignora laços minúsculos
-	maxPolyM2   = 500_000.0 // teto por polígono (0,5 km²)
-	minTotalM2  = 500.0     // área total mínima para virar território
-	minSeverity = 3         // zona de risco a partir desta severidade bloqueia
+	minPolyM2  = 500.0     // ignora laços minúsculos
+	maxPolyM2  = 500_000.0 // teto por polígono (0,5 km²)
+	minTotalM2 = 500.0     // área total mínima para virar território
 )
+
+// riskConfig lê o gate de zona de risco do game_config (ajustável no admin).
+// Sem bloqueio → severidade efetiva 999 (nada é subtraído).
+func (s *store) riskConfig(ctx context.Context) (minSeverity int) {
+	var blocking bool
+	var sev int
+	err := s.pool.QueryRow(ctx, `
+		SELECT
+			COALESCE((SELECT value_jsonb::text::bool FROM game_config WHERE key = 'risk_zone_blocking'), true),
+			COALESCE((SELECT value_jsonb::text::int  FROM game_config WHERE key = 'risk_zone_min_severity'), 3)`).
+		Scan(&blocking, &sev)
+	if err != nil || !blocking {
+		return 999
+	}
+	return sev
+}
 
 type runInfo struct {
 	UserID string
@@ -41,7 +56,7 @@ var errNotFound = errors.New("run/track não encontrado")
 // polygonize roda o núcleo geométrico em PostGIS: fecha o anel, node + polygonize,
 // filtra por área, une, e subtrai as zonas de risco ativas.
 // Devolve a geometria (WKB), a área em m² e o nº de partes (proxy de "quarteirões").
-func (s *store) polygonize(ctx context.Context, runID string) (wkb []byte, areaM2 float64, parts int, ok bool, err error) {
+func (s *store) polygonize(ctx context.Context, runID string, minSeverity int) (wkb []byte, areaM2 float64, parts int, ok bool, err error) {
 	const q = `
 WITH src AS (SELECT geom AS line FROM run_tracks WHERE run_id = $1),
 closed AS (

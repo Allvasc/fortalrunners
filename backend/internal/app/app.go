@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
 
+	"github.com/Allvasc/fortalrunners/backend/internal/admin"
 	"github.com/Allvasc/fortalrunners/backend/internal/auth"
 	"github.com/Allvasc/fortalrunners/backend/internal/challenge"
 	"github.com/Allvasc/fortalrunners/backend/internal/health"
@@ -65,6 +66,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	ranking.NewHandler(pool).Register(secured)
 	challenge.NewHandler(challenge.NewService(pool, log)).Register(secured)
 	heatmap.NewHandler(heatmap.NewService(pool, log)).Register(secured)
+	admin.NewHandler(pool, pub).Register(secured) // /v1/admin/* (role admin/moderator + 2FA)
 
 	return &API{Echo: e, Pool: pool, Queue: pub}, nil
 }

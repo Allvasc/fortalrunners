@@ -34,7 +34,7 @@ func (p *Processor) Process(ctx context.Context, runID string) {
 		return
 	}
 
-	wkb, areaM2, parts, ok, err := p.store.polygonize(ctx, runID)
+	wkb, areaM2, parts, ok, err := p.store.polygonize(ctx, runID, p.store.riskConfig(ctx))
 	if err != nil {
 		log.Error("territory: polygonize falhou", "err", err)
 		_ = p.store.finishRun(ctx, runID, "valid", 0, 0, "polygonize: "+err.Error())

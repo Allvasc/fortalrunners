@@ -404,7 +404,7 @@
 
   <header class="hero">
     <canvas class="hero-grid" id="heroGrid" aria-hidden="true"></canvas>
-    <p class="eyebrow">Plano de produto · v0.16 · 06 set 2026</p>
+    <p class="eyebrow">Plano de produto · v0.17 · 06 set 2026</p>
     <h1>FortalRunners</h1>
     <p class="lede">Um app gamificado onde correr por Fortaleza conquista território. Feche o circuito de um quarteirão e ele passa a ser seu, pintado na sua cor. E por baixo do jogo, a ambição de ser o app de corrida mais completo do mercado: cada par de tênis rastreado, cada métrica medida com rigor de relógio de ponta.</p>
     <div class="meta-row">
@@ -1170,6 +1170,7 @@
             <tr><td>ai_prompts</td><td><code>key, version, hash, body, active, created_by</code></td><td>Registro versionado de prompts do sistema.</td></tr>
             <tr><td>ai_evals</td><td><code>id, prompt_key, prompt_version, dataset, scores_jsonb, run_at</code></td><td>Resultado da suíte de avaliação por versão.</td></tr>
             <tr><td>audit_log</td><td><code>id, actor_id, actor_role, action, target_type, target_id, diff_jsonb, ip</code></td><td>Append-only. Toda ação de admin / moderação / organizador / financeira.</td></tr>
+            <tr><td>game_config</td><td><code>key, value_jsonb, updated_by, updated_at</code></td><td>Feature flags e parâmetros do jogo mexíveis no admin sem deploy (<code>risk_zone_blocking</code>, severidade, raio de fechamento, área mín/máx).</td></tr>
           </tbody>
         </table>
       </div>
@@ -1227,7 +1228,7 @@
             <tr><td>POST /v1/webhooks/asaas</td><td>Confirmação de cobrança/estorno. Assinatura HMAC + IP allowlist + idempotência.</td></tr>
             <tr><td>WS /v1/ws</td><td>Eventos: <code>territory.updated</code>, <code>feed.new</code>, <code>run.processed</code>, <code>challenge.period_closed</code>, <code>order.paid</code>.</td></tr>
             <tr><td>/v1/organizer/*</td><td>Preços, cupons, vendas, repasses, resultados. Role <code>organizer</code> + 2FA.</td></tr>
-            <tr><td>/v1/admin/*</td><td>Namespace separado, exige role admin/moderator + 2FA (ver seção 13).</td></tr>
+            <tr><td>/v1/admin/* — <code>users</code>, <code>users/:id/status|role</code>, <code>runs/flagged</code>, <code>runs/:id/review</code>, <code>risk-zones</code> (CRUD), <code>config</code>, <code>audit</code></td><td>Namespace separado: role admin/moderator + 2FA <strong>verificado</strong> (conta privilegiada sem TOTP não entra); toda mutação grava em <code>audit_log</code>. Fora do staff → 404.</td></tr>
           </tbody>
         </table>
       </div>
@@ -1865,7 +1866,7 @@
   </main>
 
   <footer class="pg">
-    FortalRunners · plano de produto v0.16 · gerado 06 set 2026 · documento vivo, revisar a cada fase
+    FortalRunners · plano de produto v0.17 · gerado 06 set 2026 · documento vivo, revisar a cada fase
   </footer>
 </div>
 

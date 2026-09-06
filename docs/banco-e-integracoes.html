@@ -129,7 +129,7 @@
 
 <div class="wrap">
   <header class="hero">
-    <p class="eyebrow">Referência técnica · v1.3 · 06 set 2026</p>
+    <p class="eyebrow">Referência técnica · v1.4 · 06 set 2026</p>
     <h1>Banco de dados &amp; Integrações</h1>
     <p class="lede">O modelo de dados completo — tabelas, tipos, chaves e relacionamentos — e o catálogo de serviços internos, data stores e integrações de terceiros. Consolida e detalha o que estava espalhado no plano.</p>
     <p class="backlink">← <a href="https://claude.ai/code/artifact/f171dbf5-8933-40a3-98ff-32f169ff869b">Plano de produto</a> · <a href="https://claude.ai/code/artifact/e662d35e-b65a-4f5c-a0ad-d2480c77f2ac">Manual de Design</a></p>
@@ -990,6 +990,18 @@
         </tbody>
       </table></div>
 
+      <h4>game_config <span class="pk">runtime</span></h4>
+      <p>Feature flags e parâmetros do jogo, mexíveis no admin sem deploy (plano §13 "Config do jogo"). <code>value_jsonb</code> é JSON puro (bool, número, objeto).</p>
+      <div class="tw"><table class="t-col">
+        <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
+        <tbody>
+          <tr><td>key</td><td>text</td><td><span class="k pk">PK</span> — ex.: <code>risk_zone_blocking</code>, <code>risk_zone_min_severity</code>, <code>loop_close_radius_m</code>, <code>territory_min/max_area_m2</code></td></tr>
+          <tr><td>value_jsonb</td><td>jsonb</td><td>—</td></tr>
+          <tr><td>updated_by</td><td>ulid</td><td><span class="k fk">FK</span> users (admin)</td></tr>
+          <tr><td>updated_at</td><td>timestamptz</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+
       <h4>webhook_events <span class="pk">idempotência</span></h4>
       <div class="tw"><table class="t-col">
         <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
@@ -1156,6 +1168,7 @@
           <tr><td>ai_interactions</td><td>N:1</td><td>users / ai_prompts</td><td>user_id / (prompt_key,version)</td><td>cascade / restrict</td></tr>
           <tr><td>ai_evals</td><td>N:1</td><td>ai_prompts</td><td>(prompt_key, prompt_version)</td><td>cascade</td></tr>
           <tr><td>audit_log</td><td>N:1</td><td>users</td><td>actor_id</td><td>set null</td></tr>
+          <tr><td>game_config</td><td>N:1</td><td>users</td><td>updated_by</td><td>set null</td></tr>
           <tr><td>sos_events</td><td>N:1</td><td>users / runs</td><td>user_id / run_id</td><td>cascade / set null</td></tr>
           <tr><td>hazard_reports</td><td>N:1</td><td>users</td><td>reporter_id</td><td>set null</td></tr>
         </tbody>
@@ -1307,7 +1320,7 @@
   </main>
 
   <footer class="pg">
-    FortalRunners · banco de dados &amp; integrações v1.3 · 06 set 2026 · consolida o modelo de dados e o catálogo de serviços do plano de produto.
+    FortalRunners · banco de dados &amp; integrações v1.4 · 06 set 2026 · consolida o modelo de dados e o catálogo de serviços do plano de produto.
   </footer>
 </div>
 
