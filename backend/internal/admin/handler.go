@@ -75,6 +75,28 @@ func (h *Handler) Register(secured *echo.Group) {
 	g.POST("/hazards/:id/remove", h.hazardRemove)
 	g.GET("/refunds", h.refundList)
 	g.POST("/refunds/:id/decide", h.refundDecide)
+	g.POST("/organizers", h.createOrganizer)
+}
+
+func (h *Handler) createOrganizer(c echo.Context) error {
+	var in struct {
+		OwnerID string `json:"owner_id"`
+		Name    string `json:"name"`
+		Kind    string `json:"kind"`
+		Email   string `json:"contact_email"`
+	}
+	if err := c.Bind(&in); err != nil || in.OwnerID == "" || in.Name == "" || in.Email == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "owner_id, name e contact_email obrigatórios")
+	}
+	ctx := c.Request().Context()
+	oid, err := h.store.createOrganizer(ctx, in.OwnerID, in.Name, in.Kind, in.Email)
+	if err != nil {
+		return internalErr(err)
+	}
+	aid, arole, ip := h.actor(c)
+	h.store.audit(ctx, aid, arole, "organizer.create", "organizer", oid,
+		map[string]any{"owner_id": in.OwnerID, "name": in.Name}, ip)
+	return c.JSON(http.StatusCreated, map[string]any{"id": oid})
 }
 
 // --- moderação ---

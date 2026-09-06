@@ -379,6 +379,32 @@ func (s *store) hazardList(ctx context.Context, limit int) ([]hazardRow, error) 
 	return out, rows.Err()
 }
 
+// createOrganizer cria uma organização vinculada a um usuário e o promove a
+// role 'organizer' (se ainda for runner). Numa transação.
+func (s *store) createOrganizer(ctx context.Context, ownerID, name, kind, email string) (string, error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return "", err
+	}
+	defer tx.Rollback(ctx)
+
+	if kind == "" {
+		kind = "race"
+	}
+	oid := id.New()
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO organizers (id, owner_id, name, kind, contact_email)
+		VALUES ($1, $2, $3, $4::org_kind, $5)`, oid, ownerID, name, kind, email); err != nil {
+		return "", err
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE users SET role = 'organizer', updated_at = now()
+		WHERE id = $1 AND role = 'runner'`, ownerID); err != nil {
+		return "", err
+	}
+	return oid, tx.Commit(ctx)
+}
+
 func (s *store) removeHazard(ctx context.Context, hazardID string) error {
 	tag, err := s.pool.Exec(ctx, `UPDATE hazard_reports SET status = 'removed' WHERE id = $1`, hazardID)
 	if err == nil && tag.RowsAffected() == 0 {

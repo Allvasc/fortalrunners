@@ -363,6 +363,11 @@ export const api = {
     request<ChallengeLeaderboard>(`/v1/challenges/${encodeURIComponent(slug)}/leaderboard`),
 
   // --- admin (role admin/moderator + 2FA) ---
+  adminCreateOrganizer: (owner_id: string, name: string, contact_email: string, kind = "race") =>
+    request<{ id: string }>("/v1/admin/organizers", {
+      method: "POST",
+      body: JSON.stringify({ owner_id, name, contact_email, kind }),
+    }),
   adminUsers: (q: string) =>
     request<{ users: AdminUser[] }>(`/v1/admin/users?q=${encodeURIComponent(q)}`),
   adminSetUserStatus: (id: string, status: string, reason: string) =>
@@ -488,10 +493,68 @@ export const api = {
 
   // --- IA coach ---
   askAICoach: (prompt: string) =>
-    request<{ coach: AICoachResponse }>("/v1/ai/coach", {
+    request<{ coach: AICoachResponse }>("/v1/coach/ask", {
       method: "POST",
       body: JSON.stringify({ prompt }),
     }),
+  coachSummary: () =>
+    request<{ runs: number; distance_km: number; moving_hours: number; elevation_m: number; note: string }>(
+      "/v1/coach/summary",
+    ),
+
+  // --- portal de organizadores ---
+  orgMe: () => request<{ organizers: OrgSummary[] }>("/v1/organizer/me"),
+  orgCreateEvent: (b: OrgEventInput) =>
+    request<{ id: string; status: string }>("/v1/organizer/events", {
+      method: "POST",
+      body: JSON.stringify(b),
+    }),
+  orgUpdateEvent: (id: string, b: Partial<OrgEventInput>) =>
+    request<{ updated: boolean }>(`/v1/organizer/events/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify(b),
+    }),
+  orgAddPrice: (id: string, b: { name: string; category: string; amount_cents: number; quota: number }) =>
+    request<{ id: string }>(`/v1/organizer/events/${encodeURIComponent(id)}/prices`, {
+      method: "POST",
+      body: JSON.stringify(b),
+    }),
+  orgAddStation: (id: string, b: { name: string; role: string; ord: number; lat: number; lng: number; radius_m: number }) =>
+    request<{ id: string }>(`/v1/organizer/events/${encodeURIComponent(id)}/stations`, {
+      method: "POST",
+      body: JSON.stringify(b),
+    }),
+  orgAddCoupon: (id: string, b: { code: string; discount_type: string; value: number; max_uses: number }) =>
+    request<{ id: string }>(`/v1/organizer/events/${encodeURIComponent(id)}/coupons`, {
+      method: "POST",
+      body: JSON.stringify(b),
+    }),
+  orgScannerCredential: (id: string, b: { label: string; role: string; station_id?: string }) =>
+    request<{ token: string; note: string }>(`/v1/organizer/events/${encodeURIComponent(id)}/scanner-credentials`, {
+      method: "POST",
+      body: JSON.stringify(b),
+    }),
+  orgParticipants: (id: string) =>
+    request<{ participants: OrgParticipant[] }>(`/v1/organizer/events/${encodeURIComponent(id)}/participants`),
+};
+
+export type OrgSummary = { id: string; name: string; kind: string; plan: string; status: string };
+export type OrgEventInput = {
+  slug: string;
+  title: string;
+  description: string;
+  type: string;
+  starts_at: string;
+  ends_at: string;
+  location_name: string;
+};
+export type OrgParticipant = {
+  username: string;
+  athlete_id: string;
+  bib_number: string;
+  category: string;
+  shirt_size: string;
+  completed: boolean;
 };
 
 export type Friend = {

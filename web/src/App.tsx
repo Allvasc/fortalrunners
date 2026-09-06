@@ -16,6 +16,7 @@ import { ClubsPage } from "./pages/Clubs";
 
 import { EventsPage } from "./pages/Events";
 import { AICoachPage } from "./pages/AICoach";
+import { Organizer } from "./pages/Organizer";
 
 // Consome os tokens do callback OAuth antes de decidir a rota.
 if (window.location.pathname === "/auth/callback") {
@@ -54,6 +55,9 @@ function Portal() {
           <NavLink to="/eventos">Eventos & QR</NavLink>
           <NavLink to="/coach">Coach IA</NavLink>
           <NavLink to="/perfil">Perfil</NavLink>
+          {me.data && (me.data.role === "organizer" || me.data.role === "admin") && (
+            <NavLink to="/organizador">Organizador</NavLink>
+          )}
           {me.data && (me.data.role === "admin" || me.data.role === "moderator") && (
             <NavLink to="/admin">Admin</NavLink>
           )}
@@ -92,6 +96,7 @@ function Portal() {
           <Route path="/eventos" element={<EventsPage />} />
           <Route path="/coach" element={<AICoachPage />} />
           <Route path="/perfil" element={<Profile />} />
+          <Route path="/organizador" element={<Organizer />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

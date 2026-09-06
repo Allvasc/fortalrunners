@@ -146,6 +146,22 @@ function Users() {
                       Reativar
                     </button>
                   )}
+                  {u.role === "runner" && (
+                    <button
+                      className="btn quiet sm"
+                      onClick={() => {
+                        const name = prompt(`Nome da organização de ${u.username}:`);
+                        if (!name) return;
+                        const email = prompt("E-mail de contato:") ?? "";
+                        api
+                          .adminCreateOrganizer(u.id, name, email)
+                          .then(() => qc.invalidateQueries({ queryKey: ["admin", "users"] }))
+                          .catch((e) => alert(e?.message ?? "erro"));
+                      }}
+                    >
+                      Tornar organizador
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
