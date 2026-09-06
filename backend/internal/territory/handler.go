@@ -21,10 +21,15 @@ func (h *Handler) Register(g *echo.Group) {
 	g.GET("/territories", h.list)
 }
 
-// GET /v1/territories?bbox=minLon,minLat,maxLon,maxLat&scope=me
-// Fase 1: scope=me apenas.
+// GET /v1/territories?bbox=minLon,minLat,maxLon,maxLat&scope=me|friends
+//
+//	me      → só o meu território
+//	friends → o meu + o dos amigos aceitos (cada um na sua cor)
+//
+// shadow_banned nunca aparece pra terceiros (plano §8).
 func (h *Handler) list(c echo.Context) error {
 	userID := auth.UserID(c)
+	scope := c.QueryParam("scope")
 
 	var bbox [4]float64
 	if raw := c.QueryParam("bbox"); raw != "" {
@@ -41,15 +46,29 @@ func (h *Handler) list(c echo.Context) error {
 		}
 	}
 
-	fc, err := h.featureCollection(c.Request().Context(), userID, bbox)
+	fc, err := h.featureCollection(c.Request().Context(), userID, scope, bbox)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "erro interno")
 	}
 	return c.JSONBlob(http.StatusOK, []byte(fc))
 }
 
-func (h *Handler) featureCollection(ctx context.Context, userID string, bbox [4]float64) (string, error) {
-	const q = `
+func (h *Handler) featureCollection(ctx context.Context, userID, scope string, bbox [4]float64) (string, error) {
+	ownerFilter := "t.user_id = $1"
+	if scope == "friends" || scope == "all" {
+		// $1 + amigos aceitos; exclui shadow_banned de terceiros.
+		ownerFilter = `t.user_id IN (
+			SELECT $1::text
+			UNION
+			SELECT CASE WHEN f.user_id = $1 THEN f.friend_id ELSE f.user_id END
+			FROM friendships f
+			WHERE (f.user_id = $1 OR f.friend_id = $1) AND f.status = 'accepted'
+		) AND (
+			(SELECT status FROM users WHERE id = t.user_id) <> 'shadow_banned' OR t.user_id = $1
+		)`
+	}
+
+	q := `
 		SELECT COALESCE(
 			jsonb_build_object(
 				'type', 'FeatureCollection',
@@ -60,6 +79,7 @@ func (h *Handler) featureCollection(ctx context.Context, userID string, bbox [4]
 						'properties', jsonb_build_object(
 							'id', t.id,
 							'user_id', t.user_id,
+							'color_hex', u.color_hex,
 							'area_m2', t.area_m2,
 							'neighborhood_id', t.neighborhood_id,
 							'claimed_at', t.claimed_at,
@@ -71,7 +91,8 @@ func (h *Handler) featureCollection(ctx context.Context, userID string, bbox [4]
 			jsonb_build_object('type','FeatureCollection','features','[]'::jsonb)
 		)::text
 		FROM territories t
-		WHERE t.user_id = $1 AND t.status = 'active'
+		JOIN users u ON u.id = t.user_id
+		WHERE ` + ownerFilter + ` AND t.status = 'active'
 		  AND ($2 = 0 AND $3 = 0 AND $4 = 0 AND $5 = 0
 		       OR ST_Intersects(t.geom, ST_MakeEnvelope($2,$3,$4,$5,4326)))`
 	var out string

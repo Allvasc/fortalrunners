@@ -167,6 +167,7 @@ func (s *Store) GetFeed(ctx context.Context, userID, cursor string, limit int) (
 		FROM activity_events e
 		JOIN users u ON u.id = e.actor_id
 		WHERE ($2::timestamptz IS NULL OR e.created_at < $2)
+		  AND (u.status <> 'shadow_banned' OR e.actor_id = $1)
 		  AND (
 		    e.actor_id = $1
 		    OR (e.visibility = 'public')

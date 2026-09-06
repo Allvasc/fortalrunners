@@ -60,6 +60,15 @@ func (s *Service) Ingest(ctx context.Context, userID string, in IngestInput) (Vi
 		return View{}, ErrTooFewPoints
 	}
 
+	// Zona de ocultação (plano §14): o traçado dentro do raio de casa/trabalho
+	// nunca é gravado. Filtra antes de calcular métricas e de gravar a geometria.
+	if hlat, hlng, hr, has := s.store.privacyZone(ctx, userID); has {
+		c.points = dropWithinRadius(c.points, hlat, hlng, hr)
+		if len(c.points) < 2 {
+			return View{}, ErrTooFewPoints
+		}
+	}
+
 	// Corrida importada: descarta se já existe (mesma ref) ou se colide no tempo
 	// com uma corrida nativa (mesma sessão gravada nos dois lugares).
 	if in.ImportRef != "" {

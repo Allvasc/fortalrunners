@@ -110,3 +110,69 @@ func (s *store) featureCollection(ctx context.Context, scope, period, activity s
 		bbox[0], bbox[1], bbox[2], bbox[3]).Scan(&out)
 	return out, err
 }
+
+// aggregate soma as células de vários corredores (amigos ou cidade) por h3_index.
+// runner_count = nº de corredores distintos naquela célula → aplica k-anonimato.
+// userIDs vazio = a cidade inteira (todos os 'user:%'), excluindo shadow_banned.
+func (s *store) aggregate(ctx context.Context, userIDs []string, period, activity string, bbox [4]float64, kAnon int) (string, error) {
+	scopeFilter := `h.scope LIKE 'user:%'
+		AND NOT EXISTS (
+			SELECT 1 FROM users u
+			WHERE u.id = substr(h.scope, 6) AND u.status = 'shadow_banned'
+		)`
+	args := []any{period, activity, kAnon, bbox[0], bbox[1], bbox[2], bbox[3]}
+	if len(userIDs) > 0 {
+		scopes := make([]string, len(userIDs))
+		for i, u := range userIDs {
+			scopes[i] = "user:" + u
+		}
+		scopeFilter = `h.scope = ANY($8)`
+		args = append(args, scopes)
+	}
+
+	q := `
+		SELECT jsonb_build_object(
+			'type', 'FeatureCollection',
+			'features', COALESCE(jsonb_agg(f), '[]'::jsonb)
+		)::text
+		FROM (
+			SELECT jsonb_build_object(
+				'type', 'Feature',
+				'geometry', ST_AsGeoJSON(ST_PointOnSurface(ST_Union(h.cell_geom)))::jsonb,
+				'properties', jsonb_build_object('w', SUM(h.weight), 'hits', SUM(h.hits))
+			) AS f
+			FROM heat_agg h
+			WHERE h.period = $1 AND h.activity = $2 AND ` + scopeFilter + `
+			  AND ($4 = 0 AND $5 = 0 AND $6 = 0 AND $7 = 0
+			       OR ST_Intersects(h.cell_geom, ST_MakeEnvelope($4, $5, $6, $7, 4326)))
+			GROUP BY h.h3_index
+			HAVING COUNT(DISTINCT h.scope) >= $3
+			ORDER BY SUM(h.weight) DESC
+			LIMIT 20000
+		) sub`
+	var out string
+	err := s.pool.QueryRow(ctx, q, args...).Scan(&out)
+	return out, err
+}
+
+// friendScopes devolve os user_ids dos amigos aceitos + o próprio.
+func (s *store) friendScopes(ctx context.Context, userID string) ([]string, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT $1::text
+		UNION
+		SELECT CASE WHEN f.user_id = $1 THEN f.friend_id ELSE f.user_id END
+		FROM friendships f
+		WHERE (f.user_id = $1 OR f.friend_id = $1) AND f.status = 'accepted'`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var ids []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err == nil {
+			ids = append(ids, id)
+		}
+	}
+	return ids, nil
+}

@@ -47,7 +47,12 @@ func (s *Service) Refresh(ctx context.Context) error {
 	return nil
 }
 
-// Query devolve o GeoJSON do mapa de calor. scope: "me" (Fase 1).
+// Query devolve o GeoJSON do mapa de calor (nunca traçados). scope:
+//
+//	me      → só os meus percursos
+//	friends → densidade combinada da minha rede (sem k-anon: conheço essas pessoas)
+//	city    → onde Fortaleza corre, com k-anonimato ≥ 3 e sem shadow_banned
+//	          (lição do vazamento do Strava 2018 — plano §7)
 func (s *Service) Query(ctx context.Context, userID, scope, period, activity string, bbox [4]float64) (string, error) {
 	if period == "" {
 		period = "all"
@@ -58,8 +63,15 @@ func (s *Service) Query(ctx context.Context, userID, scope, period, activity str
 	switch scope {
 	case "", "me":
 		return s.store.featureCollection(ctx, "user:"+userID, period, activity, bbox, 1)
+	case "friends":
+		ids, err := s.store.friendScopes(ctx, userID)
+		if err != nil {
+			return "", err
+		}
+		return s.store.aggregate(ctx, ids, period, activity, bbox, 1)
+	case "city":
+		return s.store.aggregate(ctx, nil, period, activity, bbox, cityKAnon)
 	default:
-		// friends / city: Fase 2/3.
 		return "", ErrScopeUnsupported
 	}
 }

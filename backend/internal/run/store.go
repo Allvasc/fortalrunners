@@ -18,6 +18,21 @@ type store struct{ pool *pgxpool.Pool }
 
 func newStore(pool *pgxpool.Pool) *store { return &store{pool: pool} }
 
+// privacyZone lê a zona de ocultação do usuário de users.privacy_jsonb
+// ({ home_lat, home_lng, home_blur_m }). ok=false quando não configurada.
+func (s *store) privacyZone(ctx context.Context, userID string) (lat, lng, radiusM float64, ok bool) {
+	var la, ln, r *float64
+	err := s.pool.QueryRow(ctx, `
+		SELECT (privacy_jsonb->>'home_lat')::float8,
+		       (privacy_jsonb->>'home_lng')::float8,
+		       (privacy_jsonb->>'home_blur_m')::float8
+		FROM users WHERE id = $1`, userID).Scan(&la, &ln, &r)
+	if err != nil || la == nil || ln == nil || r == nil || *r <= 0 {
+		return 0, 0, 0, false
+	}
+	return *la, *ln, *r, true
+}
+
 type createArgs struct {
 	ID         string
 	UserID     string

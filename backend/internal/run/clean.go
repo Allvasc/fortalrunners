@@ -98,6 +98,18 @@ func (c cleaned) bboxDiagonalM() float64 {
 	return haversine(c.minLat, c.minLon, c.maxLat, c.maxLon)
 }
 
+// dropWithinRadius remove os pontos que caem dentro de um círculo (zona de
+// ocultação de casa/trabalho — plano §14).
+func dropWithinRadius(pts []Point, lat, lng, radiusM float64) []Point {
+	out := pts[:0]
+	for _, p := range pts {
+		if haversine(lat, lng, p.Lat, p.Lon) > radiusM {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
 func haversine(lat1, lon1, lat2, lon2 float64) float64 {
 	const r = 6371000.0
 	φ1, φ2 := lat1*math.Pi/180, lat2*math.Pi/180

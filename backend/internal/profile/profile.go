@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"regexp"
 	"time"
@@ -27,10 +28,17 @@ func NewService(pool *pgxpool.Pool) *Service { return &Service{pool: pool} }
 
 // --- PATCH /v1/me ---
 
+type HomeZone struct {
+	Lat     float64 `json:"lat"`
+	Lng     float64 `json:"lng"`
+	RadiusM float64 `json:"radius_m"`
+}
+
 type ProfilePatch struct {
 	DisplayName *string         `json:"display_name,omitempty"`
 	ColorHex    *string         `json:"color_hex,omitempty"`
-	Privacy     json.RawMessage `json:"privacy,omitempty"` // { home_blur_m, default_visibility, ghost }
+	Privacy     json.RawMessage `json:"privacy,omitempty"` // { default_visibility, ghost }
+	Home        *HomeZone       `json:"home,omitempty"`    // zona de ocultação
 }
 
 var ErrBadColor = errors.New("cor inválida (use #RRGGBB)")
@@ -42,15 +50,43 @@ func (s *Service) UpdateMe(ctx context.Context, userID string, p ProfilePatch) e
 	if p.DisplayName != nil && len(*p.DisplayName) > 60 {
 		return errors.New("nome muito longo")
 	}
-	_, err := s.pool.Exec(ctx, `
+	if p.Home != nil && (p.Home.RadiusM < 50 || p.Home.RadiusM > 2000 ||
+		p.Home.Lat < -90 || p.Home.Lat > 90 || p.Home.Lng < -180 || p.Home.Lng > 180) {
+		return errors.New("zona de ocultação inválida (raio entre 50 e 2000 m)")
+	}
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	if _, err := tx.Exec(ctx, `
 		UPDATE users SET
 			display_name = COALESCE($2, display_name),
 			color_hex    = COALESCE($3, color_hex),
 			privacy_jsonb = CASE WHEN $4::jsonb IS NULL THEN privacy_jsonb
 			                     ELSE privacy_jsonb || $4::jsonb END,
 			updated_at = now()
-		WHERE id = $1`, userID, p.DisplayName, p.ColorHex, nullJSON(p.Privacy))
-	return err
+		WHERE id = $1`, userID, p.DisplayName, p.ColorHex, nullJSON(p.Privacy)); err != nil {
+		return err
+	}
+
+	if p.Home != nil {
+		// guarda center+raio no jsonb (usado pelo filtro rápido no ingest) e o
+		// polígono geográfico em home_blur_geom (para consultas espaciais).
+		if _, err := tx.Exec(ctx, `
+			UPDATE users SET
+				privacy_jsonb = privacy_jsonb || jsonb_build_object(
+					'home_lat', $2::float8, 'home_lng', $3::float8, 'home_blur_m', $4::float8),
+				home_blur_geom = ST_Buffer(
+					ST_SetSRID(ST_Point($3, $2), 4326)::geography, $4)::geometry,
+				updated_at = now()
+			WHERE id = $1`, userID, p.Home.Lat, p.Home.Lng, p.Home.RadiusM); err != nil {
+			return fmt.Errorf("gravar zona de ocultação: %w", err)
+		}
+	}
+	return tx.Commit(ctx)
 }
 
 func nullJSON(r json.RawMessage) any {
@@ -173,9 +209,101 @@ func (h *Handler) Register(g *echo.Group) {
 	g.PATCH("/me", h.patchMe)
 	g.GET("/me/badges", h.badges)
 	g.GET("/me/calibration", h.calibration)
+	g.GET("/me/export", h.exportData)
+	g.DELETE("/me", h.deleteAccount)
 	g.GET("/devices", h.listDevices)
 	g.POST("/devices", h.addDevice)
 	g.DELETE("/devices/:id", h.deleteDevice)
+}
+
+// --- LGPD: exportar e excluir (plano §12, §14) ---
+
+func (s *Service) Export(ctx context.Context, userID string) (map[string]any, error) {
+	out := map[string]any{"exported_at": time.Now().UTC()}
+
+	row := s.pool.QueryRow(ctx, `
+		SELECT athlete_id, username, email, COALESCE(display_name,''), color_hex,
+		       birth_date, privacy_jsonb, consent_jsonb, created_at
+		FROM users WHERE id = $1`, userID)
+	var athleteID, username, email, display, color string
+	var birth *time.Time
+	var privacy, consent json.RawMessage
+	var created time.Time
+	if err := row.Scan(&athleteID, &username, &email, &display, &color, &birth, &privacy, &consent, &created); err != nil {
+		return nil, err
+	}
+	out["profile"] = map[string]any{
+		"athlete_id": athleteID, "username": username, "email": email,
+		"display_name": display, "color_hex": color, "birth_date": birth,
+		"privacy": privacy, "consent": consent, "created_at": created,
+	}
+
+	collect := func(key, q string) {
+		rows, err := s.pool.Query(ctx, q, userID)
+		if err != nil {
+			return
+		}
+		defer rows.Close()
+		var items []map[string]any
+		fields := rows.FieldDescriptions()
+		for rows.Next() {
+			vals, err := rows.Values()
+			if err != nil {
+				continue
+			}
+			m := map[string]any{}
+			for i, f := range fields {
+				m[string(f.Name)] = vals[i]
+			}
+			items = append(items, m)
+		}
+		out[key] = items
+	}
+	collect("runs", `SELECT id, started_at, ended_at, distance_m, moving_s, avg_pace_s, status, data_source FROM runs WHERE user_id = $1 ORDER BY started_at`)
+	collect("territories", `SELECT id, run_id, area_m2, neighborhood_id, claimed_at, status FROM territories WHERE user_id = $1`)
+	collect("shoes", `SELECT id, brand, model, nickname, purchased_at, status FROM shoes WHERE user_id = $1`)
+	collect("badges", `SELECT badge_code, source, earned_at FROM user_badges WHERE user_id = $1`)
+	collect("safety_contacts", `SELECT id, name, relation, created_at FROM safety_contacts WHERE user_id = $1`)
+	collect("orders", `SELECT id, kind, status, amount_cents, created_at FROM orders WHERE user_id = $1`)
+	collect("integrations", `SELECT provider, status, last_sync_at FROM integrations WHERE user_id = $1`)
+	return out, nil
+}
+
+// DeleteAccount anonimiza os dados pessoais imediatamente e marca a conta como
+// deletada; as sessões são revogadas. O que sobra (corridas, território) fica
+// atrelado a uma conta sem PII.
+func (s *Service) DeleteAccount(ctx context.Context, userID string) error {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	if _, err := tx.Exec(ctx, `
+		UPDATE users SET
+			username = 'deleted_' || substr(id, 1, 12),
+			email = 'deleted+' || id || '@fortalrunners.invalid',
+			display_name = NULL, avatar_key = NULL, password_hash = NULL,
+			totp_secret_enc = NULL, totp_activated_at = NULL,
+			birth_date = NULL, home_blur_geom = NULL,
+			privacy_jsonb = '{}'::jsonb, consent_jsonb = '{}'::jsonb,
+			status = 'deleted', deleted_at = now(), updated_at = now()
+		WHERE id = $1`, userID); err != nil {
+		return err
+	}
+	for _, q := range []string{
+		`DELETE FROM safety_contacts WHERE user_id = $1`,
+		`DELETE FROM identities WHERE user_id = $1`,
+		`DELETE FROM integrations WHERE user_id = $1`,
+		`DELETE FROM devices WHERE user_id = $1`,
+		`DELETE FROM mfa_recovery_codes WHERE user_id = $1`,
+		`UPDATE auth_sessions SET revoked_at = now() WHERE user_id = $1 AND revoked_at IS NULL`,
+	} {
+		if _, err := tx.Exec(ctx, q, userID); err != nil {
+			return err
+		}
+	}
+	return tx.Commit(ctx)
 }
 
 func (h *Handler) patchMe(c echo.Context) error {
@@ -206,6 +334,29 @@ func (h *Handler) calibration(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "erro interno")
 	}
 	return c.JSON(http.StatusOK, cal)
+}
+
+func (h *Handler) exportData(c echo.Context) error {
+	data, err := h.svc.Export(c.Request().Context(), auth.UserID(c))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "erro ao exportar")
+	}
+	c.Response().Header().Set("Content-Disposition", `attachment; filename="fortalrunners-meus-dados.json"`)
+	return c.JSON(http.StatusOK, data)
+}
+
+func (h *Handler) deleteAccount(c echo.Context) error {
+	var in struct {
+		Confirm string `json:"confirm"`
+	}
+	_ = c.Bind(&in)
+	if in.Confirm != "EXCLUIR" {
+		return echo.NewHTTPError(http.StatusBadRequest, `envie {"confirm":"EXCLUIR"} para confirmar`)
+	}
+	if err := h.svc.DeleteAccount(c.Request().Context(), auth.UserID(c)); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "erro ao excluir conta")
+	}
+	return c.NoContent(http.StatusNoContent)
 }
 
 func (h *Handler) listDevices(c echo.Context) error {

@@ -22,6 +22,8 @@ func NewHandler(pool *pgxpool.Pool) *Handler { return &Handler{pool: pool} }
 func (h *Handler) Register(g *echo.Group) {
 	g.GET("/leaderboards/global", h.global)
 	g.GET("/leaderboards/neighborhood/:id", h.neighborhood)
+	g.GET("/leaderboards/friends", h.friends)
+	g.GET("/leaderboards/club/:id", h.club)
 	g.GET("/me/lifetime", h.lifetime)
 	g.GET("/me/records", h.records)
 	g.GET("/coverage", h.coverage)
@@ -87,6 +89,9 @@ type entry struct {
 	Blocks    int     `json:"blocks"`
 }
 
+// shadow_banned some do ranking dos outros (plano §8), mas continua se vendo.
+const notShadow = `(u.status <> 'shadow_banned' OR u.id = $1)`
+
 const boardGlobal = `
 WITH agg AS (
     SELECT t.user_id, SUM(t.area_m2) AS area_m2, COUNT(*) AS blocks
@@ -94,7 +99,11 @@ WITH agg AS (
     WHERE t.status = 'active'
     GROUP BY t.user_id
 ),
-ranked AS (SELECT a.*, RANK() OVER (ORDER BY a.area_m2 DESC) AS rk FROM agg a)
+ranked AS (
+    SELECT a.*, RANK() OVER (ORDER BY a.area_m2 DESC) AS rk
+    FROM agg a JOIN users u ON u.id = a.user_id
+    WHERE ` + notShadow + `
+)
 SELECT r.rk, r.user_id, u.username, u.athlete_id, r.area_m2, r.blocks
 FROM ranked r JOIN users u ON u.id = r.user_id
 WHERE r.rk <= 50 OR r.user_id = $1
@@ -107,10 +116,47 @@ WITH agg AS (
     WHERE t.status = 'active' AND t.neighborhood_id = $2
     GROUP BY t.user_id
 ),
-ranked AS (SELECT a.*, RANK() OVER (ORDER BY a.area_m2 DESC) AS rk FROM agg a)
+ranked AS (
+    SELECT a.*, RANK() OVER (ORDER BY a.area_m2 DESC) AS rk
+    FROM agg a JOIN users u ON u.id = a.user_id
+    WHERE ` + notShadow + `
+)
 SELECT r.rk, r.user_id, u.username, u.athlete_id, r.area_m2, r.blocks
 FROM ranked r JOIN users u ON u.id = r.user_id
 WHERE r.rk <= 50 OR r.user_id = $1
+ORDER BY r.rk`
+
+// friends: amigos aceitos do solicitante + ele mesmo.
+const boardFriends = `
+WITH circle AS (
+    SELECT $1::text AS user_id
+    UNION
+    SELECT CASE WHEN f.user_id = $1 THEN f.friend_id ELSE f.user_id END
+    FROM friendships f
+    WHERE (f.user_id = $1 OR f.friend_id = $1) AND f.status = 'accepted'
+),
+agg AS (
+    SELECT t.user_id, SUM(t.area_m2) AS area_m2, COUNT(*) AS blocks
+    FROM territories t JOIN circle c ON c.user_id = t.user_id
+    WHERE t.status = 'active'
+    GROUP BY t.user_id
+),
+ranked AS (SELECT a.*, RANK() OVER (ORDER BY a.area_m2 DESC) AS rk FROM agg a)
+SELECT r.rk, r.user_id, u.username, u.athlete_id, r.area_m2, r.blocks
+FROM ranked r JOIN users u ON u.id = r.user_id
+ORDER BY r.rk`
+
+// club: membros do clube.
+const boardClub = `
+WITH agg AS (
+    SELECT t.user_id, SUM(t.area_m2) AS area_m2, COUNT(*) AS blocks
+    FROM territories t JOIN club_members cm ON cm.user_id = t.user_id AND cm.club_id = $2
+    WHERE t.status = 'active'
+    GROUP BY t.user_id
+),
+ranked AS (SELECT a.*, RANK() OVER (ORDER BY a.area_m2 DESC) AS rk FROM agg a)
+SELECT r.rk, r.user_id, u.username, u.athlete_id, r.area_m2, r.blocks
+FROM ranked r JOIN users u ON u.id = r.user_id
 ORDER BY r.rk`
 
 func (h *Handler) global(c echo.Context) error {
@@ -119,6 +165,14 @@ func (h *Handler) global(c echo.Context) error {
 
 func (h *Handler) neighborhood(c echo.Context) error {
 	return h.board(c, boardNeighborhood, auth.UserID(c), c.Param("id"))
+}
+
+func (h *Handler) friends(c echo.Context) error {
+	return h.board(c, boardFriends, auth.UserID(c))
+}
+
+func (h *Handler) club(c echo.Context) error {
+	return h.board(c, boardClub, auth.UserID(c), c.Param("id"))
 }
 
 func (h *Handler) board(c echo.Context, q string, args ...any) error {
