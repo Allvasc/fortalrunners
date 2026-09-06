@@ -107,6 +107,10 @@ Ver `docs/plano.html` § 16.
   - ✅ **rotas comunitárias** (`internal/route`): percursos curados em Fortaleza (Beira-Mar 5k, Cocó 7k),
     avaliações com notas 1-5 estrelas e comentários; UI web (`/rotas`) e mobile (`Routes`)
   - ✅ **pontos de apoio urbanos** (`internal/poi`): bebedouros, banheiros públicos e postos de apoio em Fortaleza em GeoJSON (`GET /v1/amenities`), integrados como marcadores no mapa
+  - ✅ **social & feed de atividades** (`internal/social`): solicitações de amizade, feed de corridas/conquistas e botão de Kudos; UI web (`/social`) e mobile (`Social`)
+  - ✅ **clubes de corrida** (`internal/club`): cadastro e adesão a equipes de Fortaleza (*Beira-Mar Runners*, *Grupo Cocó Trail*); UI web (`/clubes`) e mobile (`Clubs`)
+  - ✅ **segurança pessoal & SOS** (`internal/safety`): contatos de emergência e alertas de pânico com localização GPS (`POST /v1/safety/sos`)
+  - ✅ **condições climáticas** (`internal/weather`): relatório do clima em Fortaleza (sensação, UV, vento) e melhores janelas para corrida integrados no mapa
   - ⬜ Health Connect / Apple Health (ponte on-device), style JSON próprio do mapa
     (chave MapTiler/Protomaps), fusão de sensores para precisão, cobertura H3 (%)
 
