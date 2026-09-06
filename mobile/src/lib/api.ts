@@ -48,8 +48,9 @@ export async function isAuthed() {
 
 async function request<T>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
   const tokens = await getTokens();
+  const isForm = typeof FormData !== "undefined" && init.body instanceof FormData;
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+    ...(isForm ? {} : { "Content-Type": "application/json" }),
     ...(init.headers as Record<string, string>),
   };
   if (tokens) headers.Authorization = `Bearer ${tokens.access_token}`;
@@ -148,11 +149,19 @@ export const api = {
       }[];
     }>("/v1/landmarks"),
 
-  landmarkCheckin: (id: string, lat: number, lng: number) =>
-    request<unknown>(`/v1/landmarks/${encodeURIComponent(id)}/checkin`, {
+  // check-in por foto: entra em moderação (plano §3). photoUri = arquivo da câmera in-app.
+  landmarkCheckin: (id: string, lat: number, lng: number, photoUri: string, runId?: string) => {
+    const form = new FormData();
+    form.append("lat", String(lat));
+    form.append("lng", String(lng));
+    if (runId) form.append("run_id", runId);
+    // @ts-expect-error RN aceita { uri, name, type } como parte do FormData
+    form.append("photo", { uri: photoUri, name: "checkin.jpg", type: "image/jpeg" });
+    return request<{ status: string }>(`/v1/landmarks/${encodeURIComponent(id)}/checkin`, {
       method: "POST",
-      body: JSON.stringify({ lat, lng }),
-    }),
+      body: form,
+    });
+  },
 
   routes: () =>
     request<{
@@ -199,8 +208,67 @@ export const api = {
   joinClub: (id: string) =>
     request<{ joined: boolean }>(`/v1/clubs/${encodeURIComponent(id)}/join`, { method: "POST" }),
 
-  triggerSOS: (lat: number, lng: number, note?: string) =>
-    request<unknown>("/v1/safety/sos", { method: "POST", body: JSON.stringify({ lat, lng, note }) }),
+  // --- segurança ---
+  safetyContacts: () =>
+    request<{ contacts: { id: string; name: string; phone: string; relation?: string }[] }>(
+      "/v1/safety/contacts",
+    ),
+  addSafetyContact: (name: string, phone: string, relation: string) =>
+    request<{ id: string }>("/v1/safety/contacts", {
+      method: "POST",
+      body: JSON.stringify({ name, phone, relation }),
+    }),
+  deleteSafetyContact: (id: string) =>
+    request<void>(`/v1/safety/contacts/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  triggerSOS: (lat: number, lng: number, note?: string, pin?: string, run_id?: string) =>
+    request<{ id: string; share_token: string; share_url?: string; notified_contacts: number }>(
+      "/v1/safety/sos",
+      { method: "POST", body: JSON.stringify({ lat, lng, note, pin, run_id }) },
+    ),
+  cancelSOS: (id: string, pin?: string) =>
+    request<{ status: string }>(`/v1/safety/sos/${encodeURIComponent(id)}/cancel`, {
+      method: "POST",
+      body: JSON.stringify({ pin }),
+    }),
+  updateBeacon: (id: string, lat: number, lng: number) =>
+    request<void>(`/v1/safety/sos/${encodeURIComponent(id)}/beacon`, {
+      method: "POST",
+      body: JSON.stringify({ lat, lng }),
+    }),
+
+  // --- perigos na via ---
+  hazards: (bbox?: string) =>
+    request<{
+      hazards: { id: string; type: string; lat: number; lng: number; severity: number; note?: string; confirms: number; disputes: number }[];
+    }>(`/v1/hazards${bbox ? `?bbox=${encodeURIComponent(bbox)}` : ""}`),
+  reportHazard: (type: string, lat: number, lng: number, severity: number, note?: string) =>
+    request<{ id: string }>("/v1/hazards", {
+      method: "POST",
+      body: JSON.stringify({ type, lat, lng, severity, note }),
+    }),
+
+  // --- dispositivos & assinatura & perfil ---
+  devices: () =>
+    request<{ devices: { id: string; kind: string; brand?: string; model?: string }[] }>("/v1/devices"),
+  addDevice: (kind: string, brand: string, model: string) =>
+    request<{ id: string }>("/v1/devices", { method: "POST", body: JSON.stringify({ kind, brand, model }) }),
+  deleteDevice: (id: string) =>
+    request<void>(`/v1/devices/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  badges: () =>
+    request<{ badges: { code: string; name: string; description?: string; earned_at: string }[] }>(
+      "/v1/me/badges",
+    ),
+  subscription: () =>
+    request<{ active: boolean; plan?: string; status?: string; current_period_end?: string }>(
+      "/v1/me/subscription",
+    ),
+  subscribe: (plan: string) =>
+    request<{ status: string }>("/v1/me/subscription", { method: "POST", body: JSON.stringify({ plan }) }),
+  cancelSubscription: () => request<{ status: string }>("/v1/me/subscription", { method: "DELETE" }),
+  coachSummary: () =>
+    request<{ runs: number; distance_km: number; moving_hours: number; elevation_m: number; note: string }>(
+      "/v1/coach/summary",
+    ),
 
   events: () =>
     request<{
@@ -234,11 +302,11 @@ export const api = {
         id: string;
         message: string;
         tips: string[];
-        advice: string;
-        weather: string;
+        source: "ia" | "fallback";
+        disclaimer?: string;
         created_at: string;
       };
-    }>("/v1/ai/coach", {
+    }>("/v1/coach/ask", {
       method: "POST",
       body: JSON.stringify({ prompt }),
     }),

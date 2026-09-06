@@ -65,6 +65,12 @@ export function Home({ navigation }: Props) {
         <TouchableOpacity style={[s.ctaGhost, { flexGrow: 1 }]} onPress={() => navigation.navigate("AICoach")}>
           <Text style={s.ctaGhostText}>Coach IA</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={[s.ctaGhost, { flexGrow: 1 }]} onPress={() => navigation.navigate("Safety")}>
+          <Text style={s.ctaGhostText}>Segurança & SOS</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[s.ctaGhost, { flexGrow: 1 }]} onPress={() => navigation.navigate("Settings")}>
+          <Text style={s.ctaGhostText}>Ajustes</Text>
+        </TouchableOpacity>
       </View>
 
       <Text style={s.section}>Últimas corridas</Text>

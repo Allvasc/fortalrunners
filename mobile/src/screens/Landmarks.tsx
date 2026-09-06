@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import * as Location from "expo-location";
+import * as ImagePicker from "expo-image-picker";
 import { api } from "../lib/api";
 import { C } from "../theme";
 
@@ -12,14 +13,22 @@ export function Landmarks() {
   const handleCheckin = async (id: string, name: string) => {
     setCheckingId(id);
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("Permissão necessária", "É necessário permitir o acesso ao GPS para realizar check-in.");
+      const loc0 = await Location.requestForegroundPermissionsAsync();
+      const cam = await ImagePicker.requestCameraPermissionsAsync();
+      if (loc0.status !== "granted" || !cam.granted) {
+        Alert.alert("Permissões", "O check-in precisa da câmera e do GPS.");
         return;
       }
+      // foto SÓ pela câmera do app (sem galeria) — plano §3.
+      const shot = await ImagePicker.launchCameraAsync({ quality: 0.7, exif: false });
+      if (shot.canceled || !shot.assets?.[0]) return;
+
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-      await api.landmarkCheckin(id, loc.coords.latitude, loc.coords.longitude);
-      Alert.alert("Parabéns! 🎉", `Selo "${name}" conquistado com sucesso!`);
+      await api.landmarkCheckin(id, loc.coords.latitude, loc.coords.longitude, shot.assets[0].uri);
+      Alert.alert(
+        "Enviado para revisão",
+        `A foto do marco "${name}" entrou na fila de moderação. O selo é concedido após a aprovação.`,
+      );
       lmkQuery.refetch();
     } catch (err: any) {
       Alert.alert("Ops", err.message || "Erro ao fazer check-in.");

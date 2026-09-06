@@ -16,6 +16,8 @@ import { SocialScreen } from "./src/screens/Social";
 import { ClubsScreen } from "./src/screens/Clubs";
 import { EventsScreen } from "./src/screens/Events";
 import { AICoachScreen } from "./src/screens/AICoach";
+import { SafetyScreen } from "./src/screens/Safety";
+import { SettingsScreen } from "./src/screens/Settings";
 import "./src/lib/recorder"; // registra a task de background no import
 
 export type RootStack = {
@@ -29,6 +31,8 @@ export type RootStack = {
   Clubs: undefined;
   Events: undefined;
   AICoach: undefined;
+  Safety: undefined;
+  Settings: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStack>();
@@ -73,6 +77,8 @@ function Root() {
         <Stack.Screen name="Clubs" component={ClubsScreen} options={{ title: "Clubes" }} />
         <Stack.Screen name="Events" component={EventsScreen} options={{ title: "Eventos & QR" }} />
         <Stack.Screen name="AICoach" component={AICoachScreen} options={{ title: "Coach IA" }} />
+        <Stack.Screen name="Safety" component={SafetyScreen} options={{ title: "Segurança & SOS" }} />
+        <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: "Ajustes" }} />
         <Stack.Screen name="Recording" component={Recording} options={{ title: "Correndo", gestureEnabled: false }} />
         <Stack.Screen name="Summary" component={Summary} options={{ title: "Resumo", headerBackVisible: false }} />
       </Stack.Navigator>
