@@ -108,6 +108,11 @@ h3 {
   font-size: 0.85rem;
   margin: 0;
 }
+.ok {
+  color: var(--good);
+  font-size: 0.85rem;
+  margin: 0;
+}
 
 /* --- controles --- */
 .btn {

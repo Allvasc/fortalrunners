@@ -316,6 +316,17 @@ export const api = {
     return { kind: "ok", user: r.user };
   },
 
+  forgotPassword: (email: string) =>
+    request<{ status: string }>("/v1/auth/password/forgot", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+  resetPassword: (token: string, password: string) =>
+    request<{ status: string }>("/v1/auth/password/reset", {
+      method: "POST",
+      body: JSON.stringify({ token, password }),
+    }),
+
   async verifyMfa(mfaToken: string, code: string) {
     const r = await request<{ user: PublicUser; tokens: Tokens }>("/v1/auth/mfa/verify", {
       method: "POST",

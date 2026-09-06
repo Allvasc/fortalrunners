@@ -1,5 +1,7 @@
-// Tokens do manual de design (subset para o app).
-export const C = {
+// Paletas do manual de design — claro e escuro.
+import { Easing } from "react-native";
+
+export const light = {
   bg: "#F4F1E8",
   surface: "#FFFFFF",
   sunken: "#ECE6D9",
@@ -16,10 +18,30 @@ export const C = {
   crit: "#C7402B",
 };
 
+export const dark: typeof light = {
+  bg: "#0E1618",
+  surface: "#1B292C",
+  sunken: "#0A1214",
+  ink: "#E9E4D7",
+  ink2: "#A8B1B1",
+  ink3: "#7C8888",
+  line: "#2C3A3E",
+  teal: "#3CB4BE",
+  tealDeep: "#6FD0D8",
+  coral: "#F06A42",
+  gold: "#DBA94A",
+  runner: "#22C7C0",
+  good: "#43B27D",
+  crit: "#E05640",
+};
+
+export type Palette = typeof light;
+
+// `C` legado = paleta clara (uso fora de componentes). Em componentes, use useTheme().
+export const C = light;
+
 // Movimento — manual de design §"Movimento & animação".
 export const DUR = { xs: 120, sm: 200, md: 300, lg: 450, xl: 900 };
-// Easings equivalentes aos cubic-bezier do manual (para Animated.timing).
-import { Easing } from "react-native";
 export const EASE = {
   standard: Easing.bezier(0.2, 0, 0, 1),
   out: Easing.bezier(0, 0, 0, 1),

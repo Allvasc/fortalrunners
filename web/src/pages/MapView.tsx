@@ -60,7 +60,7 @@ export function MapView() {
   const [scope, setScope] = useState<"me" | "friends">("me");
   const [heatScope, setHeatScope] = useState<"me" | "friends" | "city">("me");
   const [on, setOn] = useState<Record<LayerKey, boolean>>({
-    heat: false, landmarks: false, routes: false, pois: false, risk: true, hazards: false,
+    heat: true, landmarks: true, routes: true, pois: true, risk: true, hazards: true,
   });
   const toggle = (k: LayerKey) => setOn((s) => ({ ...s, [k]: !s[k] }));
 

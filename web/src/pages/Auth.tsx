@@ -12,8 +12,11 @@ export function Auth() {
   const [password, setPassword] = useState("");
   const [mfaToken, setMfaToken] = useState<string | null>(null);
   const [code, setCode] = useState("");
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   const done = () => qc.invalidateQueries({ queryKey: ["me"] });
+
+  const forgot = useMutation({ mutationFn: () => api.forgotPassword(email) });
 
   const submit = useMutation({
     mutationFn: async () => {
@@ -42,7 +45,32 @@ export function Auth() {
         <span className="muted small">portal do corredor</span>
       </div>
 
-      {mfaToken ? (
+      {forgotOpen ? (
+        <form
+          className="card"
+          onSubmit={(e) => {
+            e.preventDefault();
+            forgot.mutate();
+          }}
+        >
+          <h2>Recuperar senha</h2>
+          <p className="muted small">
+            Informe seu e-mail. Se houver uma conta, enviamos um link para redefinir a senha.
+          </p>
+          <label>
+            E-mail
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
+          </label>
+          {forgot.isSuccess && <p className="ok">Se este e-mail estiver cadastrado, o link foi enviado.</p>}
+          {forgot.isError && <p className="err">Não foi possível enviar. Tente de novo.</p>}
+          <button className="btn primary" disabled={forgot.isPending}>
+            {forgot.isPending ? "Enviando…" : "Enviar link"}
+          </button>
+          <button type="button" className="btn quiet" onClick={() => setForgotOpen(false)}>
+            Voltar ao login
+          </button>
+        </form>
+      ) : mfaToken ? (
         <form
           className="card"
           onSubmit={(e) => {
@@ -136,6 +164,19 @@ export function Auth() {
           <button className="btn primary" disabled={submit.isPending}>
             {submit.isPending ? "…" : mode === "login" ? "Entrar" : "Criar conta"}
           </button>
+
+          {mode === "login" && (
+            <button
+              type="button"
+              className="btn quiet sm"
+              onClick={() => {
+                setForgotOpen(true);
+                forgot.reset();
+              }}
+            >
+              Esqueci minha senha
+            </button>
+          )}
 
           <div className="oauth-sep">
             <span>ou</span>

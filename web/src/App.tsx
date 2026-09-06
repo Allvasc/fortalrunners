@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, consumeOAuthFragment, type PublicUser } from "./lib/api";
 import { useAuthed } from "./lib/useAuth";
 import { Auth } from "./pages/Auth";
+import { ResetPassword } from "./pages/ResetPassword";
 import { MapView } from "./pages/MapView";
 import { History } from "./pages/History";
 import { Ranking } from "./pages/Ranking";
@@ -25,6 +26,7 @@ if (window.location.pathname === "/auth/callback") {
 
 export function App() {
   const authed = useAuthed();
+  if (window.location.pathname === "/redefinir-senha") return <ResetPassword />;
   if (!authed) return <Auth />;
   return <Portal />;
 }

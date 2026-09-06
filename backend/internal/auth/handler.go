@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -19,6 +20,8 @@ type Deps struct {
 	MFAEncKey  string // base64 de 32 bytes (AES-256-GCM do segredo TOTP)
 	OAuth      OAuthConfig
 	WebBaseURL string // para onde o callback OAuth redireciona (fragmento com tokens)
+	Log        *slog.Logger
+	Mailer     Mailer // nil → logMailer (só registra o link no log)
 }
 
 type RegisterInput struct {
@@ -41,6 +44,8 @@ func (h *Handler) Register(g *echo.Group) {
 	a.POST("/refresh", h.refresh)
 	a.POST("/logout", h.logout)
 	a.POST("/mfa/verify", h.mfaVerify) // troca o desafio de login pelo par de tokens
+	a.POST("/password/forgot", h.passwordForgot)
+	a.POST("/password/reset", h.passwordReset)
 
 	a.GET("/oauth/:provider", h.oauthStart)
 	a.GET("/oauth/:provider/callback", h.oauthCallback)
@@ -54,6 +59,32 @@ func (h *Handler) RegisterSecured(g *echo.Group) {
 	m.POST("/setup", h.mfaSetup)
 	m.POST("/activate", h.mfaActivate)
 	m.POST("/disable", h.mfaDisable)
+}
+
+func (h *Handler) passwordForgot(c echo.Context) error {
+	var req struct {
+		Email string `json:"email"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "corpo inválido")
+	}
+	// resposta sempre igual — não revela se o e-mail existe
+	h.svc.RequestPasswordReset(c.Request().Context(), req.Email)
+	return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
+}
+
+func (h *Handler) passwordReset(c echo.Context) error {
+	var req struct {
+		Token    string `json:"token"`
+		Password string `json:"password"`
+	}
+	if err := c.Bind(&req); err != nil || req.Token == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "token e password obrigatórios")
+	}
+	if err := h.svc.ResetPassword(c.Request().Context(), req.Token, req.Password); err != nil {
+		return authErr(err)
+	}
+	return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
 }
 
 func (h *Handler) register(c echo.Context) error {
@@ -311,6 +342,8 @@ func authErr(err error) error {
 		return echo.NewHTTPError(http.StatusConflict, err.Error())
 	case errors.Is(err, ErrWeakPassword):
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+	case errors.Is(err, ErrResetInvalid):
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	default:
 		return echo.NewHTTPError(http.StatusInternalServerError, "erro interno")
 	}

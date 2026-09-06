@@ -153,6 +153,36 @@ func (s *store) revokeFamily(ctx context.Context, familyID string) error {
 	return err
 }
 
+func (s *store) revokeAllSessions(ctx context.Context, userID string) error {
+	_, err := s.pool.Exec(ctx, `UPDATE auth_sessions SET revoked_at = now() WHERE user_id = $1 AND revoked_at IS NULL`, userID)
+	return err
+}
+
+// --- redefinição de senha ---
+
+func (s *store) createResetToken(ctx context.Context, tokenHash, userID string, exp time.Time) error {
+	_, err := s.pool.Exec(ctx,
+		`INSERT INTO password_reset_tokens (token_hash, user_id, expires_at) VALUES ($1, $2, $3)`,
+		tokenHash, userID, exp)
+	return err
+}
+
+// consumeResetToken devolve o user_id e marca o token como usado, se válido.
+func (s *store) consumeResetToken(ctx context.Context, tokenHash string) (string, error) {
+	var userID string
+	err := s.pool.QueryRow(ctx, `
+		UPDATE password_reset_tokens SET used_at = now()
+		WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now()
+		RETURNING user_id`, tokenHash).Scan(&userID)
+	return userID, err
+}
+
+func (s *store) setPassword(ctx context.Context, userID, hash string) error {
+	_, err := s.pool.Exec(ctx,
+		`UPDATE users SET password_hash = $2, updated_at = now() WHERE id = $1`, userID, hash)
+	return err
+}
+
 // --- 2FA / TOTP ---
 
 // mfaState devolve o segredo cifrado (nil se não houver) e quando o TOTP foi

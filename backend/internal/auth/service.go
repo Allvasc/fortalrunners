@@ -53,12 +53,17 @@ type Service struct {
 	oauth   OAuthConfig
 	httpc   *http.Client
 	webBase string
+	mailer  Mailer
 }
 
 func NewService(deps Deps) (*Service, error) {
 	box, err := crypto.NewBox(deps.MFAEncKey)
 	if err != nil {
 		return nil, err
+	}
+	mailer := deps.Mailer
+	if mailer == nil {
+		mailer = logMailer{log: deps.Log}
 	}
 	return &Service{
 		store:   newStore(deps.Pool),
@@ -67,6 +72,7 @@ func NewService(deps Deps) (*Service, error) {
 		oauth:   deps.OAuth,
 		httpc:   &http.Client{Timeout: 10 * time.Second},
 		webBase: deps.WebBaseURL,
+		mailer:  mailer,
 	}, nil
 }
 

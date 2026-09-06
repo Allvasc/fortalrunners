@@ -71,6 +71,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 		RefreshTTL: cfg.RefreshTokenTTL,
 		MFAEncKey:  cfg.MFAEncKey,
 		WebBaseURL: firstOrigin(cfg.CORSOrigins),
+		Log:        log,
 		OAuth: auth.OAuthConfig{
 			GoogleClientID: cfg.GoogleClientID, GoogleClientSecret: cfg.GoogleClientSecret,
 			GoogleRedirectURL: cfg.GoogleRedirectURL,
