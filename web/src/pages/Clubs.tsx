@@ -137,6 +137,11 @@ export function ClubsPage() {
       )}
 
       {/* Clubs Grid */}
+      {clubs.length === 0 && (
+        <p style={{ color: "var(--ink-soft)" }}>
+          Nenhum clube ainda — seja o primeiro a criar um em Fortaleza.
+        </p>
+      )}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(260px, 100%), 1fr))", gap: "1.2rem" }}>
         {clubs.map((c) => (
           <div
