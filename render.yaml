@@ -7,9 +7,8 @@ services:
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     healthCheckPath: /healthz
-    # sem dockerCommand: a imagem distroless não tem shell e o Render
-    # embrulha dockerCommand em `sh -c`. O ENTRYPOINT ["/app"] (exec form)
-    # do Dockerfile sobe o binário direto, sem shell.
+    # sem dockerCommand: o ENTRYPOINT ["/app"] (exec form) sobe o binário
+    # direto. A imagem é alpine (o binário linka musl via cgo do H3).
     envVars:
       - key: APP_ENV
         value: prod
