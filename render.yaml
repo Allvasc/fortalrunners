@@ -1,8 +1,9 @@
 services:
-  # 1. Backend API Service
+  # 1. Backend API Service (Gratuito)
   - type: web
     name: fortalrunners-api
     env: docker
+    plan: free
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     dockerCommand: ./app
@@ -23,27 +24,7 @@ services:
           name: fortalrunners-redis
           property: connectionString
 
-  # 2. Background Territory Worker Service
-  - type: worker
-    name: fortalrunners-worker
-    env: docker
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
-    dockerCommand: ./app
-    envVars:
-      - key: TARGET
-        value: worker
-      - key: DATABASE_URL
-        fromDatabase:
-          name: fortalrunners-db
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: fortalrunners-redis
-          property: connectionString
-
-  # 3. Web Frontend Portal
+  # 2. Web Frontend Portal (Gratuito)
   - type: web
     name: fortalrunners-web
     env: static
@@ -60,14 +41,17 @@ services:
           name: fortalrunners-api
           property: host
 
-  # 4. Redis Service
+  # 3. Redis Service (Gratuito)
   - type: redis
     name: fortalrunners-redis
+    plan: free
     ipAllowList: []
 
 databases:
-  # 5. PostgreSQL Database
+  # 4. PostgreSQL Database (Gratuito)
   - name: fortalrunners-db
     databaseName: fortalrunners
     user: fortalrunners
+    plan: free
     ipAllowList: []
+
