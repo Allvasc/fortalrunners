@@ -5,12 +5,20 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Allvasc/fortalrunners/backend/internal/platform/id"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/Allvasc/fortalrunners/backend/internal/platform/id"
 )
 
-// ErrPaidEvent: o evento tem lote pago — a inscrição precisa passar pelo checkout.
-var ErrPaidEvent = errors.New("evento pago: use o checkout")
+var (
+	// ErrPaidEvent: o evento tem lote pago — a inscrição precisa passar pelo checkout.
+	ErrPaidEvent       = errors.New("evento pago: use o checkout")
+	ErrStationNotFound = errors.New("estação do evento não encontrada")
+	ErrTooFar          = errors.New("você está longe demais da estação")
+	ErrNotRegistered   = errors.New("você não está inscrito neste evento")
+	ErrEventNotFound   = errors.New("evento não encontrado")
+)
 
 type Store struct {
 	pool *pgxpool.Pool
@@ -20,14 +28,16 @@ func NewStore(pool *pgxpool.Pool) *Store {
 	return &Store{pool: pool}
 }
 
-func (s *Store) ListEvents(ctx context.Context, userID string) ([]Event, error) {
+func (s *Store) ListEvents(ctx context.Context, userID string, limit int) ([]Event, error) {
 	query := `
 		SELECT e.id, e.slug, e.organizer_id, e.title, e.description, e.type, e.starts_at, e.ends_at, e.location_name, e.status, e.created_at,
 		       EXISTS (SELECT 1 FROM event_participants ep WHERE ep.event_id = e.id AND ep.user_id = $1) as is_registered
 		FROM events e
+		WHERE e.status IN ('live', 'published', 'open') AND e.ends_at > now() - interval '7 days'
 		ORDER BY e.starts_at ASC
+		LIMIT $2
 	`
-	rows, err := s.pool.Query(ctx, query, userID)
+	rows, err := s.pool.Query(ctx, query, userID, limit)
 	if err != nil {
 		return nil, fmt.Errorf("list events: %w", err)
 	}
@@ -105,4 +115,94 @@ func (s *Store) RegisterParticipant(ctx context.Context, userID, eventID, catego
 		return nil, fmt.Errorf("register participant: %w", err)
 	}
 	return &p, nil
+}
+
+// LeaderEntry: linha do ranking de um evento.
+type LeaderEntry struct {
+	Rank        int     `json:"rank"`
+	UserID      string  `json:"user_id"`
+	Username    string  `json:"username"`
+	BibNumber   string  `json:"bib_number,omitempty"`
+	Checkpoints int     `json:"checkpoints"`
+	AreaM2      float64 `json:"area_m2"` // território conquistado durante a janela do evento
+	Completed   bool    `json:"completed"`
+}
+
+// Leaderboard: participantes ordenados por checkpoints batidos e área conquistada
+// durante a janela do evento (plano §3 — "território conquistado durante a prova").
+func (s *Store) Leaderboard(ctx context.Context, eventRef string, limit int) ([]LeaderEntry, error) {
+	rows, err := s.pool.Query(ctx, `
+		WITH e AS (SELECT id, starts_at, ends_at FROM events WHERE id = $1 OR slug = $1)
+		SELECT ep.user_id, u.username, COALESCE(ep.bib_number,''),
+		       (SELECT count(*) FROM scan_events se
+		         WHERE se.event_id = e.id AND se.athlete_id = ep.user_id
+		           AND se.kind IN ('checkpoint','start','finish','lap') AND se.status = 'recorded'),
+		       COALESCE((SELECT SUM(t.area_m2) FROM territories t, e
+		         WHERE t.user_id = ep.user_id AND t.status = 'active'
+		           AND t.claimed_at BETWEEN e.starts_at AND e.ends_at), 0),
+		       ep.completed_at IS NOT NULL
+		FROM event_participants ep
+		JOIN e ON ep.event_id = e.id
+		JOIN users u ON u.id = ep.user_id
+		ORDER BY 4 DESC, 5 DESC
+		LIMIT $2`, eventRef, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []LeaderEntry
+	rank := 0
+	for rows.Next() {
+		rank++
+		var e LeaderEntry
+		if err := rows.Scan(&e.UserID, &e.Username, &e.BibNumber, &e.Checkpoints, &e.AreaM2, &e.Completed); err != nil {
+			return nil, err
+		}
+		e.Rank = rank
+		out = append(out, e)
+	}
+	return out, nil
+}
+
+// CheckpointCheckin registra passagem do participante numa estação do evento
+// por proximidade GPS (event_stations com raio).
+func (s *Store) CheckpointCheckin(ctx context.Context, userID, eventRef, stationID string, lat, lng float64) (string, error) {
+	var eventID, kind string
+	var within bool
+	err := s.pool.QueryRow(ctx, `
+		SELECT e.id, st.role::text,
+		       ST_DWithin(st.geom::geography, ST_SetSRID(ST_Point($3,$4),4326)::geography, st.radius_m)
+		FROM events e
+		JOIN event_stations st ON st.event_id = e.id AND st.id = $2
+		WHERE e.id = $1 OR e.slug = $1`, eventRef, stationID, lng, lat).Scan(&eventID, &kind, &within)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrStationNotFound
+	}
+	if err != nil {
+		return "", err
+	}
+	if !within {
+		return "", ErrTooFar
+	}
+
+	var registered bool
+	_ = s.pool.QueryRow(ctx,
+		`SELECT true FROM event_participants WHERE event_id = $1 AND user_id = $2`, eventID, userID).Scan(&registered)
+	if !registered {
+		return "", ErrNotRegistered
+	}
+
+	scanID := id.New()
+	if _, err := s.pool.Exec(ctx, `
+		INSERT INTO scan_events (id, athlete_id, station_id, event_id, scanned_by, kind, geom, status)
+		VALUES ($1, $2, $3, $4, $2, $5::scan_kind, ST_SetSRID(ST_Point($6,$7),4326), 'recorded')`,
+		scanID, userID, stationID, eventID, kind, lng, lat); err != nil {
+		return "", err
+	}
+	if kind == "finish" {
+		_, _ = s.pool.Exec(ctx,
+			`UPDATE event_participants SET completed_at = now() WHERE event_id = $1 AND user_id = $2 AND completed_at IS NULL`,
+			eventID, userID)
+	}
+	return kind, nil
 }

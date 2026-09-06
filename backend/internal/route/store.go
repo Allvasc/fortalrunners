@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -48,10 +49,10 @@ func NewStore(pool *pgxpool.Pool) *Store {
 	return &Store{pool: pool}
 }
 
-func (s *Store) ListRoutes(ctx context.Context) ([]Route, error) {
+func (s *Store) ListRoutes(ctx context.Context, limit int) ([]Route, error) {
 	query := `
-		SELECT 
-			r.id, r.created_by, r.name, COALESCE(r.description, ''), r.distance_m, 
+		SELECT
+			r.id, r.created_by, r.name, COALESCE(r.description, ''), r.distance_m,
 			r.surface, r.is_official, ST_AsGeoJSON(r.geom) as geojson,
 			COALESCE(AVG(rr.rating), 0) as avg_rating,
 			COUNT(rr.id) as review_count,
@@ -60,8 +61,9 @@ func (s *Store) ListRoutes(ctx context.Context) ([]Route, error) {
 		LEFT JOIN route_reviews rr ON rr.route_id = r.id AND rr.status = 'approved'
 		GROUP BY r.id, r.created_by, r.name, r.description, r.distance_m, r.surface, r.is_official, r.geom, r.created_at
 		ORDER BY r.is_official DESC, r.created_at DESC
+		LIMIT $1
 	`
-	rows, err := s.pool.Query(ctx, query)
+	rows, err := s.pool.Query(ctx, query, limit)
 	if err != nil {
 		return nil, fmt.Errorf("list routes query: %w", err)
 	}
@@ -136,33 +138,42 @@ func (s *Store) GetRoute(ctx context.Context, routeID string) (*Route, []Review,
 	return &r, reviews, nil
 }
 
-func (s *Store) CreateRoute(ctx context.Context, userID, name, description string, distanceM int, surface string, lineWKT string) (*Route, error) {
+var ErrBadGeometry = errors.New("geometria da rota inválida")
+
+// CreateRoute grava a rota. A distância é calculada da própria geometria (não é
+// confiada ao cliente) e a geometria é validada (LINESTRING, WGS84, dentro de
+// limites plausíveis).
+func (s *Store) CreateRoute(ctx context.Context, userID, name, description string, surface string, lineWKT string) (*Route, error) {
+	up := strings.ToUpper(strings.TrimSpace(lineWKT))
+	if !strings.HasPrefix(up, "LINESTRING") || len(lineWKT) > 60_000 {
+		return nil, ErrBadGeometry
+	}
+
 	routeID := id.New()
 	now := time.Now().UTC()
 
 	query := `
+		WITH g AS (SELECT ST_SetSRID(ST_GeomFromText($7), 4326) AS geom)
 		INSERT INTO routes (id, created_by, name, description, distance_m, surface, is_official, geom, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, false, ST_GeomFromText($7, 4326), $8)
-		RETURNING ST_AsGeoJSON(geom)
+		SELECT $1, $2, $3, $4, ST_Length(g.geom::geography)::int, $5, false, g.geom, $6
+		FROM g
+		WHERE ST_NPoints(g.geom) BETWEEN 2 AND 5000
+		  AND ST_Length(g.geom::geography) BETWEEN 100 AND 200000
+		RETURNING distance_m, ST_AsGeoJSON(geom)
 	`
+	var distanceM int
 	var geoJSON string
-	err := s.pool.QueryRow(ctx, query, routeID, userID, name, description, distanceM, surface, lineWKT, now).Scan(&geoJSON)
+	err := s.pool.QueryRow(ctx, query, routeID, userID, name, description, surface, now, lineWKT).Scan(&distanceM, &geoJSON)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrBadGeometry
+	}
 	if err != nil {
 		return nil, fmt.Errorf("create route insert: %w", err)
 	}
 
 	return &Route{
-		ID:          routeID,
-		CreatedBy:   &userID,
-		Name:        name,
-		Description: description,
-		DistanceM:   distanceM,
-		Surface:     surface,
-		IsOfficial:  false,
-		GeoJSON:     geoJSON,
-		AvgRating:   0,
-		ReviewCount: 0,
-		CreatedAt:   now,
+		ID: routeID, CreatedBy: &userID, Name: name, Description: description,
+		DistanceM: distanceM, Surface: surface, GeoJSON: geoJSON, CreatedAt: now,
 	}, nil
 }
 

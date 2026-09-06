@@ -43,9 +43,9 @@ func NewStore(pool *pgxpool.Pool) *Store {
 	return &Store{pool: pool}
 }
 
-func (s *Store) ListClubs(ctx context.Context, userID string) ([]Club, error) {
+func (s *Store) ListClubs(ctx context.Context, userID string, limit int) ([]Club, error) {
 	query := `
-		SELECT 
+		SELECT
 			c.id, c.owner_id, c.name, COALESCE(c.description, ''), c.neighborhood_id, c.color_hex,
 			COUNT(cm.user_id) as member_count,
 			EXISTS(SELECT 1 FROM club_members cm2 WHERE cm2.club_id = c.id AND cm2.user_id = $1) as is_member,
@@ -54,8 +54,9 @@ func (s *Store) ListClubs(ctx context.Context, userID string) ([]Club, error) {
 		LEFT JOIN club_members cm ON cm.club_id = c.id
 		GROUP BY c.id, c.owner_id, c.name, c.description, c.neighborhood_id, c.color_hex, c.created_at
 		ORDER BY member_count DESC, c.name ASC
+		LIMIT $2
 	`
-	rows, err := s.pool.Query(ctx, query, userID)
+	rows, err := s.pool.Query(ctx, query, userID, limit)
 	if err != nil {
 		return nil, fmt.Errorf("list clubs query: %w", err)
 	}
@@ -176,4 +177,47 @@ func (s *Store) JoinClub(ctx context.Context, userID, clubID string) error {
 	`
 	_, err := s.pool.Exec(ctx, query, clubID, userID)
 	return err
+}
+
+// LeaveClub remove o membro. O dono não sai (precisa transferir/apagar antes).
+func (s *Store) LeaveClub(ctx context.Context, userID, clubID string) error {
+	_, err := s.pool.Exec(ctx,
+		`DELETE FROM club_members WHERE club_id = $1 AND user_id = $2 AND role <> 'owner'`,
+		clubID, userID)
+	return err
+}
+
+// LeaderEntry: ranking do clube por área de território somada dos membros.
+type LeaderEntry struct {
+	ClubID      string  `json:"club_id"`
+	Name        string  `json:"name"`
+	ColorHex    string  `json:"color_hex"`
+	MemberCount int     `json:"member_count"`
+	AreaM2      float64 `json:"area_m2"`
+}
+
+func (s *Store) Leaderboard(ctx context.Context, limit int) ([]LeaderEntry, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT c.id, c.name, c.color_hex,
+		       COUNT(DISTINCT cm.user_id),
+		       COALESCE(SUM(t.area_m2), 0)
+		FROM clubs c
+		JOIN club_members cm ON cm.club_id = c.id
+		LEFT JOIN territories t ON t.user_id = cm.user_id AND t.status = 'active'
+		GROUP BY c.id, c.name, c.color_hex
+		ORDER BY 5 DESC, 4 DESC
+		LIMIT $1`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []LeaderEntry
+	for rows.Next() {
+		var e LeaderEntry
+		if err := rows.Scan(&e.ClubID, &e.Name, &e.ColorHex, &e.MemberCount, &e.AreaM2); err != nil {
+			return nil, err
+		}
+		out = append(out, e)
+	}
+	return out, nil
 }

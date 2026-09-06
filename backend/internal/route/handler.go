@@ -3,6 +3,7 @@ package route
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 
@@ -25,7 +26,8 @@ func (h *Handler) Register(g *echo.Group) {
 }
 
 func (h *Handler) list(c echo.Context) error {
-	routes, err := h.svc.ListRoutes(c.Request().Context())
+	limit, _ := strconv.Atoi(c.QueryParam("limit"))
+	routes, err := h.svc.ListRoutes(c.Request().Context(), limit)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "erro ao listar rotas")
 	}
@@ -35,7 +37,6 @@ func (h *Handler) list(c echo.Context) error {
 type createRouteReq struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	DistanceM   int    `json:"distance_m"`
 	Surface     string `json:"surface"`
 	LineWKT     string `json:"line_wkt"`
 }
@@ -44,14 +45,19 @@ func (h *Handler) create(c echo.Context) error {
 	userID := auth.UserID(c)
 	var req createRouteReq
 	if err := c.Bind(&req); err != nil || req.Name == "" || req.LineWKT == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "nome e geometria line_wkt sao obrigatorios")
+		return echo.NewHTTPError(http.StatusBadRequest, "nome e geometria line_wkt são obrigatórios")
 	}
-
+	if len(req.Name) > 120 || len(req.Description) > 2000 {
+		return echo.NewHTTPError(http.StatusBadRequest, "texto muito longo")
+	}
 	if req.Surface == "" {
 		req.Surface = "asfalto"
 	}
 
-	r, err := h.svc.CreateRoute(c.Request().Context(), userID, req.Name, req.Description, req.DistanceM, req.Surface, req.LineWKT)
+	r, err := h.svc.CreateRoute(c.Request().Context(), userID, req.Name, req.Description, req.Surface, req.LineWKT)
+	if errors.Is(err, ErrBadGeometry) {
+		return echo.NewHTTPError(http.StatusBadRequest, "geometria da rota inválida (LINESTRING WGS84, 100 m a 200 km)")
+	}
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "erro ao criar rota")
 	}

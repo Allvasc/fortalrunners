@@ -3,6 +3,7 @@ package club
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 
@@ -20,17 +21,35 @@ func NewHandler(svc *Service) *Handler {
 func (h *Handler) Register(g *echo.Group) {
 	g.GET("/clubs", h.list)
 	g.POST("/clubs", h.create)
+	g.GET("/clubs/leaderboard", h.leaderboard)
 	g.GET("/clubs/:id", h.get)
 	g.POST("/clubs/:id/join", h.join)
+	g.POST("/clubs/:id/leave", h.leave)
 }
 
 func (h *Handler) list(c echo.Context) error {
-	userID := auth.UserID(c)
-	clubs, err := h.svc.ListClubs(c.Request().Context(), userID)
+	limit, _ := strconv.Atoi(c.QueryParam("limit"))
+	clubs, err := h.svc.ListClubs(c.Request().Context(), auth.UserID(c), limit)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "erro ao listar clubes")
 	}
 	return c.JSON(http.StatusOK, map[string]any{"clubs": clubs})
+}
+
+func (h *Handler) leaderboard(c echo.Context) error {
+	limit, _ := strconv.Atoi(c.QueryParam("limit"))
+	board, err := h.svc.Leaderboard(c.Request().Context(), limit)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "erro ao montar ranking")
+	}
+	return c.JSON(http.StatusOK, map[string]any{"leaderboard": board})
+}
+
+func (h *Handler) leave(c echo.Context) error {
+	if err := h.svc.LeaveClub(c.Request().Context(), auth.UserID(c), c.Param("id")); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "erro ao sair do clube")
+	}
+	return c.JSON(http.StatusOK, map[string]any{"left": true})
 }
 
 type createClubReq struct {
