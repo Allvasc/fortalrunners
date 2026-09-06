@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { api } from "../lib/api";
+import { api, connectEvents } from "../lib/api";
 import { C } from "../theme";
 import { area, clock, km, pace } from "../format";
 import type { RootStack } from "../../App";
@@ -23,6 +23,20 @@ export function Summary({ route, navigation }: Props) {
     qc.invalidateQueries({ queryKey: ["runs"] });
     qc.invalidateQueries({ queryKey: ["lifetime"] });
   }, [q.data?.status, qc]);
+
+  // WebSocket: quando o servidor avisa que a corrida processou, atualiza na hora.
+  useEffect(() => {
+    let close = () => {};
+    connectEvents((e) => {
+      if (e.type === "run.processed" && e.data?.run_id === runId) {
+        qc.invalidateQueries({ queryKey: ["run", runId] });
+        qc.invalidateQueries({ queryKey: ["lifetime"] });
+      }
+    }).then((c) => {
+      close = c;
+    });
+    return () => close();
+  }, [runId, qc]);
 
   const r = q.data;
 

@@ -42,6 +42,27 @@ export function isAuthed() {
 /** URL base da API (para navegações OAuth que não passam pelo fetch). */
 export const apiBase = BASE;
 
+/** WebSocket de eventos ao vivo (/v1/ws). Best-effort; devolve close(). */
+export function connectEvents(onEvent: (e: { type: string; data: unknown }) => void): () => void {
+  const t = getTokens();
+  if (!t) return () => {};
+  const url = `${BASE.replace(/^http/, "ws")}/v1/ws?token=${encodeURIComponent(t.access_token)}`;
+  let ws: WebSocket | null = null;
+  try {
+    ws = new WebSocket(url);
+    ws.onmessage = (m) => {
+      try {
+        onEvent(JSON.parse(String(m.data)));
+      } catch {
+        /* ignora */
+      }
+    };
+  } catch {
+    /* segue sem WS */
+  }
+  return () => ws?.close();
+}
+
 /** Inicia login social: navega para o provedor (rota pública, sem Bearer). */
 export function oauthLogin(provider: "google" | "apple") {
   window.location.href = `${BASE}/v1/auth/oauth/${provider}`;

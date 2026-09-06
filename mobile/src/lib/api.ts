@@ -46,6 +46,30 @@ export async function isAuthed() {
   return (await getTokens()) !== null;
 }
 
+/**
+ * Abre o WebSocket de eventos ao vivo (/v1/ws). `onEvent` recebe {type, data}.
+ * Devolve uma função de close. Best-effort — a tela deve funcionar sem ele.
+ */
+export async function connectEvents(onEvent: (e: { type: string; data: any }) => void): Promise<() => void> {
+  const t = await getTokens();
+  if (!t) return () => {};
+  const url = BASE.replace(/^http/, "ws") + `/v1/ws?token=${encodeURIComponent(t.access_token)}`;
+  let ws: WebSocket | null = null;
+  try {
+    ws = new WebSocket(url);
+    ws.onmessage = (m) => {
+      try {
+        onEvent(JSON.parse(String(m.data)));
+      } catch {
+        /* ignora frames não-JSON */
+      }
+    };
+  } catch {
+    /* sem WS, segue no polling */
+  }
+  return () => ws?.close();
+}
+
 async function request<T>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
   const tokens = await getTokens();
   const isForm = typeof FormData !== "undefined" && init.body instanceof FormData;
