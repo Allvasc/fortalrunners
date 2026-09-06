@@ -32,23 +32,29 @@
         "NSLocationWhenInUseUsageDescription": "Para gravar sua corrida e conquistar território.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Para gravar sua corrida mesmo com a tela apagada.",
         "NSMotionUsageDescription": "Para medir cadência e passos com precisão.",
-        "UIBackgroundModes": ["location"]
+        "UIBackgroundModes": [
+          "location"
+        ]
       }
     },
     "android": {
       "package": "com.allvasc.fortalrunners",
       "versionCode": 1,
       "permissions": [
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION",
-        "ACTIVITY_RECOGNITION",
-        "FOREGROUND_SERVICE",
-        "FOREGROUND_SERVICE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.ACTIVITY_RECOGNITION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
       ]
     },
     "extra": {
-      "apiUrl": "http://localhost:8090"
-    }
+      "apiUrl": "http://localhost:8090",
+      "eas": {
+        "projectId": "452a88ac-6c8a-4201-a07f-2fc4d2bb2e58"
+      }
+    },
+    "owner": "allvasc"
   }
 }
