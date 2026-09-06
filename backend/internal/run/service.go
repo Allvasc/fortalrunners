@@ -1,0 +1,80 @@
+// Package run recebe corridas, valida o essencial, grava runs + run_tracks e
+// enfileira o processamento pesado (território, H3, anti-fraude) para o worker.
+package run
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/Allvasc/fortalrunners/backend/internal/platform/id"
+	"github.com/Allvasc/fortalrunners/backend/internal/platform/queue"
+)
+
+var (
+	ErrTooFewPoints = errors.New("traçado insuficiente para registrar a corrida")
+	ErrBadWindow    = errors.New("started_at/ended_at inválidos")
+)
+
+// suspiciousPaceS: mais rápido que 2:30/km sustentado é sinalizado para revisão.
+const suspiciousPaceS = 150
+
+type Service struct {
+	store *store
+	pub   queue.Publisher
+}
+
+func NewService(pool *pgxpool.Pool, pub queue.Publisher) *Service {
+	return &Service{store: newStore(pool), pub: pub}
+}
+
+// Ingest grava a corrida e publica run.uploaded.
+func (s *Service) Ingest(ctx context.Context, userID string, in IngestInput) (View, error) {
+	if in.StartedAt.IsZero() || in.EndedAt.IsZero() || !in.EndedAt.After(in.StartedAt) {
+		return View{}, ErrBadWindow
+	}
+	if in.EndedAt.Sub(in.StartedAt) > 24*time.Hour {
+		return View{}, ErrBadWindow
+	}
+
+	c, ok := clean(in.Points)
+	if !ok {
+		return View{}, ErrTooFewPoints
+	}
+
+	status := "processing"
+	var fraud float64
+	if c.distM > 0 {
+		pace := c.movingS / (c.distM / 1000.0)
+		if pace > 0 && pace < suspiciousPaceS {
+			status, fraud = "flagged", 0.8
+		}
+	}
+
+	v, err := s.store.create(ctx, createArgs{
+		ID: id.New(), UserID: userID, In: in, Clean: c, FraudScore: fraud, Status: status,
+	})
+	if err != nil {
+		return View{}, err
+	}
+
+	if status == "processing" {
+		payload, _ := json.Marshal(map[string]string{"run_id": v.ID, "user_id": userID})
+		_ = s.pub.Publish(ctx, queue.SubjectRunUploaded, payload)
+	}
+	return v, nil
+}
+
+func (s *Service) Get(ctx context.Context, id, userID string) (View, error) {
+	return s.store.get(ctx, id, userID)
+}
+
+func (s *Service) List(ctx context.Context, userID string, limit int) ([]View, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 30
+	}
+	return s.store.list(ctx, userID, limit)
+}

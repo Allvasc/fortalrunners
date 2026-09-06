@@ -59,8 +59,13 @@ npx expo start
 
 ## Roadmap
 
-Ver `docs/plano.html` § 16. Estamos na **Fase 0 — Fundação**: monorepo, auth (e-mail + Google),
-esquema de banco, deploy básico, mapa com tiles, gravação de corrida no mobile.
+Ver `docs/plano.html` § 16.
+
+- **Fase 0 — Fundação** ✅ monorepo, auth (e-mail + JWT rotativo), esquema de banco, health, CI.
+- **Fase 1 — MVP jogável** 🚧 em andamento:
+  - ✅ ingestão de corrida (`POST /v1/runs`), limpeza de GPS, `runs` + `run_tracks`
+  - ✅ pipeline de território no worker: detecção de laço → polígono (PostGIS) → gate de zona de risco → gravação; `GET /v1/territories` (GeoJSON)
+  - ⬜ métricas de precisão, tênis, mapa de calor, ranking, integrações, 2FA, portal web, admin
 
 ## Convenções
 

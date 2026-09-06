@@ -1,13 +1,10 @@
-// Comando: territory-worker — consome a fila e processa corridas
-// (limpeza, map-matching, detecção de laço, gate de risco, resolução de
-// conflito, indexação H3, anti-fraude, rollups).
-//
-// Fase 0: apenas conecta na fila e loga os eventos recebidos. A lógica de
-// processamento entra na Fase 1.
+// Comando: territory-worker — consome a fila e roda o pipeline de território
+// (detecção de laço, polígono, gate de zona de risco, gravação).
 package main
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"os/signal"
 	"syscall"
@@ -19,6 +16,7 @@ import (
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/db"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/logging"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/queue"
+	"github.com/Allvasc/fortalrunners/backend/internal/territory"
 )
 
 func main() {
@@ -47,15 +45,23 @@ func main() {
 	}
 	defer nc.Drain()
 
-	sub, err := nc.Subscribe(queue.SubjectRunUploaded, func(m *nats.Msg) {
-		log.Info("evento recebido", "subject", m.Subject, "bytes", len(m.Data))
-		// TODO(fase-1): pipeline de território.
+	proc := territory.NewProcessor(pool, log)
+
+	sub, err := nc.QueueSubscribe(queue.SubjectRunUploaded, "territory-workers", func(m *nats.Msg) {
+		var ev struct {
+			RunID string `json:"run_id"`
+		}
+		if err := json.Unmarshal(m.Data, &ev); err != nil || ev.RunID == "" {
+			log.Warn("evento malformado", "subject", m.Subject)
+			return
+		}
+		proc.Process(context.Background(), ev.RunID)
 	})
 	if err != nil {
 		log.Error("não foi possível assinar", "err", err)
 		os.Exit(1)
 	}
-	defer sub.Unsubscribe()
+	defer sub.Unsubscribe() //nolint:errcheck
 
 	log.Info("worker pronto", "subject", queue.SubjectRunUploaded)
 	<-ctx.Done()

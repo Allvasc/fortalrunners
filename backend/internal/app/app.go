@@ -14,6 +14,7 @@ import (
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/httpx"
 	"github.com/Allvasc/fortalrunners/backend/internal/platform/queue"
 	"github.com/Allvasc/fortalrunners/backend/internal/run"
+	"github.com/Allvasc/fortalrunners/backend/internal/territory"
 )
 
 // API mantém as dependências vivas do processo da API.
@@ -47,7 +48,8 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	// grupo protegido: exige Bearer token
 	secured := v1.Group("", authH.Middleware())
 	secured.GET("/me", authH.MeHandler)
-	run.NewHandler(pub).Register(secured)
+	run.NewHandler(run.NewService(pool, pub)).Register(secured)
+	territory.NewHandler(pool).Register(secured)
 
 	return &API{Echo: e, Pool: pool, Queue: pub}
 }
