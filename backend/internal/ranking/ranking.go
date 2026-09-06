@@ -24,7 +24,59 @@ func (h *Handler) Register(g *echo.Group) {
 	g.GET("/leaderboards/neighborhood/:id", h.neighborhood)
 	g.GET("/me/lifetime", h.lifetime)
 	g.GET("/me/records", h.records)
+	g.GET("/coverage", h.coverage)
 }
+
+// GET /v1/coverage — % de células cobertas pelo corredor, por bairro + total da cidade.
+func (h *Handler) coverage(c echo.Context) error {
+	uid := auth.UserID(c)
+	const q = `
+		WITH mine AS (
+			SELECT neighborhood_id, count(*) AS covered
+			FROM h3_cells WHERE owner_id = $1 GROUP BY neighborhood_id
+		)
+		SELECT n.id, n.name, n.h3_total, COALESCE(m.covered, 0)
+		FROM neighborhoods n LEFT JOIN mine m ON m.neighborhood_id = n.id
+		WHERE n.h3_total > 0
+		ORDER BY n.name`
+	rows, err := h.pool.Query(c.Request().Context(), q, uid)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "erro interno")
+	}
+	defer rows.Close()
+
+	type nb struct {
+		NeighborhoodID string  `json:"neighborhood_id"`
+		Name           string  `json:"name"`
+		Total          int     `json:"total_cells"`
+		Covered        int     `json:"covered_cells"`
+		Pct            float64 `json:"pct"`
+	}
+	list := []nb{}
+	var totCells, covCells int
+	for rows.Next() {
+		var b nb
+		if err := rows.Scan(&b.NeighborhoodID, &b.Name, &b.Total, &b.Covered); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "erro interno")
+		}
+		if b.Total > 0 {
+			b.Pct = round1(float64(b.Covered) / float64(b.Total) * 100)
+		}
+		totCells += b.Total
+		covCells += b.Covered
+		list = append(list, b)
+	}
+	cityPct := 0.0
+	if totCells > 0 {
+		cityPct = round1(float64(covCells) / float64(totCells) * 100)
+	}
+	return c.JSON(http.StatusOK, map[string]any{
+		"city":          map[string]any{"total_cells": totCells, "covered_cells": covCells, "pct": cityPct},
+		"neighborhoods": list,
+	})
+}
+
+func round1(v float64) float64 { return float64(int(v*10+0.5)) / 10 }
 
 type entry struct {
 	Rank      int     `json:"rank"`

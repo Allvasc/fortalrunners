@@ -129,7 +129,7 @@
 
 <div class="wrap">
   <header class="hero">
-    <p class="eyebrow">Referência técnica · v1.6 · 06 set 2026</p>
+    <p class="eyebrow">Referência técnica · v1.7 · 06 set 2026</p>
     <h1>Banco de dados &amp; Integrações</h1>
     <p class="lede">O modelo de dados completo — tabelas, tipos, chaves e relacionamentos — e o catálogo de serviços internos, data stores e integrações de terceiros. Consolida e detalha o que estava espalhado no plano.</p>
     <p class="backlink">← <a href="https://claude.ai/code/artifact/f171dbf5-8933-40a3-98ff-32f169ff869b">Plano de produto</a> · <a href="https://claude.ai/code/artifact/e662d35e-b65a-4f5c-a0ad-d2480c77f2ac">Manual de Design</a></p>
@@ -438,7 +438,7 @@
           <tr><td>city_id</td><td>text</td><td><span class="k ix">IX</span></td></tr>
           <tr><td>name</td><td>text</td><td>—</td></tr>
           <tr><td>geom</td><td>geometry(MultiPolygon,4326)</td><td><span class="k gx">GIST</span></td></tr>
-          <tr><td>h3_total</td><td>int</td><td>células H3 res 9 dentro do bairro</td></tr>
+          <tr><td>h3_total</td><td>int</td><td>denominador da cobertura — nº de células da grade dentro do bairro (calculado na migração 00013)</td></tr>
         </tbody>
       </table></div>
 
@@ -540,7 +540,7 @@
       </table></div>
 
       <h4>h3_cells <span class="pk">cobertura por corredor</span></h4>
-      <p>Célula H3 res 9 coberta por um corredor. Base do "% de Fortaleza" — <strong>por pessoa</strong>, sobreposição livre.</p>
+      <p>Célula coberta por um corredor (polyfill do território). Base do "% de Fortaleza" — <strong>por pessoa</strong>, sobreposição livre. H3 real adiado (cgo) → grade stand-in ~60 m; <code>h3_index = gy·1e7 + (gx + 5e6)</code>.</p>
       <div class="tw"><table class="t-col">
         <thead><tr><th>Coluna</th><th>Tipo</th><th>Chave / nota</th></tr></thead>
         <tbody>
@@ -1323,7 +1323,7 @@
   </main>
 
   <footer class="pg">
-    FortalRunners · banco de dados &amp; integrações v1.6 · 06 set 2026 · consolida o modelo de dados e o catálogo de serviços do plano de produto.
+    FortalRunners · banco de dados &amp; integrações v1.7 · 06 set 2026 · consolida o modelo de dados e o catálogo de serviços do plano de produto.
   </footer>
 </div>
 

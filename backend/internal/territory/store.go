@@ -121,6 +121,34 @@ func (s *store) insertTerritory(ctx context.Context, id, userID, runID string, w
 	return err
 }
 
+// coverageCellDeg = ~155 m — grade stand-in ~60 m até o H3 real.
+const coverageCellDeg = 0.00055
+
+// polyfillCells preenche h3_cells com as células da grade cujo centro cai dentro
+// do território. Cobertura é por corredor (PK composta), sobreposição livre.
+func (s *store) polyfillCells(ctx context.Context, territoryID, ownerID string) error {
+	const q = `
+		WITH t AS (
+			SELECT geom, ST_XMin(geom) x0, ST_XMax(geom) x1, ST_YMin(geom) y0, ST_YMax(geom) y1
+			FROM territories WHERE id = $1
+		),
+		cells AS (
+			SELECT gx, gy, ST_SetSRID(ST_Point((gx + 0.5) * $3, (gy + 0.5) * $3), 4326) AS c
+			FROM t,
+			     generate_series(floor(t.x0 / $3)::int, ceil(t.x1 / $3)::int) gx,
+			     generate_series(floor(t.y0 / $3)::int, ceil(t.y1 / $3)::int) gy
+		)
+		INSERT INTO h3_cells (h3_index, city_id, neighborhood_id, owner_id, territory_id)
+		SELECT gy::bigint * 10000000 + (gx + 5000000), 'fortaleza',
+		       (SELECT n.id FROM neighborhoods n WHERE ST_Contains(n.geom, cells.c) LIMIT 1),
+		       $2, $1
+		FROM cells, t
+		WHERE ST_Contains(t.geom, cells.c)
+		ON CONFLICT (h3_index, owner_id) DO NOTHING`
+	_, err := s.pool.Exec(ctx, q, territoryID, ownerID, coverageCellDeg)
+	return err
+}
+
 // finishRun marca a corrida como processada.
 func (s *store) finishRun(ctx context.Context, runID, status string, areaM2 float64, parts int, errMsg string) error {
 	_, err := s.pool.Exec(ctx, `

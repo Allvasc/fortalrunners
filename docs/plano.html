@@ -404,7 +404,7 @@
 
   <header class="hero">
     <canvas class="hero-grid" id="heroGrid" aria-hidden="true"></canvas>
-    <p class="eyebrow">Plano de produto · v0.19 · 06 set 2026</p>
+    <p class="eyebrow">Plano de produto · v0.20 · 06 set 2026</p>
     <h1>FortalRunners</h1>
     <p class="lede">Um app gamificado onde correr por Fortaleza conquista território. Feche o circuito de um quarteirão e ele passa a ser seu, pintado na sua cor. E por baixo do jogo, a ambição de ser o app de corrida mais completo do mercado: cada par de tênis rastreado, cada métrica medida com rigor de relógio de ponta.</p>
     <div class="meta-row">
@@ -1131,7 +1131,7 @@
             <tr><td>personal_records</td><td><code>id, user_id, distance_key, value_s, run_id, achieved_at</code></td><td>1k/5k/10k/21k/42k/1h/maior distância/etc.</td></tr>
             <tr><td>lifetime_stats</td><td><code>user_id, total_moving_s, total_distance_m, total_steps, run_count, elevation_gain_m, calories, active_days, longest_streak</code></td><td>Materializada; base das "horas de prática".</td></tr>
             <tr><td>territories</td><td><code>id, user_id, run_id, geom(MultiPolygon,4326), area_m2, neighborhood_id, claimed_at, status</code></td><td>Um registro por conquista. <strong>Permanente.</strong> <code>status</code>: active / revoked (só fraude).</td></tr>
-            <tr><td>h3_cells</td><td><code>h3_index(bigint), owner_id, territory_id, neighborhood_id, claimed_at</code></td><td>Res 9. Cobertura <strong>por corredor</strong>. PK = (h3_index, owner_id).</td></tr>
+            <tr><td>h3_cells</td><td><code>h3_index(bigint), owner_id, territory_id, neighborhood_id, claimed_at</code></td><td>Cobertura <strong>por corredor</strong>, PK (h3_index, owner_id). H3 real adiado → grade stand-in ~60 m; polyfill do território após cada conquista. <code>GET /v1/coverage</code>.</td></tr>
             <tr><td>heat_agg</td><td><code>h3_index(bigint), scope, period, activity, hits, weight, runner_count, cell_geom(Point,4326), updated_at</code></td><td>Agregação de passagem para o mapa de calor, mantida pelo <code>scheduler</code>. <code>scope</code>: user:&lt;id&gt; / club:&lt;id&gt; / city. Fase 1 = só pessoal; cidade com <code>runner_count ≥ N</code>. H3 é Fase 2 → <code>h3_index</code> é stand-in de grade e <code>cell_geom</code> guarda o centro da célula.</td></tr>
             <tr><td>neighborhoods</td><td><code>id, name, geom(MultiPolygon), h3_total</code></td><td>Bairros oficiais de Fortaleza (seed via IBGE/prefeitura).</td></tr>
             <tr><td>routes</td><td><code>id, name, created_by, geom(LineString), distance_m, surface, is_official</code></td><td>Percursos nomeados.</td></tr>
@@ -1868,7 +1868,7 @@
   </main>
 
   <footer class="pg">
-    FortalRunners · plano de produto v0.19 · gerado 06 set 2026 · documento vivo, revisar a cada fase
+    FortalRunners · plano de produto v0.20 · gerado 06 set 2026 · documento vivo, revisar a cada fase
   </footer>
 </div>
 

@@ -55,6 +55,11 @@ func (p *Processor) Process(ctx context.Context, runID string) {
 		return
 	}
 
+	// indexa na grade de cobertura (h3_cells) — não fatal se falhar.
+	if err := p.store.polyfillCells(ctx, terrID, ri.UserID); err != nil {
+		log.Warn("territory: polyfill de cobertura falhou", "err", err)
+	}
+
 	if err := p.store.finishRun(ctx, runID, "valid", areaM2, parts, ""); err != nil {
 		log.Error("territory: finishRun falhou", "err", err)
 		return
