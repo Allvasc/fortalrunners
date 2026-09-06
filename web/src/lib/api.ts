@@ -39,6 +39,30 @@ export function isAuthed() {
   return !!getTokens();
 }
 
+/** URL base da API (para navegações OAuth que não passam pelo fetch). */
+export const apiBase = BASE;
+
+/** Inicia login social: navega para o provedor (rota pública, sem Bearer). */
+export function oauthLogin(provider: "google" | "apple") {
+  window.location.href = `${BASE}/v1/auth/oauth/${provider}`;
+}
+
+/**
+ * Consome os tokens do fragmento (#access_token=...) após o callback OAuth.
+ * Chamado no boot quando a rota é /auth/callback. Retorna true se logou.
+ */
+export function consumeOAuthFragment(): boolean {
+  if (!window.location.hash.includes("access_token")) return false;
+  const p = new URLSearchParams(window.location.hash.slice(1));
+  const access_token = p.get("access_token");
+  const refresh_token = p.get("refresh_token");
+  const expires_at = p.get("expires_at");
+  if (!access_token || !refresh_token || !expires_at) return false;
+  setTokens({ access_token, refresh_token, expires_at });
+  window.history.replaceState(null, "", "/");
+  return true;
+}
+
 async function request<T>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
   const tokens = getTokens();
   const headers = new Headers(init.headers);
@@ -348,6 +372,24 @@ export const api = {
     }),
   mfaDisable: (code: string) =>
     request<void>("/v1/auth/mfa/disable", { method: "POST", body: JSON.stringify({ code }) }),
+
+  // --- integrações (contas conectadas) ---
+  integrations: () => request<{ integrations: unknown[] }>("/v1/integrations"),
+  linkOAuth: async (provider: "google" | "apple") => {
+    // vincular à conta logada: busca a URL com Bearer e navega.
+    const { authorize_url } = await request<{ authorize_url: string }>(
+      `/v1/auth/oauth/${provider}?mode=link`,
+    ).catch(() => ({ authorize_url: "" }));
+    if (authorize_url) window.location.href = authorize_url;
+  },
+  connectStrava: async () => {
+    const { authorize_url } = await request<{ authorize_url: string }>(
+      "/v1/integrations/strava/connect",
+    );
+    window.location.href = authorize_url;
+  },
+  disconnectIntegration: (provider: string, purge = false) =>
+    request<void>(`/v1/integrations/${provider}${purge ? "?purge=true" : ""}`, { method: "DELETE" }),
 
   // --- landmarks & selos ---
   landmarksProgress: () => request<LandmarkProgress>("/v1/landmarks"),

@@ -1,6 +1,6 @@
 import { NavLink, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, type PublicUser } from "./lib/api";
+import { api, consumeOAuthFragment, type PublicUser } from "./lib/api";
 import { useAuthed } from "./lib/useAuth";
 import { Auth } from "./pages/Auth";
 import { MapView } from "./pages/MapView";
@@ -16,6 +16,11 @@ import { ClubsPage } from "./pages/Clubs";
 
 import { EventsPage } from "./pages/Events";
 import { AICoachPage } from "./pages/AICoach";
+
+// Consome os tokens do callback OAuth antes de decidir a rota.
+if (window.location.pathname === "/auth/callback") {
+  consumeOAuthFragment();
+}
 
 export function App() {
   const authed = useAuthed();

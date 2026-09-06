@@ -18,6 +18,7 @@ type Deps struct {
 	RefreshTTL time.Duration
 	MFAEncKey  string // base64 de 32 bytes (AES-256-GCM do segredo TOTP)
 	OAuth      OAuthConfig
+	WebBaseURL string // para onde o callback OAuth redireciona (fragmento com tokens)
 }
 
 type RegisterInput struct {
@@ -116,6 +117,10 @@ func (h *Handler) oauthStart(c echo.Context) error {
 	if err != nil {
 		return authErr(err)
 	}
+	// mode=link vem de um fetch com Bearer (não pode seguir 302 por CORS) → JSON.
+	if mode == "link" || c.QueryParam("format") == "json" {
+		return c.JSON(http.StatusOK, map[string]string{"authorize_url": url})
+	}
 	return c.Redirect(http.StatusFound, url)
 }
 
@@ -131,7 +136,9 @@ func (h *Handler) oauthCallback(c echo.Context) error {
 	if err != nil {
 		return authErr(err)
 	}
-	// TODO: em produção, 302 para o app com os tokens no fragmento da URL.
+	if dest := h.svc.WebRedirectURL(tk); dest != "" {
+		return c.Redirect(http.StatusFound, dest)
+	}
 	return c.JSON(http.StatusOK, map[string]any{"user": publicUser(u), "tokens": tk})
 }
 

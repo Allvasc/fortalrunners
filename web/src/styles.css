@@ -672,3 +672,24 @@ table.splits .bar-cell {
     height: calc(100vh - 120px);
   }
 }
+
+/* --- login social --- */
+.oauth-sep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-3, #7B8688);
+  font-size: 12px;
+  margin: 4px 0;
+}
+.oauth-sep::before,
+.oauth-sep::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line, #E2DCCF);
+}
+.oauth-row {
+  display: grid;
+  gap: 8px;
+}

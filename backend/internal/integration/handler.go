@@ -43,7 +43,11 @@ func (h *Handler) connect(c echo.Context) error {
 	if err != nil {
 		return integErr(err)
 	}
-	return c.Redirect(http.StatusFound, url)
+	// o navegador não manda Bearer num redirect: o front busca a URL e navega.
+	if c.QueryParam("redirect") == "1" {
+		return c.Redirect(http.StatusFound, url)
+	}
+	return c.JSON(http.StatusOK, map[string]string{"authorize_url": url})
 }
 
 func (h *Handler) callback(c echo.Context) error {

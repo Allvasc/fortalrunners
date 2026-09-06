@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, ApiError } from "../lib/api";
+import { api, ApiError, oauthLogin } from "../lib/api";
 
 type Mode = "login" | "register";
 
@@ -136,6 +136,18 @@ export function Auth() {
           <button className="btn primary" disabled={submit.isPending}>
             {submit.isPending ? "…" : mode === "login" ? "Entrar" : "Criar conta"}
           </button>
+
+          <div className="oauth-sep">
+            <span>ou</span>
+          </div>
+          <div className="oauth-row">
+            <button type="button" className="btn" onClick={() => oauthLogin("google")}>
+              Continuar com Google
+            </button>
+            <button type="button" className="btn" onClick={() => oauthLogin("apple")}>
+              Continuar com Apple
+            </button>
+          </div>
         </form>
       )}
     </div>

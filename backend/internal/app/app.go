@@ -69,6 +69,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 		AccessTTL:  cfg.AccessTokenTTL,
 		RefreshTTL: cfg.RefreshTokenTTL,
 		MFAEncKey:  cfg.MFAEncKey,
+		WebBaseURL: firstOrigin(cfg.CORSOrigins),
 		OAuth: auth.OAuthConfig{
 			GoogleClientID: cfg.GoogleClientID, GoogleClientSecret: cfg.GoogleClientSecret,
 			GoogleRedirectURL: cfg.GoogleRedirectURL,
@@ -102,10 +103,7 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	if err != nil {
 		return nil, err
 	}
-	publicWebURL := ""
-	if len(cfg.CORSOrigins) > 0 {
-		publicWebURL = cfg.CORSOrigins[0]
-	}
+	publicWebURL := firstOrigin(cfg.CORSOrigins)
 
 	blobs := blobstore.NewPGStore(pool)
 	media.NewHandler(blobs).Register(secured)
@@ -190,6 +188,13 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger, pool *pgxpool
 	}
 
 	return &API{Echo: e, Pool: pool, Queue: pub}, nil
+}
+
+func firstOrigin(origins []string) string {
+	if len(origins) > 0 {
+		return origins[0]
+	}
+	return ""
 }
 
 // Close libera os recursos do processo.

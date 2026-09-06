@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -46,11 +47,12 @@ type LoginResult struct {
 
 // Service é a fachada do módulo.
 type Service struct {
-	store  *store
-	tokens tokenIssuer
-	box    crypto.Box
-	oauth  OAuthConfig
-	httpc  *http.Client
+	store   *store
+	tokens  tokenIssuer
+	box     crypto.Box
+	oauth   OAuthConfig
+	httpc   *http.Client
+	webBase string
 }
 
 func NewService(deps Deps) (*Service, error) {
@@ -59,12 +61,25 @@ func NewService(deps Deps) (*Service, error) {
 		return nil, err
 	}
 	return &Service{
-		store:  newStore(deps.Pool),
-		tokens: newTokenIssuer(deps.JWTSecret, deps.AccessTTL, deps.RefreshTTL),
-		box:    box,
-		oauth:  deps.OAuth,
-		httpc:  &http.Client{Timeout: 10 * time.Second},
+		store:   newStore(deps.Pool),
+		tokens:  newTokenIssuer(deps.JWTSecret, deps.AccessTTL, deps.RefreshTTL),
+		box:     box,
+		oauth:   deps.OAuth,
+		httpc:   &http.Client{Timeout: 10 * time.Second},
+		webBase: deps.WebBaseURL,
 	}, nil
+}
+
+// WebRedirectURL monta o destino do callback OAuth com os tokens no fragmento
+// (nunca na query — fragmento não vai para logs de servidor). "" quando não há
+// front configurado (aí o handler devolve JSON).
+func (s *Service) WebRedirectURL(t Tokens) string {
+	if s.webBase == "" {
+		return ""
+	}
+	return s.webBase + "/auth/callback#access_token=" + url.QueryEscape(t.AccessToken) +
+		"&refresh_token=" + url.QueryEscape(t.RefreshToken) +
+		"&expires_at=" + url.QueryEscape(t.ExpiresAt.Format(time.RFC3339))
 }
 
 // Register cria a conta e já devolve tokens (auto-login).

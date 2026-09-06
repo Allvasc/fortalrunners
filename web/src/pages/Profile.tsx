@@ -37,9 +37,38 @@ export function Profile() {
       </section>
 
       <section>
+        <h2>Contas conectadas</h2>
+        <ConnectionsPanel />
+      </section>
+
+      <section>
         <h2>Verificação em duas etapas</h2>
         <MFAPanel />
       </section>
+    </div>
+  );
+}
+
+function ConnectionsPanel() {
+  const [msg, setMsg] = useState("");
+  return (
+    <div className="card" style={{ display: "grid", gap: "0.6rem" }}>
+      <p className="muted small" style={{ margin: 0 }}>
+        Vincule Google ou Apple à sua conta, ou conecte o Strava para importar o histórico
+        de corridas (mesmo pipeline de território, marcado como importado).
+      </p>
+      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+        <button className="btn" onClick={() => api.linkOAuth("google").catch(() => setMsg("Google não configurado no servidor."))}>
+          Vincular Google
+        </button>
+        <button className="btn" onClick={() => api.linkOAuth("apple").catch(() => setMsg("Apple não configurado no servidor."))}>
+          Vincular Apple
+        </button>
+        <button className="btn" onClick={() => api.connectStrava().catch(() => setMsg("Strava não configurado no servidor."))}>
+          Conectar Strava
+        </button>
+      </div>
+      {msg && <p className="err">{msg}</p>}
     </div>
   );
 }
