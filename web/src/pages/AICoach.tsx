@@ -32,14 +32,18 @@ export const AICoachPage: React.FC = () => {
         </p>
       </header>
 
-      <form onSubmit={handleAsk} className="card" style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
+      <form
+        onSubmit={handleAsk}
+        className="card"
+        style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: "0.6rem" }}
+      >
         <input
           type="text"
           value={prompt}
           maxLength={1000}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="Ex.: qual o melhor horário pra correr na Beira-Mar hoje?"
-          style={{ flex: "1 1 260px" }}
+          style={{ flex: "1 1 240px", minWidth: 0 }}
         />
         <button type="submit" className="btn primary" disabled={loading}>
           {loading ? "Consultando…" : "Perguntar"}
