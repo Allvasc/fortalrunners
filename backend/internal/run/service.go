@@ -62,6 +62,8 @@ func (s *Service) Ingest(ctx context.Context, userID string, in IngestInput) (Vi
 		return View{}, ErrTooFewPoints
 	}
 
+	metrics := computeMetrics(c.points, in.Cadence, in.HeartRate)
+
 	status := "processing"
 	var fraud float64
 	if c.distM > 0 {
@@ -72,7 +74,7 @@ func (s *Service) Ingest(ctx context.Context, userID string, in IngestInput) (Vi
 	}
 
 	v, err := s.store.create(ctx, createArgs{
-		ID: id.New(), UserID: userID, In: in, Clean: c, FraudScore: fraud, Status: status,
+		ID: id.New(), UserID: userID, In: in, Clean: c, Metrics: metrics, FraudScore: fraud, Status: status,
 	})
 	if err != nil {
 		return View{}, err
@@ -87,6 +89,11 @@ func (s *Service) Ingest(ctx context.Context, userID string, in IngestInput) (Vi
 
 func (s *Service) Get(ctx context.Context, id, userID string) (View, error) {
 	return s.store.get(ctx, id, userID)
+}
+
+// Metrics devolve o pacote de precisão de uma corrida (splits, elevação, GAP).
+func (s *Service) Metrics(ctx context.Context, id, userID string) (MetricsView, error) {
+	return s.store.metrics(ctx, id, userID)
 }
 
 func (s *Service) List(ctx context.Context, userID string, limit int) ([]View, error) {

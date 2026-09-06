@@ -21,7 +21,29 @@ type IngestInput struct {
 	AvgHDOP    *float64  `json:"avg_hdop,omitempty"`
 	ShoeID     string    `json:"shoe_id,omitempty"`
 	Points     []Point   `json:"points"`
+	Cadence    []Sample  `json:"cadence,omitempty"`    // passos por minuto ao longo do tempo
+	HeartRate  []Sample  `json:"heart_rate,omitempty"` // bpm ao longo do tempo
 	Weather    any       `json:"weather,omitempty"`
+}
+
+// MetricsView é a projeção de leitura de GET /v1/runs/:id/metrics.
+type MetricsView struct {
+	RunID         string    `json:"run_id"`
+	Splits        []Split   `json:"splits"`
+	ElevGainM     float64   `json:"elev_gain_m"`
+	ElevLossM     float64   `json:"elev_loss_m"`
+	AltMinM       *float64  `json:"alt_min_m,omitempty"`
+	AltMaxM       *float64  `json:"alt_max_m,omitempty"`
+	AvgCadenceSPM *int      `json:"avg_cadence_spm,omitempty"`
+	MaxCadenceSPM *int      `json:"max_cadence_spm,omitempty"`
+	AvgHRBPM      *int      `json:"avg_hr_bpm,omitempty"`
+	MaxHRBPM      *int      `json:"max_hr_bpm,omitempty"`
+	BestKmPaceS   *int      `json:"best_km_pace_s,omitempty"`
+	GradeAdjPaceS *int      `json:"grade_adjusted_pace_s,omitempty"`
+	HasAltitude   bool      `json:"has_altitude"`
+	HasCadence    bool      `json:"has_cadence"`
+	HasHR         bool      `json:"has_heart_rate"`
+	ComputedAt    time.Time `json:"computed_at"`
 }
 
 // View é a projeção de leitura de uma corrida.

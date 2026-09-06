@@ -19,6 +19,7 @@ func (h *Handler) Register(g *echo.Group) {
 	g.POST("/runs", h.upload)
 	g.GET("/runs", h.list)
 	g.GET("/runs/:id", h.get)
+	g.GET("/runs/:id/metrics", h.metrics)
 }
 
 func (h *Handler) upload(c echo.Context) error {
@@ -42,6 +43,14 @@ func (h *Handler) get(c echo.Context) error {
 		return runErr(err)
 	}
 	return c.JSON(http.StatusOK, v)
+}
+
+func (h *Handler) metrics(c echo.Context) error {
+	mv, err := h.svc.Metrics(c.Request().Context(), c.Param("id"), auth.UserID(c))
+	if err != nil {
+		return runErr(err)
+	}
+	return c.JSON(http.StatusOK, mv)
 }
 
 func (h *Handler) list(c echo.Context) error {

@@ -76,11 +76,14 @@ Ver `docs/plano.html` § 16.
     (`/v1/auth/mfa/verify`); segredo cifrado em repouso (AES-256-GCM, `MFA_ENC_KEY`),
     10 códigos de recuperação de uso único, claim `mfa` no access token +
     middleware `RequireMFA` para rotas privilegiadas
+  - ✅ **métricas de precisão** (`internal/run/metrics.go`): splits por km, elevação
+    suavizada (histerese barométrica), cadência e FC dos streams de sensor, pace
+    ajustado ao aclive (GAP, modelo de custo de Minetti); `GET /v1/runs/:id/metrics`
   - ✅ **portal web** (`web/`): rota + shell, mapa MapLibre com o território do corredor,
-    ranking all-time, desafios com ranking de período, perfil com stats/recordes e
-    gestão de 2FA (QR, ativar, códigos de recuperação, desativar)
-  - ⬜ métricas de precisão (splits, cadência), mapa de calor, integrações (Strava),
-    style JSON próprio do mapa (MapTiler/Protomaps), painel de admin
+    histórico com splits/GAP/cadência por corrida, ranking all-time, desafios com
+    ranking de período, perfil com stats/recordes e gestão de 2FA
+  - ⬜ mapa de calor, integrações (Strava), style JSON próprio do mapa
+    (MapTiler/Protomaps), painel de admin
 
 ## Convenções
 
